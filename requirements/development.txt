@@ -1,0 +1,20 @@
+# =====================================================================
+# ERP Contable — requirements/development.txt
+# Probado con Python 3.11 / 3.12 / 3.13 / 3.14
+# =====================================================================
+-r base.txt
+
+# Testing
+factory-boy>=3.3.1
+Faker>=26.0.0
+pytest>=8.3.0
+pytest-django>=4.9.0
+pytest-cov>=5.0.0
+
+# Calidad de código
+black>=24.8.0
+flake8>=7.1.0
+isort>=5.13.2
+
+# Debug
+django-debug-toolbar>=4.4.0

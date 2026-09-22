@@ -1,0 +1,11 @@
+# =====================================================================
+# ERP Contable — requirements/production.txt
+# Probado con Python 3.11 / 3.12 / 3.13 / 3.14
+# =====================================================================
+-r base.txt
+
+# PostgreSQL
+psycopg2-binary>=2.9.9
+
+# Monitoreo
+sentry-sdk>=2.13.0

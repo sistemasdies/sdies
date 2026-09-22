@@ -1,0 +1,35 @@
+# =====================================================================
+# ERP Contable — requirements/base.txt
+# Probado con Python 3.11 / 3.12 / 3.13 / 3.14
+# =====================================================================
+
+# Django core
+Django>=5.1,<5.3
+djangorestframework>=3.15.2
+djangorestframework-simplejwt>=5.3.1
+django-cors-headers>=4.4.0
+django-filter>=24.3
+drf-spectacular>=0.27.2
+
+# Celery + Redis
+celery>=5.4.0
+redis>=5.0.7
+django-celery-beat>=2.7.0
+django-celery-results>=2.5.1
+
+# Archivos / imágenes
+Pillow>=10.4.0
+
+# Exportación
+openpyxl>=3.1.5
+WeasyPrint>=62.3
+
+# Servidor WSGI
+gunicorn>=22.0.0
+
+# Estáticos + SPA (Whitenoise sin nginx)
+whitenoise>=6.7.0
+
+# Utilidades
+python-decouple>=3.8
+dj-database-url>=2.2.0

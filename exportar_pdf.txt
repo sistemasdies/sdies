@@ -1,0 +1,44 @@
+Sub ExportarPDFs()
+    Dim oDoc As Object
+    Dim oSheet As Object
+    Dim nRepeticiones As Long
+    Dim nValorK4 As Double
+    Dim sDirTrabajo As String
+    Dim sNombreArchivo As String
+    Dim sRutaCompleta As String
+    Dim sFileURL As String
+    Dim sOriginalURL As String
+    Dim aArgs(0) As New com.sun.star.beans.PropertyValue
+
+    oDoc = ThisComponent
+    oSheet = oDoc.Sheets.getByIndex(0)
+    nRepeticiones = oSheet.getCellRangeByName("A1").Value
+    sOriginalURL = oDoc.URL
+
+    sDirTrabajo = ConvertFromURL(sOriginalURL)
+    sDirTrabajo = Replace(sDirTrabajo, "/", Application.PathSeparator)
+    sDirTrabajo = Left(sDirTrabajo, InStrRev(sDirTrabajo, Application.PathSeparator))
+
+    aArgs(0).Name = "FilterName"
+    aArgs(0).Value = "calc_pdf_Export"
+
+    For i As Long = 1 To nRepeticiones
+        nValorK4 = oSheet.getCellRangeByName("K4").Value + 1
+        oSheet.getCellRangeByName("K4").Value = nValorK4
+        oDoc.calculateAll()
+
+        sNombreArchivo = "Orden de pago " & nValorK4 & ".pdf"
+        sRutaCompleta = sDirTrabajo & sNombreArchivo
+        sFileURL = ConvertToURL(sRutaCompleta)
+
+        oDoc.storeToURL(sFileURL, aArgs())
+
+        If i < nRepeticiones Then
+            oDoc.store()
+            oDoc = StarDesktop.loadComponentFromURL(sOriginalURL, "_default", 0, Array())
+            oSheet = oDoc.Sheets.getByIndex(0)
+        End If
+    Next i
+
+    MsgBox "Proceso finalizado. Se generaron " & nRepeticiones & " archivos PDF.", 64, "Exportar PDF"
+End Sub

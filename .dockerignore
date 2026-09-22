@@ -1,0 +1,16 @@
+venv/
+node_modules/
+**/node_modules/
+.git/
+.gitignore
+.idea/
+__pycache__/
+**/__pycache__/
+*.pyc
+staticfiles/
+media/
+db/erp.db
+apps/erp_frontend/build/
+apps/erp_frontend/frontend.log
+.env
+*.log

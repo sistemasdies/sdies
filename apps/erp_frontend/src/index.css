@@ -1,0 +1,9 @@
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: #f8f9fa;
+}
+.table th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.card { border-radius: 0.5rem; }
+.badge { font-weight: 500; }
+code { font-size: 0.82em; }
+.modal { backdrop-filter: blur(2px); }
