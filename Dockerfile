@@ -45,5 +45,8 @@ EXPOSE 8000
 CMD ["sh", "-c", \
      "python manage.py migrate --noinput && \
       python manage.py collectstatic --noinput && \
+      if [ \"$LOAD_FIXTURE\" = \"true\" ]; then \
+        python manage.py cargar_datos --fixture db/fixtures/data.json; \
+      fi && \
       gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} \
       --workers 3 --timeout 300 --access-logfile -"]
