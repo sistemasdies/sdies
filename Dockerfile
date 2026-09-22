@@ -7,6 +7,7 @@
 FROM node:20-alpine AS frontend
 WORKDIR /frontend
 COPY apps/erp_frontend/package.json apps/erp_frontend/package-lock.json ./
+RUN node --version && npm --version
 RUN npm ci --no-audit --no-fund
 COPY apps/erp_frontend/ ./
 RUN npm run build
