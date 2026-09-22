@@ -62,8 +62,19 @@ TEMPLATES = [{'BACKEND': 'django.template.backends.django.DjangoTemplates',
               ]}}]
 
 def _db_url():
-    if os.environ.get('DATABASE_URL'):
-        return os.environ['DATABASE_URL']
+    # Usar DATABASE_URL solo si es una URL valida con esquema de postgres
+    db_url = os.environ.get('DATABASE_URL')
+    if db_url and db_url.startswith(('postgres://', 'postgresql://')):
+        return db_url
+    # Railway inyecta PGHOST/PGPORT/PGUSER/PGPASSWORD/PGDATABASE automaticamente
+    if os.environ.get('PGHOST'):
+        user     = os.environ.get('PGUSER')     or 'postgres'
+        password = os.environ.get('PGPASSWORD') or ''
+        host     = os.environ['PGHOST']
+        port     = os.environ.get('PGPORT')     or '5432'
+        name     = os.environ.get('PGDATABASE') or 'railway'
+        return f'postgres://{user}:{password}@{host}:{port}/{name}'
+    # Fallback local: variables propias o .env
     user     = os.environ.get('DB_USER')     or env_file('DB_USER', 'postgres')
     password = os.environ.get('DB_PASSWORD') or env_file('DB_PASSWORD', '')
     host     = os.environ.get('DB_HOST')     or env_file('DB_HOST', 'localhost')
@@ -72,8 +83,8 @@ def _db_url():
     return f'postgres://{user}:{password}@{host}:{port}/{name}'
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default=_db_url(),
+    'default': dj_database_url.parse(
+        _db_url(),
         engine='django.db.backends.postgresql',
     )
 }
