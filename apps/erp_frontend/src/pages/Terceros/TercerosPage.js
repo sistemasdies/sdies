@@ -21,7 +21,7 @@ const PAGE_SIZE = 50;
 
 const COLUMNAS = [
   { key:'cedula',         label:'Identificación' },
-  { key:'tipo_documento', label:'Doc' },
+  { key:'tipo_documento', label:'Tipo Doc' },
   { key:'apellido1',      label:'Nombre / Razón Social' },
   { key:'telefono1',      label:'Teléfono' },
   { key:'email',          label:'Email' },
@@ -66,7 +66,7 @@ export default function TercerosPage() {
       const r = await siguienteCedula();
       setForm({...form, cedula: r.data.siguiente_cedula});
     } catch {
-      toast.error('No se pudo generar el código');
+      toast.error('No se pudo generar el Código');
     }
   };
 
