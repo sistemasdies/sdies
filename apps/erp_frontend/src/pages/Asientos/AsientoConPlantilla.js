@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import MainLayout from '../../components/layout/MainLayout';
 import TopBar from '../../components/layout/TopBar';
 import ModalBuscador from '../../components/common/ModalBuscador';
+import AvisoCierre from '../../components/common/AvisoCierre';
 import { useBuscador } from '../../hooks/useBuscador';
 import { createAsiento } from '../../api/asientos';
 import { getComprobantes, getSiguienteNumero } from '../../api/comprobantes';
@@ -467,6 +468,8 @@ export default function AsientoConPlantilla() {
             ))}
           </div>
         </div>
+
+        <AvisoCierre />
 
         {/* ── FASE 1: Seleccionar plantilla ─────────────────────────── */}
         {fase==='seleccionar' && (

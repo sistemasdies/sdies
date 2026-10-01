@@ -25,6 +25,8 @@ MODULES = {
     'importar':         'Importar Datos',
     'usuarios':         'Usuarios',
     'roles':            'Roles',
+    'membresias':       'Membresías',
+    'congregaciones':   'Congregaciones',
 }
 
 ACTIONS = ['acceder', 'listar', 'agregar', 'editar', 'borrar']

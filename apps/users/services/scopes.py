@@ -22,6 +22,32 @@ def user_scope(user):
     }
 
 
+def fecha_cierre_usuario(user):
+    """Fecha de cierre contable del usuario (None si no tiene restricción).
+
+    Los superusuarios no tienen restricción de fecha de cierre.
+    """
+    if not user or user.is_superuser:
+        return None
+    return getattr(user, 'fecha_cierre', None)
+
+
+def validar_fecha_cierre(user, fecha, accion='adicionar movimientos'):
+    """Valida que `fecha` respete la fecha de cierre del usuario.
+
+    Regla: no se permite trabajar (crear/modificar/eliminar) movimientos
+    contables 'MoviCont' con fecha igual o anterior a la fecha de cierre.
+    Devuelve un mensaje de error o None si está permitido.
+    """
+    cierre = fecha_cierre_usuario(user)
+    if cierre is None or fecha is None:
+        return None
+    if fecha <= cierre:
+        return (f"No puede {accion} con fecha igual o anterior a {cierre.isoformat()} "
+                f"(fecha de cierre de su usuario).")
+    return None
+
+
 def _codigos_o_none(manager):
     codigos = set(manager.values_list('codigo', flat=True))
     return codigos if codigos else None

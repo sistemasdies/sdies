@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.core.exceptions import ValidationError as DjangoValidationError
 from apps.accounting.models import MoviCont, Cuenta, Tercero, CentroCosto
 from apps.accounting.services.journal_service import JournalService
-from apps.users.services.scopes import user_scope
+from apps.users.services.scopes import user_scope, validar_fecha_cierre
 
 
 class MoviContLineaSerializer(serializers.ModelSerializer):
@@ -33,6 +33,12 @@ class MoviContCreateSerializer(serializers.Serializer):
     def validate(self, data):
         scope = user_scope(self.context['request'].user)
         errores = []
+
+        error_cierre = validar_fecha_cierre(self.context['request'].user,
+                                            data['fecha'],
+                                            accion='adicionar movimientos')
+        if error_cierre:
+            errores.append(error_cierre)
 
         if scope['comprobantes'] is not None and data['cod_comprob'] not in scope['comprobantes']:
             errores.append(f"El comprobante '{data['cod_comprob']}' no está permitido para su rol.")

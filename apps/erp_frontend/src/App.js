@@ -12,6 +12,7 @@ import AsientosPage      from './pages/Asientos/AsientosPage';
 import NuevoAsientoPage  from './pages/Asientos/NuevoAsientoPage';
 import TercerosPage      from './pages/Terceros/TercerosPage';
 import CentroCostosPage  from './pages/CentroCostos/CentroCostosPage';
+import CongregacionesPage from './pages/Congregaciones/CongregacionesPage';
 import ReportesPage      from './pages/Reportes/ReportesPage';
 import PeriodosPage      from './pages/Periodos/PeriodosPage';
 import UsuariosPage      from './pages/Usuarios/UsuariosPage';
@@ -21,7 +22,9 @@ import ComprobantesPage  from './pages/Comprobantes/ComprobantesPage';
 import PlantillasPage     from './pages/Plantillas/PlantillasPage';
 import AsientoConPlantilla from './pages/Asientos/AsientoConPlantilla';
 import ModuloEnProceso   from './pages/ModuloEnProceso/ModuloEnProceso';
+import BloquearFechaPage from './pages/BloquearFecha/BloquearFechaPage';
 import AuxiliaresPage    from './pages/Informes/AuxiliaresPage';
+import MembresiaPage    from './pages/Membresia/MembresiaPage';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -59,12 +62,14 @@ function AppRoutes() {
       <Route path="/plantillas"        element={<PrivateRoute><PlantillasPage /></PrivateRoute>} />
       <Route path="/asientos/plantilla" element={<PrivateRoute><AsientoConPlantilla /></PrivateRoute>} />
       <Route path="/importar"       element={<PrivateRoute><ImportarPage /></PrivateRoute>} />
-      <Route path="/procesos/bloquear-fecha"      element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
+      <Route path="/procesos/bloquear-fecha"      element={<PrivateRoute><BloquearFechaPage /></PrivateRoute>} />
       <Route path="/procesos/cierre-periodo"      element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
       <Route path="/procesos/generar-balance"     element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
       <Route path="/procesos/generar-presupuesto" element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
       <Route path="/procesos/correccion-datos"    element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
       <Route path="/procesos/copia-seguridad"     element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
+      <Route path="/secretaria/membresia"        element={<PrivateRoute><MembresiaPage /></PrivateRoute>} />
+      <Route path="/secretaria/congregaciones"   element={<PrivateRoute><CongregacionesPage /></PrivateRoute>} />
       <Route path="/informes/auxiliares"          element={<PrivateRoute><AuxiliaresPage /></PrivateRoute>} />
       <Route path="/informes/saldos"              element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
       <Route path="/informes/balances"            element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />

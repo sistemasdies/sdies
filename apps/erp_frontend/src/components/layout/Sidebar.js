@@ -41,6 +41,16 @@ const GRUPOS = [
     ],
   },
   {
+    key: 'secretaria',
+    icon: 'bi-building',
+    label: 'Secretaría',
+    mod: null,
+    hijos: [
+      { to: '/secretaria/membresia', icon: 'bi-person-badge', label: 'Membresía', mod: 'membresias' },
+      { to: '/secretaria/congregaciones', icon: 'bi-house-door', label: 'Congregaciones', mod: 'congregaciones' },
+    ],
+  },
+  {
     key: 'informes',
     icon: 'bi-file-earmark-bar-graph',
     label: 'Informes',

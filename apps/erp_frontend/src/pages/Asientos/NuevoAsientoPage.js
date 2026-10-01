@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import MainLayout from '../../components/layout/MainLayout';
 import TopBar from '../../components/layout/TopBar';
 import ModalBuscador from '../../components/common/ModalBuscador';
+import AvisoCierre from '../../components/common/AvisoCierre';
 import { useBuscador } from '../../hooks/useBuscador';
 import { createAsiento } from '../../api/asientos';
 import { getComprobantes } from '../../api/comprobantes';
@@ -166,6 +167,8 @@ export default function NuevoAsientoPage() {
             <kbd>F3</kbd> en cualquier campo para buscar
           </span>
         </div>
+
+        <AvisoCierre />
 
         {/* ── Cabecera ── */}
         <div className="card border-0 shadow-sm mb-3">

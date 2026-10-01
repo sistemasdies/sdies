@@ -105,7 +105,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'login', 'email', 'NameUser', 'caja_user', 'fecha_nacimiento',
                   'frase_verificacion', 'verificacion_pendiente', 'estado',
                   'is_staff', 'is_active', 'is_superuser', 'role', 'role_nombre',
-                  'permission_codes', 'controles', 'created_at']
+                  'permission_codes', 'controles', 'fecha_cierre', 'created_at']
         read_only_fields = ['id', 'created_at']
 
     def get_controles(self, obj):

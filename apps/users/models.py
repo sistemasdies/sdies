@@ -65,7 +65,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                                      on_delete=models.SET_NULL, related_name='users')
     observacion  = models.TextField(blank=True)
     estado       = models.IntegerField(default=1)
-    fecha_cierre = models.DateTimeField(null=True, blank=True)
+    fecha_cierre = models.DateField(null=True, blank=True)
     is_active    = models.BooleanField(default=True)
     is_staff     = models.BooleanField(default=False)
     created_at   = models.DateTimeField(auto_now_add=True)

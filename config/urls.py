@@ -18,6 +18,8 @@ urlpatterns = [
     path('api/banking/',       include('apps.banking.urls')),
     path('api/reports/',       include('apps.reports.urls')),
     path('api/audit/',         include('apps.audit.urls')),
+    path('api/membresias/',    include('apps.membresia.urls.membresia')),
+    path('api/congregaciones/', include('apps.congregacion.urls.congregacion')),
     path('api/schema/',        SpectacularAPIView.as_view(),                      name='schema'),
     path('api/docs/',          SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/redoc/',         SpectacularRedocView.as_view(url_name='schema'),   name='redoc'),

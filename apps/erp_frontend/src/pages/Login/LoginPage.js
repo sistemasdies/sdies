@@ -3,6 +3,29 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
+// Sin respuesta del servidor: NO es un problema de credenciales.
+function mensajeErrorLogin(err) {
+  const res = err.response;
+  if (!res) return 'No se pudo conectar con el servidor.';
+
+  const { status, data } = res;
+  const ct = res.headers?.['content-type'] || '';
+
+  // Con Django apagado, el proxy de CRA (Express) contesta 500 sin content-type y
+  // con cuerpo "Proxy error: ... (ECONNREFUSED)". Django siempre envia uno, asi que
+  // la ausencia del header distingue "backend caido" de un 500 real del servidor.
+  if (status >= 500 && !ct) {
+    return 'No hay conexión con el backend. Verifica que Django esté corriendo en el puerto 8000.';
+  }
+  if (typeof data?.detail === 'string') return data.detail;
+  if (Array.isArray(data?.non_field_errors) && data.non_field_errors[0]) {
+    return data.non_field_errors[0];
+  }
+  if (status === 400 || status === 401) return 'Credenciales no coinciden';
+  if (status >= 500) return 'El servidor devolvió un error. Revisa la consola de Django.';
+  return `Error ${status} al iniciar sesión.`;
+}
+
 export default function LoginPage() {
   const [usuario,  setUsuario]  = useState('');
   const [password, setPassword] = useState('');
@@ -19,13 +42,7 @@ export default function LoginPage() {
       toast.success('Bienvenido al sistema');
       navigate('/dashboard');
     } catch (err) {
-      const data = err.response?.data;
-      let msg = 'Credenciales no coinciden';
-      if (data) {
-        if (typeof data.detail === 'string') msg = data.detail;
-        else if (data.non_field_errors) msg = data.non_field_errors[0];
-      }
-      toast.error(msg);
+      toast.error(mensajeErrorLogin(err));
     } finally {
       setLoading(false);
     }

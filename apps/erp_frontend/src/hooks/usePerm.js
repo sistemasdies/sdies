@@ -13,6 +13,8 @@ const MODULE_MAP = {
   '/importar':            'importar',
   '/usuarios':            'usuarios',
   '/roles':               'roles',
+  '/secretaria/membresia':'membresias',
+  '/secretaria/congregaciones': 'congregaciones',
 };
 
 export function usePerm(pathname) {

@@ -3,6 +3,7 @@ import MainLayout from '../../components/layout/MainLayout';
 import TopBar from '../../components/layout/TopBar';
 import PageHeader from '../../components/common/PageHeader';
 import Spinner from '../../components/common/Spinner';
+import AvisoCierre from '../../components/common/AvisoCierre';
 import MultiSelect from '../../components/common/MultiSelect';
 import { getAsientos, getMovimiento, eliminarMovimiento, anularMovimiento, editarLineaMovimiento, editarLineasMovimientos } from '../../api/asientos';
 import { getComprobantes } from '../../api/comprobantes';
@@ -370,6 +371,8 @@ export default function AsientosPage() {
             <i className="bi bi-plus-lg me-1"></i>Nuevo asiento
           </button>
         </PageHeader>
+
+        <AvisoCierre />
 
         {/* Filtros */}
         <div className="card border-0 shadow-sm mb-3">

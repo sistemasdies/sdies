@@ -69,6 +69,33 @@ class UserViewSet(viewsets.ModelViewSet):
     def me(self, request):
         return Response(UserSerializer(request.user).data)
 
+    @action(detail=False, methods=['post'], url_path='bloquear-fecha')
+    def bloquear_fecha(self, request):
+        """Asigna (o quita) la fecha de cierre de uno o varios usuarios.
+        Body: { user_ids: [...], fecha?: 'YYYY-MM-DD' } — fecha vacía/nula = desbloquear."""
+        user_ids = request.data.get('user_ids')
+        if not isinstance(user_ids, list) or not user_ids:
+            return Response({'detail': 'Seleccione al menos un usuario.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        fecha = None
+        fecha_raw = request.data.get('fecha')
+        if fecha_raw:
+            try:
+                fecha = date.fromisoformat(str(fecha_raw))
+            except (TypeError, ValueError):
+                return Response({'detail': 'Fecha inválida.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        usuarios = list(User.objects.filter(pk__in=user_ids))
+        if len(usuarios) != len(set(user_ids)):
+            return Response({'detail': 'Algunos usuarios no existen.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        for u in usuarios:
+            u.fecha_cierre = fecha
+            u.save(update_fields=['fecha_cierre', 'updated_at'])
+        if fecha is None:
+            return Response({'detail': f'Fecha de cierre quitada a {len(usuarios)} usuario(s).'})
+        return Response({'detail': f'Fecha de cierre {fecha.isoformat()} asignada a {len(usuarios)} usuario(s).'})
+
     @action(detail=False, methods=['post'])
     def change_password(self, request):
         s = ChangePasswordSerializer(data=request.data, context={'request': request})

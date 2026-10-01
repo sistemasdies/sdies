@@ -44,7 +44,8 @@ class TerceroViewSet(viewsets.ModelViewSet):
     module             = 'terceros'
     permission_classes = [IsAuthenticated]
     filter_backends    = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    search_fields      = ['cedula','razon_social','apellido1','nombre1']
+    search_fields      = ['cedula','razon_social','apellido1','apellido2',
+                          'nombre1','nombre2','celular','telefono1']
     filterset_fields   = ['tipo_documento', 'tipo_persona', 'is_active']
     ordering_fields    = ['cedula', 'tipo_documento', 'apellido1', 'nombre1',
                           'razon_social', 'telefono1', 'email', 'celular']

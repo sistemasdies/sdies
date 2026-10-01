@@ -7,6 +7,7 @@ import API from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { usePerm } from '../../hooks/usePerm';
+import { formatDate } from '../../utils/formato';
 
 const getUsuarios   = ()        => API.get('/users/');
 const getRoles      = ()        => API.get('/users/roles/');
@@ -153,13 +154,14 @@ export default function UsuariosPage() {
             <th className="text-center">Caja</th>
             <th className="text-center">Admin</th>
             <th className="text-center">Estado</th>
+            <th className="text-center">Cierre</th>
             <th className="text-center">Verificación</th>
             <th className="text-center">Acciones</th>
           </tr>
         </thead>
         <tbody>
           {lista.length === 0
-            ? <tr><td colSpan={9} className="text-center text-muted py-4">Sin registros</td></tr>
+            ? <tr><td colSpan={10} className="text-center text-muted py-4">Sin registros</td></tr>
             : lista.map(u => (
               <tr key={u.id} className={!u.is_active?'table-secondary':''}>
                 <td><code className="fw-bold">{u.login}</code></td>
@@ -180,6 +182,14 @@ export default function UsuariosPage() {
                   {u.is_active
                     ? <span className="badge bg-success">Activo</span>
                     : <span className="badge bg-secondary">Inactivo</span>}
+                </td>
+                <td className="text-center">
+                  {u.fecha_cierre
+                    ? <span className="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle"
+                        title="Fecha límite de cierre contable">
+                        <i className="bi bi-calendar-x me-1"></i>{formatDate(u.fecha_cierre)}
+                      </span>
+                    : <span className="text-muted">—</span>}
                 </td>
                 <td className="text-center">
                   {u.verificacion_pendiente

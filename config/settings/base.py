@@ -32,6 +32,8 @@ INSTALLED_APPS = [
     'apps.banking',
     'apps.reports',
     'apps.audit',
+    'apps.membresia',
+    'apps.congregacion',
 ]
 
 MIDDLEWARE = [

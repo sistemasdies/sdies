@@ -14,7 +14,7 @@ from apps.accounting.serializers.movicont import (
     MoviContSerializer, MoviContCreateSerializer, MoviContAsientoSerializer,
     MoviContUpdateSerializer
 )
-from apps.users.services.scopes import user_scope
+from apps.users.services.scopes import user_scope, validar_fecha_cierre
 from apps.core.utils.pagination import StandardPagination
 
 
@@ -165,6 +165,16 @@ class MoviContViewSet(viewsets.GenericViewSet):
             return Response({'detail': 'Línea del movimiento no encontrada.'},
                             status=status.HTTP_404_NOT_FOUND)
 
+        error_mov = validar_fecha_cierre(request.user, filas[0].fecha,
+                                         accion='modificar movimientos')
+        if error_mov:
+            return Response({'detail': error_mov}, status=status.HTTP_400_BAD_REQUEST)
+        if 'fecha' in v:
+            error_fecha = validar_fecha_cierre(request.user, v['fecha'],
+                                               accion='cambiar la fecha a un movimiento')
+            if error_fecha:
+                return Response({'detail': error_fecha}, status=status.HTTP_400_BAD_REQUEST)
+
         campos_linea = {}
         for k in ('cuenta', 'doc_ref', 'observacion', 'cedula',
                   'centro_costo', 'doc_soporte', 'vr_debitos', 'vr_creditos'):
@@ -224,6 +234,10 @@ class MoviContViewSet(viewsets.GenericViewSet):
             return Response({'detail': 'Movimiento no encontrado.'},
                             status=status.HTTP_404_NOT_FOUND)
 
+        error_mov = validar_fecha_cierre(request.user, next(iter(filas_map.values())).fecha,
+                                         accion='modificar movimientos')
+        if error_mov:
+            return Response({'detail': error_mov}, status=status.HTTP_400_BAD_REQUEST)
         if fecha_global:
             from datetime import date as _date
             try:
@@ -231,6 +245,10 @@ class MoviContViewSet(viewsets.GenericViewSet):
             except (ValueError, TypeError):
                 return Response({'detail': 'Fecha inválida.'},
                                 status=status.HTTP_400_BAD_REQUEST)
+            error_fecha = validar_fecha_cierre(request.user, fv,
+                                               accion='cambiar la fecha a un movimiento')
+            if error_fecha:
+                return Response({'detail': error_fecha}, status=status.HTTP_400_BAD_REQUEST)
             for f in filas_map.values():
                 f.fecha = fv
 
@@ -290,6 +308,10 @@ class MoviContViewSet(viewsets.GenericViewSet):
         if not filas.exists():
             return Response({'detail': 'No se encontró el movimiento.'},
                             status=status.HTTP_404_NOT_FOUND)
+        error_cierre = validar_fecha_cierre(request.user, filas.first().fecha,
+                                            accion='eliminar movimientos')
+        if error_cierre:
+            return Response({'detail': error_cierre}, status=status.HTTP_400_BAD_REQUEST)
         filas.delete()
         return Response({'detail': 'Movimiento eliminado.'})
 
@@ -306,6 +328,10 @@ class MoviContViewSet(viewsets.GenericViewSet):
         if not filas.exists():
             return Response({'detail': 'No se encontró el movimiento.'},
                             status=status.HTTP_404_NOT_FOUND)
+        error_cierre = validar_fecha_cierre(request.user, filas.first().fecha,
+                                            accion='anular movimientos')
+        if error_cierre:
+            return Response({'detail': error_cierre}, status=status.HTTP_400_BAD_REQUEST)
         for f in filas:
             valor = f.vr_debitos if f.vr_debitos > 0 else f.vr_creditos
             tipo  = 'VrDb' if f.vr_debitos > 0 else 'VrCr'
@@ -448,6 +474,17 @@ class MoviContViewSet(viewsets.GenericViewSet):
                 continue
             if not existente and modo == 'reemplazar':
                 omitidos += 1
+                continue
+
+            if existente:
+                err_cierre = validar_fecha_cierre(
+                    request.user, existente.fecha, accion='modificar movimientos')
+            else:
+                err_cierre = validar_fecha_cierre(
+                    request.user, fecha, accion='adicionar movimientos')
+            if err_cierre:
+                errores.append({'fila': i, 'referencia': ref(dato, cod, num),
+                                'error': err_cierre})
                 continue
 
             if existente:
