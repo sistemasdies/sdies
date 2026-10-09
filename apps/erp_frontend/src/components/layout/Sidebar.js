@@ -57,7 +57,7 @@ const GRUPOS = [
     mod: null,
     hijos: [
       { to: '/informes/auxiliares',          icon: 'bi-list-ul',       label: 'Auxiliares' },
-      { to: '/informes/saldos',              icon: 'bi-wallet2',       label: 'Saldos' },
+      { to: '/informes/comparativo-meses',    icon: 'bi-calendar3',     label: 'Saldos Meses/Años' },
       { to: '/informes/estado-presupuestal', icon: 'bi-graph-up-arrow', label: 'Estado Presupuestal' },
       { to: '/reportes',                    icon: 'bi-cash-coin',        label: 'Balances',          mod: 'reportes' },
     ],

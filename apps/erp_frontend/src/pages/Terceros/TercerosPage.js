@@ -22,7 +22,7 @@ const PAGE_SIZE = 50;
 const COLUMNAS = [
   { key:'cedula',         label:'Identificación' },
   { key:'tipo_documento', label:'Tipo Doc' },
-  { key:'apellido1',      label:'Nombre / Razón Social' },
+  { key:'apellido1',      label:'Nombre / Razón Social' },git
   { key:'telefono1',      label:'Teléfono' },
   { key:'email',          label:'Email' },
   { key:'celular',        label:'Celular' },

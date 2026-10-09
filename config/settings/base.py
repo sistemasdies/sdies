@@ -1,4 +1,4 @@
-import os
+﻿import os
 from pathlib import Path
 from datetime import timedelta
 import dj_database_url
@@ -91,7 +91,7 @@ DATABASES = {
     )
 }
 
-# Estáticos: Whitenoise sirve los assets (CompressedManifest)
+# EstÃ¡ticos: Whitenoise sirve los assets (CompressedManifest)
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},

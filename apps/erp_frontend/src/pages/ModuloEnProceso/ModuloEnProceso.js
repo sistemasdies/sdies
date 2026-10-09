@@ -11,7 +11,6 @@ const MODULO_LABELS = {
   '/procesos/correccion-datos':     { titulo: 'Corrección de Datos',  mod: 'Procesos' },
   '/procesos/copia-seguridad':      { titulo: 'Copia de Seguridad',   mod: 'Procesos' },
   '/informes/auxiliares':           { titulo: 'Auxiliares',           mod: 'Informes' },
-  '/informes/saldos':               { titulo: 'Saldos',               mod: 'Informes' },
   '/informes/balances':             { titulo: 'Balances',             mod: 'Informes' },
   '/informes/estado-presupuestal':  { titulo: 'Estado Presupuestal',  mod: 'Informes' },
 };

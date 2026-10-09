@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -21,9 +21,10 @@ import ImportarPage        from './pages/Importar/ImportarPage';
 import ComprobantesPage  from './pages/Comprobantes/ComprobantesPage';
 import PlantillasPage     from './pages/Plantillas/PlantillasPage';
 import AsientoConPlantilla from './pages/Asientos/AsientoConPlantilla';
-import ModuloEnProceso   from './pages/ModuloEnProceso/ModuloEnProceso';
+import CopiaSeguridadPage from './pages/Procesos/CopiaSeguridadPage';
 import BloquearFechaPage from './pages/BloquearFecha/BloquearFechaPage';
 import AuxiliaresPage    from './pages/Informes/AuxiliaresPage';
+import ComparativoMesesPage from './pages/Informes/ComparativoMesesPage';
 import MembresiaPage    from './pages/Membresia/MembresiaPage';
 
 function PrivateRoute({ children }) {
@@ -63,17 +64,17 @@ function AppRoutes() {
       <Route path="/asientos/plantilla" element={<PrivateRoute><AsientoConPlantilla /></PrivateRoute>} />
       <Route path="/importar"       element={<PrivateRoute><ImportarPage /></PrivateRoute>} />
       <Route path="/procesos/bloquear-fecha"      element={<PrivateRoute><BloquearFechaPage /></PrivateRoute>} />
-      <Route path="/procesos/cierre-periodo"      element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
-      <Route path="/procesos/generar-balance"     element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
-      <Route path="/procesos/generar-presupuesto" element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
-      <Route path="/procesos/correccion-datos"    element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
-      <Route path="/procesos/copia-seguridad"     element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
+      <Route path="/procesos/cierre-periodo"      element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
+      <Route path="/procesos/generar-balance"     element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
+      <Route path="/procesos/generar-presupuesto" element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
+      <Route path="/procesos/correccion-datos"    element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
+      <Route path="/procesos/copia-seguridad"     element={<PrivateRoute><CopiaSeguridadPage /></PrivateRoute>} />
       <Route path="/secretaria/membresia"        element={<PrivateRoute><MembresiaPage /></PrivateRoute>} />
       <Route path="/secretaria/congregaciones"   element={<PrivateRoute><CongregacionesPage /></PrivateRoute>} />
       <Route path="/informes/auxiliares"          element={<PrivateRoute><AuxiliaresPage /></PrivateRoute>} />
-      <Route path="/informes/saldos"              element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
-      <Route path="/informes/balances"            element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
-      <Route path="/informes/estado-presupuestal" element={<PrivateRoute><ModuloEnProceso /></PrivateRoute>} />
+      <Route path="/informes/comparativo-meses"   element={<PrivateRoute><ComparativoMesesPage /></PrivateRoute>} />
+      <Route path="/informes/balances"            element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
+      <Route path="/informes/estado-presupuestal" element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
       <Route path="/"               element={<Navigate to="/dashboard" replace />} />
       <Route path="*"               element={<Navigate to="/dashboard" replace />} />
     </Routes>
