@@ -46,7 +46,11 @@ class BalanceGeneralView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         fecha_hasta = request.query_params.get('fecha_hasta', str(datetime.date.today()))
-        return Response(ReportService.balance_general(fecha_hasta))
+        scope = user_scope(request.user)
+        return Response(ReportService.balance_general(
+            fecha_hasta, solo_cuentas=scope['cuentas'],
+            solo_centros=scope['centros_costo'],
+            solo_comprobantes=scope['comprobantes']))
 
 
 class EstadoResultadosView(APIView):
@@ -56,7 +60,12 @@ class EstadoResultadosView(APIView):
         today       = datetime.date.today()
         fecha_desde = request.query_params.get('fecha_desde', f"{today.year}-01-01")
         fecha_hasta = request.query_params.get('fecha_hasta', str(today))
-        return Response(ReportService.estado_resultados(fecha_desde, fecha_hasta))
+        excluir_cierre = request.query_params.get('excluir_cierre', '').lower() in ('1', 'true', 'si', 'yes')
+        scope = user_scope(request.user)
+        return Response(ReportService.estado_resultados(
+            fecha_desde, fecha_hasta, excluir_cierre=excluir_cierre,
+            solo_cuentas=scope['cuentas'], solo_centros=scope['centros_costo'],
+            solo_comprobantes=scope['comprobantes']))
 
 
 class BalanceComprobacionView(APIView):
@@ -66,6 +75,7 @@ class BalanceComprobacionView(APIView):
         today       = datetime.date.today()
         fecha_desde = request.query_params.get('fecha_desde', f"{today.year}-01-01")
         fecha_hasta = request.query_params.get('fecha_hasta', str(today))
+        scope = user_scope(request.user)
         return Response(BalanceService.balance_comprobacion(
             fecha_desde=fecha_desde,
             fecha_hasta=fecha_hasta,
@@ -73,6 +83,9 @@ class BalanceComprobacionView(APIView):
             cuentas=_multi(request.query_params, 'cuenta'),
             centros=_multi(request.query_params, 'centro'),
             nivel=request.query_params.get('nivel', 4),
+            solo_cuentas=scope['cuentas'],
+            solo_centros=scope['centros_costo'],
+            solo_comprobantes=scope['comprobantes'],
         ))
 
 

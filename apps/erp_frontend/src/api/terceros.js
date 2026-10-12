@@ -7,3 +7,4 @@ export const deleteTercero  = (id)       => API.delete(`/terceros/${id}/`);
 export const exportarTerceros = (params) => API.get('/terceros/exportar/', { params, responseType: 'blob' });
 export const importarTerceros = (data) => API.post('/terceros/importar/', data);
 export const siguienteCedula  = () => API.get('/terceros/siguiente-cedula/');
+export const getCumpleanos    = (params) => API.get('/terceros/cumpleanos/', { params });

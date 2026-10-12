@@ -35,7 +35,9 @@ class BalanceService:
     # ────────────────────────────────────────────────────────────────
     @classmethod
     def balance_comprobacion(cls, fecha_desde, fecha_hasta, libros=None,
-                             cuentas=None, centros=None, nivel=4) -> dict:
+                             cuentas=None, centros=None, nivel=4,
+                             solo_cuentas=None, solo_centros=None,
+                             solo_comprobantes=None) -> dict:
         libros  = [str(x) for x in (libros or [])]
         cuentas = [str(x) for x in (cuentas or [])]
         centros = [str(x) for x in (centros or [])]
@@ -50,6 +52,11 @@ class BalanceService:
             if libros:  qs = qs.filter(cod_comprob__codigo__in=libros)
             if cuentas: qs = qs.filter(cuenta__codigo__in=cuentas)
             if centros: qs = qs.filter(centro_costo__codigo__in=centros)
+            # Alcance por rol (None = sin restricción). Puede dejar el balance
+            # descuadrado a propósito: solo muestra lo permitido al usuario.
+            if solo_cuentas is not None:       qs = qs.filter(cuenta__codigo__in=solo_cuentas)
+            if solo_centros is not None:       qs = qs.filter(centro_costo__codigo__in=solo_centros)
+            if solo_comprobantes is not None:  qs = qs.filter(cod_comprob__codigo__in=solo_comprobantes)
             return qs
 
         # ── Agregados finos por (cuenta, centro, cedula) ──────────────

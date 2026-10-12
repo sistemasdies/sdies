@@ -1,17 +1,29 @@
 import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { login as apiLogin, logout as apiLogout, getMe } from '../api/auth';
+import { getDatosGenerales } from '../api/datosGenerales';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
   const [loading, setLoading] = useState(true);
+  const [marca, setMarca]     = useState(null);
+
+  const refrescarMarca = async () => {
+    try {
+      const { data } = await getDatosGenerales();
+      setMarca(data);
+      return data;
+    } catch {
+      setMarca(null);
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     if (token) {
       getMe()
-        .then(({ data }) => setUser(data))
+        .then(({ data }) => { setUser(data); refrescarMarca(); })
         .catch(() => localStorage.clear())
         .finally(() => setLoading(false));
     } else {
@@ -25,6 +37,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem('refresh_token', data.refresh);
     const me = await getMe();
     setUser(me.data);
+    refrescarMarca();
     return me.data;
   };
 
@@ -34,6 +47,7 @@ export function AuthProvider({ children }) {
     } catch {}
     localStorage.clear();
     setUser(null);
+    setMarca(null);
   };
 
   const refrescar = async () => {
@@ -68,7 +82,7 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refrescar, hasPermission, hasModulePermission, hasControl }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refrescar, marca, refrescarMarca, hasPermission, hasModulePermission, hasControl }}>
       {children}
     </AuthContext.Provider>
   );

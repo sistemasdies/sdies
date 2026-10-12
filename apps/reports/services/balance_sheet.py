@@ -14,7 +14,8 @@ from apps.accounting.models import MoviCont
 class ReportService:
 
     @staticmethod
-    def _qs(fecha_desde, fecha_hasta, clase_aptig=None):
+    def _qs(fecha_desde, fecha_hasta, clase_aptig=None, excluir_cierre=False,
+            solo_cuentas=None, solo_centros=None, solo_comprobantes=None):
         qs = MoviCont.objects.filter(
             fecha__gte=fecha_desde,
             fecha__lte=fecha_hasta,
@@ -22,12 +23,27 @@ class ReportService:
         )
         if clase_aptig:
             qs = qs.filter(cuenta__clase_aptig__in=clase_aptig)
+        # Alcance por rol (None = sin restricción).
+        if solo_cuentas is not None:
+            qs = qs.filter(cuenta__codigo__in=solo_cuentas)
+        if solo_centros is not None:
+            qs = qs.filter(centro_costo__codigo__in=solo_centros)
+        if solo_comprobantes is not None:
+            qs = qs.filter(cod_comprob__codigo__in=solo_comprobantes)
+        if excluir_cierre:
+            # Excluye comprobantes de cierre (código empieza por 'z').
+            qs = qs.exclude(cod_comprob__codigo__istartswith='z')
         return qs
 
     @classmethod
-    def _saldos_por_clase(cls, fecha_desde, fecha_hasta, clases: list) -> list:
+    def _saldos_por_clase(cls, fecha_desde, fecha_hasta, clases: list,
+                          excluir_cierre=False, solo_cuentas=None, solo_centros=None,
+                          solo_comprobantes=None) -> list:
         rows = (
-            cls._qs(fecha_desde, fecha_hasta, clase_aptig=clases)
+            cls._qs(fecha_desde, fecha_hasta, clase_aptig=clases,
+                    excluir_cierre=excluir_cierre,
+                    solo_cuentas=solo_cuentas, solo_centros=solo_centros,
+                    solo_comprobantes=solo_comprobantes)
             .values('cuenta__codigo', 'cuenta__descripcion',
                     'cuenta__nivel', 'cuenta__naturaleza', 'cuenta__clase_aptig')
             .annotate(deb=Sum('vr_debitos'), cre=Sum('vr_creditos'))
@@ -49,19 +65,24 @@ class ReportService:
         return result
 
     @classmethod
-    def balance_general(cls, fecha_hasta) -> dict:
+    def balance_general(cls, fecha_hasta, solo_cuentas=None, solo_centros=None,
+                        solo_comprobantes=None) -> dict:
         """
         Balance General (Estado de Situación Financiera).
         Activos vs Pasivos + Patrimonio + Ingresos - Gastos.
+        Los parámetros solo_* limitan los datos al alcance del rol del usuario;
+        por ello la ecuación contable puede aparecer descuadrada a propósito.
         """
         import datetime
         fecha_inicio = datetime.date(1900, 1, 1)
 
-        activos    = cls._saldos_por_clase(fecha_inicio, fecha_hasta, ['A'])
-        pasivos    = cls._saldos_por_clase(fecha_inicio, fecha_hasta, ['P'])
-        patrimonio = cls._saldos_por_clase(fecha_inicio, fecha_hasta, ['T'])
-        ingresos_rows = cls._saldos_por_clase(fecha_inicio, fecha_hasta, ['I'])
-        gastos_rows   = cls._saldos_por_clase(fecha_inicio, fecha_hasta, ['G'])
+        alcance = dict(solo_cuentas=solo_cuentas, solo_centros=solo_centros,
+                       solo_comprobantes=solo_comprobantes)
+        activos    = cls._saldos_por_clase(fecha_inicio, fecha_hasta, ['A'], **alcance)
+        pasivos    = cls._saldos_por_clase(fecha_inicio, fecha_hasta, ['P'], **alcance)
+        patrimonio = cls._saldos_por_clase(fecha_inicio, fecha_hasta, ['T'], **alcance)
+        ingresos_rows = cls._saldos_por_clase(fecha_inicio, fecha_hasta, ['I'], **alcance)
+        gastos_rows   = cls._saldos_por_clase(fecha_inicio, fecha_hasta, ['G'], **alcance)
 
         total_a = sum(r['saldo'] for r in activos)
         total_p = sum(r['saldo'] for r in pasivos)
@@ -88,13 +109,23 @@ class ReportService:
         }
 
     @classmethod
-    def estado_resultados(cls, fecha_desde, fecha_hasta) -> dict:
+    def estado_resultados(cls, fecha_desde, fecha_hasta, excluir_cierre=False,
+                          solo_cuentas=None, solo_centros=None,
+                          solo_comprobantes=None) -> dict:
         """
         Estado de Resultados (P&G).
         Ingresos (I) vs Gastos (G).
+        Si excluir_cierre=True se omiten los comprobantes de cierre (código 'z...').
+        Los parámetros solo_* limitan los datos al alcance del rol del usuario.
         """
-        ingresos_rows = cls._saldos_por_clase(fecha_desde, fecha_hasta, ['I'])
-        gastos_rows   = cls._saldos_por_clase(fecha_desde, fecha_hasta, ['G'])
+        ingresos_rows = cls._saldos_por_clase(
+            fecha_desde, fecha_hasta, ['I'], excluir_cierre=excluir_cierre,
+            solo_cuentas=solo_cuentas, solo_centros=solo_centros,
+            solo_comprobantes=solo_comprobantes)
+        gastos_rows   = cls._saldos_por_clase(
+            fecha_desde, fecha_hasta, ['G'], excluir_cierre=excluir_cierre,
+            solo_cuentas=solo_cuentas, solo_centros=solo_centros,
+            solo_comprobantes=solo_comprobantes)
 
         ingresos = sum(r['saldo'] for r in ingresos_rows)
         gastos   = sum(abs(r['saldo']) for r in gastos_rows)
@@ -111,7 +142,7 @@ class ReportService:
         }
 
     @classmethod
-    def balance_comprobacion(cls, fecha_desde, fecha_hasta) -> dict:
+    def balance_comprobacion(cls, fecha_desde, fecha_hasta, **kwargs) -> dict:
         """Balance de comprobación — todas las clases."""
         from apps.accounting.services.balance_service import BalanceService
-        return BalanceService.balance_comprobacion(fecha_desde, fecha_hasta)
+        return BalanceService.balance_comprobacion(fecha_desde, fecha_hasta, **kwargs)

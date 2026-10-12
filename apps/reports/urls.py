@@ -3,6 +3,7 @@ from .views import (BalanceGeneralView, EstadoResultadosView,
                     BalanceComprobacionView, AuxiliaresView,
                     ComparativoMesesView, ExportarReporteView,
                     BackupExportView, BackupImportView)
+from .exportar_datos import ExportarDatosView, ExportarTodoView
 urlpatterns = [
     path('balance-general/',     BalanceGeneralView.as_view(),     name='balance-general'),
     path('estado-resultados/',   EstadoResultadosView.as_view(),   name='estado-resultados'),
@@ -10,6 +11,8 @@ urlpatterns = [
     path('auxiliares/',          AuxiliaresView.as_view(),         name='auxiliares'),
     path('comparativo-meses/',   ComparativoMesesView.as_view(),   name='comparativo-meses'),
     path('exportar/',            ExportarReporteView.as_view(),    name='exportar-reporte'),
+    path('exportar-datos/',      ExportarTodoView.as_view(),       name='exportar-datos-todo'),
+    path('exportar-datos/<str:entidad>/', ExportarDatosView.as_view(), name='exportar-datos'),
     path('backup-export/',       BackupExportView.as_view(),       name='backup-export'),
     path('backup-import/',       BackupImportView.as_view(),       name='backup-import'),
 ]

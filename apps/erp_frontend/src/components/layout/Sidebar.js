@@ -35,9 +35,10 @@ const GRUPOS = [
       { to: '/procesos/cierre-periodo',    icon: 'bi-calendar-check', label: 'Cierre de Periodo' },
       { to: '/procesos/generar-balance',   icon: 'bi-calculator',     label: 'Generar Balance' },
       { to: '/procesos/generar-presupuesto', icon: 'bi-journal-check', label: 'Generar Presupuesto' },
-      { to: '/procesos/correccion-datos',  icon: 'bi-tools',          label: 'Corrección de Datos' },
+      { to: '/procesos/correccion-datos',  icon: 'bi-tools',          label: 'Corrección de Datos', mod: 'correccion_datos' },
       { to: '/procesos/copia-seguridad',   icon: 'bi-database-down',  label: 'Copia de Seguridad' },
       { to: '/importar',                   icon: 'bi-cloud-upload',   label: 'Importar datos',     mod: 'importar' },
+      { to: '/procesos/exportar-datos',    icon: 'bi-cloud-download', label: 'Exportar datos',     mod: 'exportar' },
     ],
   },
   {
@@ -62,10 +63,20 @@ const GRUPOS = [
       { to: '/reportes',                    icon: 'bi-cash-coin',        label: 'Balances',          mod: 'reportes' },
     ],
   },
+  {
+    key: 'configuracion',
+    icon: 'bi-sliders',
+    label: 'Configuración',
+    mod: null,
+    requerir_hijos: true,
+    hijos: [
+      { to: '/configuracion/datos-generales', icon: 'bi-building-gear', label: 'Datos Generales', mod: 'datos_generales' },
+    ],
+  },
 ];
 
 export default function Sidebar() {
-  const { user, hasModulePermission, logout } = useAuth();
+  const { user, hasModulePermission, logout, marca } = useAuth();
   const location = useLocation();
   const [abiertos, setAbiertos] = useState(() => {
     const inc = {};
@@ -81,10 +92,14 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-3 py-3 border-bottom border-secondary">
         <div className="d-flex align-items-center gap-2">
-          <i className="bi bi-calculator fs-4 text-success"></i>
-          <div>
-            <div className="fw-bold small">SDIES</div>
-            <div className="text-muted" style={{ fontSize: 11 }}>Sistema Contable</div>
+          {marca?.logoDeLaApp
+            ? <img src={marca.logoDeLaApp} alt="Logo" style={{ height: 36, maxWidth: 40, objectFit: 'contain' }} />
+            : <i className="bi bi-calculator fs-4 text-success"></i>}
+          <div className="overflow-hidden">
+            <div className="fw-bold small text-truncate">{marca?.NombreOrganizacion || 'SDIES'}</div>
+            <div className="text-muted text-truncate" style={{ fontSize: 11 }}>
+              {marca?.NIT ? `NIT ${marca.NIT}` : 'Sistema Contable'}
+            </div>
           </div>
         </div>
       </div>

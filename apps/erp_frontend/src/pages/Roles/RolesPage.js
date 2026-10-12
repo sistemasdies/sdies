@@ -32,6 +32,9 @@ const MODULE_LABELS = {
   periodos:          'Períodos',
   reportes:          'Reportes',
   importar:          'Importar Datos',
+  exportar:          'Exportar Datos',
+  correccion_datos:  'Corrección de Datos',
+  datos_generales:   'Datos Generales',
   usuarios:          'Usuarios',
   roles:             'Roles',
 };

@@ -1,4 +1,5 @@
 import csv
+import datetime
 
 from django.http import HttpResponse
 from rest_framework import viewsets, filters, status
@@ -67,6 +68,48 @@ class TerceroViewSet(viewsets.ModelViewSet):
             except ValueError:
                 continue
         return Response({'siguiente_cedula': str(max_num + 1)})
+
+    @action(detail=False, methods=['get'], url_path='cumpleanos')
+    def cumpleanos(self, request):
+        """Terceros (personas) que cumplen años en los próximos `dias` días (por defecto 10)."""
+        try:
+            dias = int(request.query_params.get('dias', 10))
+        except (TypeError, ValueError):
+            dias = 10
+        dias = max(0, min(dias, 366))
+
+        hoy = datetime.date.today()
+        limite = hoy + datetime.timedelta(days=dias)
+
+        resultados = []
+        terceros = Tercero.objects.filter(
+            deleted=False, is_active=True, fecha_nacimiento__isnull=False)
+        for t in terceros:
+            fn = t.fecha_nacimiento
+            try:
+                cumple = fn.replace(year=hoy.year)
+            except ValueError:  # 29 de febrero en año no bisiesto
+                cumple = datetime.date(hoy.year, 3, 1)
+            if cumple < hoy:
+                try:
+                    cumple = fn.replace(year=hoy.year + 1)
+                except ValueError:
+                    cumple = datetime.date(hoy.year + 1, 3, 1)
+            if hoy <= cumple <= limite:
+                edad = cumple.year - fn.year
+                if edad > 120:
+                    continue
+                resultados.append({
+                    'id':               str(t.id),
+                    'cedula':           t.cedula,
+                    'nombre':           t.nombre_completo,
+                    'fecha_nacimiento': fn.isoformat(),
+                    'fecha_cumple':     cumple.isoformat(),
+                    'dias':             (cumple - hoy).days,
+                    'edad':             edad,
+                })
+        resultados.sort(key=lambda r: (r['dias'], r['nombre']))
+        return Response({'dias': dias, 'hoy': hoy.isoformat(), 'resultados': resultados})
 
     @action(detail=False, methods=['get'], url_path='exportar')
     def exportar(self, request):

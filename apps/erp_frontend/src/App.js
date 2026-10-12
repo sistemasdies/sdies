@@ -22,6 +22,9 @@ import ComprobantesPage  from './pages/Comprobantes/ComprobantesPage';
 import PlantillasPage     from './pages/Plantillas/PlantillasPage';
 import AsientoConPlantilla from './pages/Asientos/AsientoConPlantilla';
 import CopiaSeguridadPage from './pages/Procesos/CopiaSeguridadPage';
+import ExportarDatosPage  from './pages/Procesos/ExportarDatosPage';
+import CorreccionDatosPage from './pages/Procesos/CorreccionDatosPage';
+import DatosGeneralesPage from './pages/Configuracion/DatosGeneralesPage';
 import BloquearFechaPage from './pages/BloquearFecha/BloquearFechaPage';
 import AuxiliaresPage    from './pages/Informes/AuxiliaresPage';
 import ComparativoMesesPage from './pages/Informes/ComparativoMesesPage';
@@ -67,8 +70,10 @@ function AppRoutes() {
       <Route path="/procesos/cierre-periodo"      element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
       <Route path="/procesos/generar-balance"     element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
       <Route path="/procesos/generar-presupuesto" element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
-      <Route path="/procesos/correccion-datos"    element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
+      <Route path="/procesos/correccion-datos"    element={<PrivateRoute><CorreccionDatosPage /></PrivateRoute>} />
       <Route path="/procesos/copia-seguridad"     element={<PrivateRoute><CopiaSeguridadPage /></PrivateRoute>} />
+      <Route path="/procesos/exportar-datos"      element={<PrivateRoute><ExportarDatosPage /></PrivateRoute>} />
+      <Route path="/configuracion/datos-generales" element={<PrivateRoute><DatosGeneralesPage /></PrivateRoute>} />
       <Route path="/secretaria/membresia"        element={<PrivateRoute><MembresiaPage /></PrivateRoute>} />
       <Route path="/secretaria/congregaciones"   element={<PrivateRoute><CongregacionesPage /></PrivateRoute>} />
       <Route path="/informes/auxiliares"          element={<PrivateRoute><AuxiliaresPage /></PrivateRoute>} />
