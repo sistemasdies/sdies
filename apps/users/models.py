@@ -57,6 +57,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email        = models.EmailField(unique=True)
     NameUser     = models.CharField(max_length=30)
     caja_user    = models.CharField(max_length=8, blank=True, default='')
+    centro_costo_user = models.CharField(max_length=7, blank=True, default='')
     fecha_nacimiento = models.DateField(null=True, blank=True)
     frase_verificacion = models.CharField(max_length=30, blank=True, default='')
     reset_token   = models.CharField(max_length=64, blank=True, default='')

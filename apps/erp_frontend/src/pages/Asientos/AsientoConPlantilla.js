@@ -133,7 +133,7 @@ export default function AsientoConPlantilla() {
     }
   }, [searchParams, plantillas]);
 
-  // Rehidratar plantilla + sufijo guardados (solo si no se viene por URL y aún en fase de selección)
+  // Rehidratar plantilla + sufijo + fecha guardados (solo si no se viene por URL y aún en fase de selección)
   useEffect(() => {
     if (!prefsListo || !prefs || fase !== 'seleccionar') return;
     if (searchParams.get('plantilla')) return;
@@ -141,16 +141,17 @@ export default function AsientoConPlantilla() {
     if (!guardados) return;
     if (guardados.plantillaId && !plantillaId) setPlantillaId(guardados.plantillaId);
     if (guardados.sufijoComprob) setSufijoComprob(guardados.sufijoComprob);
+    if (guardados.fecha) setCabecera(prev => ({ ...prev, fecha: guardados.fecha }));
   }, [prefsListo]);
 
-  // Persistir plantilla + sufijo en preferencias cada vez que cambian (con debounce sencillo)
+  // Persistir plantilla + sufijo + fecha en preferencias cada vez que cambian (con debounce sencillo)
   useEffect(() => {
     if (!guardarPrefs) return;
     const prefsAtrasadas = setTimeout(() => {
-      guardarPrefs({ 'asiento_plantilla': { ...(prefs?.['asiento_plantilla'] || {}), plantillaId, sufijoComprob } });
+      guardarPrefs({ 'asiento_plantilla': { ...(prefs?.['asiento_plantilla'] || {}), plantillaId, sufijoComprob, fecha: cabecera.fecha } });
     }, 600);
     return () => clearTimeout(prefsAtrasadas);
-  }, [plantillaId, sufijoComprob]);
+  }, [plantillaId, sufijoComprob, cabecera.fecha]);
 
   // Scroll a la plantilla seleccionada
   useEffect(() => {
@@ -184,17 +185,23 @@ export default function AsientoConPlantilla() {
     const ordenados  = [...activa.detalles].sort((a,b) => a.item - b.item);
     const heredados  = heredarAnterior(ordenados);
 
-    // Función auxiliar para reemplazar CajaUser en cualquier campo
-    const resolverCaja = (val) =>
-      val && val.toUpperCase() === 'CAJAUSER' ? cajaUser : val;
+    // Reemplaza los placeholders CajaUser / CentroCostoUser / CCUser en cualquier campo
+    const resolverCaja = (val, campo) => {
+      if (!val) return val;
+      const up = val.toUpperCase().trim();
+      if (up === 'CAJAUSER')        return cajaUser;
+      if (up === 'CENTROCOSTOUSER') return user?.centro_costo_user || '';
+      if (up === 'CCUSER' && campo === 'centro_costo') return user?.centro_costo_user || '';
+      return val;
+    };
 
     const lineasBase = heredados.map(d => ({
-      cuenta:              esDig(d.cuenta)       ? DIGIT : resolverCaja(d.cuenta       || ''),
+      cuenta:              esDig(d.cuenta)       ? DIGIT : resolverCaja(d.cuenta       || '', 'cuenta'),
       cuenta_desc:         '',
-      observacion:         esDig(d.observacion)  ? DIGIT : resolverCaja(d.observacion  || ''),
-      cedula:              esDig(d.cedula)        ? DIGIT : resolverCaja(d.cedula       || ''),
+      observacion:         esDig(d.observacion)  ? DIGIT : resolverCaja(d.observacion  || '', 'observacion'),
+      cedula:              esDig(d.cedula)        ? DIGIT : resolverCaja(d.cedula       || '', 'cedula'),
       tercero_nombre:      '',
-      centro_costo:        esDig(d.centro_costo) ? DIGIT : resolverCaja(d.centro_costo || ''),
+      centro_costo:        esDig(d.centro_costo) ? DIGIT : resolverCaja(d.centro_costo || '', 'centro_costo'),
       vr_debitos:          d.tipo_mov==='D' ? (esDig(d.valor) ? DIGIT : (d.valor||'')) : '',
       vr_creditos:         d.tipo_mov==='C' ? (esDig(d.valor) ? DIGIT : (d.valor||'')) : '',
       tipo_mov:            d.tipo_mov || '',
@@ -392,6 +399,7 @@ export default function AsientoConPlantilla() {
 
   // ── Guardar ───────────────────────────────────────────────────────────
   const guardar = async () => {
+    if (!cabecera.fecha) { toast.error('Seleccione la fecha del movimiento'); return; }
     if (!cabecera.cod_comprob) { toast.error('Seleccione un comprobante'); return; }
     if (!comprobantes.some(c => c.codigo === cabecera.cod_comprob)) {
       toast.error(`El comprobante "${cabecera.cod_comprob}" no está permitido para su rol.`);
@@ -441,6 +449,21 @@ export default function AsientoConPlantilla() {
     if (t==='tercero') return terceros;
     if (t==='cc')      return centros;
     return [];
+  };
+
+  // Buscar en el paso actual del wizard (icono o F3)
+  const buscarEnWizard = () => {
+    const tipo = paso?.tipo==='cuenta' ?'cuenta':
+                 paso?.tipo==='tercero'?'tercero':
+                 paso?.tipo==='cc'     ?'cc':null;
+    if (!tipo) return;
+    buscador.abrir(tipo, null, (item)=>{
+      const val = tipo==='cuenta'  ? item.codigo :
+                  tipo==='tercero' ? item.cedula  :
+                                     item.codigo;
+      setValorWiz(val);
+      setErrWiz('');
+    });
   };
 
   const paso = pasos[pasoActual];
@@ -577,35 +600,49 @@ export default function AsientoConPlantilla() {
                   Configuración
                 </div>
                 <div className="card-body">
-                  {/* Caja user */}
-                  <div className="mb-3">
-                    <label className="form-label small fw-semibold mb-1">
+                  {/* Caja user + Centro de costo (informativos, no editables) */}
+                  <div className="d-flex flex-wrap gap-3 mb-3" style={{ fontSize: '0.85rem' }}>
+                    <div>
                       <i className="bi bi-person-badge me-1 text-primary"></i>
-                      Caja user
-                    </label>
-                    <input className="form-control form-control-sm font-monospace"
-                      maxLength={10} value={cajaUser}
-                      placeholder="Código de caja..."
-                      onChange={e => setCajaUser(e.target.value)}/>
-                    <div className="form-text">
-                      Reemplaza <code>CajaUser</code> en la plantilla
+                      <span className="fw-semibold">Caja Usuario:</span>{' '}
+                      <span className="fw-bold font-monospace">{user?.caja_user || '—'}</span>
+                    </div>
+                    <div>
+                      <i className="bi bi-diagram-3 me-1 text-primary"></i>
+                      <span className="fw-semibold">Centro de Costos del Usuario:</span>{' '}
+                      <span className="fw-bold font-monospace">{user?.centro_costo_user || '—'}</span>
                     </div>
                   </div>
+                  <div className="form-text mb-3">
+                    Reemplaza <code>CajaUser</code> y <code>CentroCostoUser</code> en la plantilla
+                  </div>
 
-                  {/* Sufijo comprobante */}
-                  <div className="mb-3">
-                    <label className="form-label small fw-semibold mb-1">
-                      <i className="bi bi-type me-1 text-primary"></i>
-                      Sufijo comprobante
-                    </label>
-                    <input className="form-control form-control-sm font-monospace"
-                      maxLength={3} value={sufijoComprob} style={{ width: '20%' }}
-                      placeholder="Ej: A, AB..."
-                      onChange={e => setSufijoComprob(e.target.value.toUpperCase())}/>
-                    <div className="form-text">
-                      {sufijoComprob
-                        ? <>Resultado: <code>{plantillaActual?.comprobante || '—'}{sufijoComprob}</code></>
-                        : 'Se agrega al código del comprobante'}
+                  {/* Sufijo comprobante + Fecha del movimiento */}
+                  <div className="d-flex gap-3 mb-3 align-items-start">
+                    <div style={{ flexShrink: 0 }}>
+                      <label className="form-label small fw-semibold mb-1">
+                        <i className="bi bi-type me-1 text-primary"></i>
+                        Sufijo comprobante
+                      </label>
+                      <input className="form-control form-control-sm font-monospace"
+                        maxLength={3} value={sufijoComprob} style={{ width: 90 }}
+                        placeholder="Ej: A, AB..."
+                        onChange={e => setSufijoComprob(e.target.value.toUpperCase())}/>
+                      <div className="form-text" style={{ maxWidth: 170 }}>
+                        {sufijoComprob
+                          ? <>Resultado: <code>{plantillaActual?.comprobante || '—'}{sufijoComprob}</code></>
+                          : 'Se agrega al código del comprobante'}
+                      </div>
+                    </div>
+                    <div className="flex-grow-1">
+                      <label className="form-label small fw-semibold mb-1">
+                        <i className="bi bi-calendar-event me-1 text-primary"></i>
+                        Seleccione la fecha
+                      </label>
+                      <input type="date" className="form-control form-control-sm"
+                        value={cabecera.fecha}
+                        onChange={e => setCabecera(prev => ({ ...prev, fecha: e.target.value }))}/>
+                      <div className="form-text">Fecha con la que se registrará el movimiento</div>
                     </div>
                   </div>
 
@@ -719,50 +756,47 @@ export default function AsientoConPlantilla() {
                        `Ingresa: ${paso.label}`}
                     </label>
 
-                    {/* F3 también funciona en el wizard */}
-                    <input
-                      ref={inputRef}
-                      type={paso.tipo==='monto'?'number':'text'}
-                      min={paso.tipo==='monto'?'0':undefined}
-                      step={paso.tipo==='monto'?'0.01':undefined}
-                      className={`form-control form-control-lg text-center ${errWiz?'is-invalid':''}`}
-                      style={{fontSize:22,fontWeight:500,maxWidth:320,margin:'0 auto'}}
-                      placeholder={
-                        paso.tipo==='monto'  ?'0.00':
-                        paso.tipo==='cuenta' ?'Ej: 110505':
-                        paso.tipo==='tercero'?'Ej: 1234567890':
-                        paso.tipo==='cc'     ?'Ej: CC001':'...'}
-                      value={valorWiz}
-                      onChange={e=>{setValorWiz(e.target.value);setErrWiz('');}}
-                      onKeyDown={e=>{
-                        if (e.key==='Enter') avanzarWizard();
-                        // F3 en el wizard abre el buscador correspondiente
-                        if (e.key==='F3') {
-                          e.preventDefault();
-                          const tipo = paso.tipo==='cuenta'?'cuenta':
-                                       paso.tipo==='tercero'?'tercero':
-                                       paso.tipo==='cc'?'cc':null;
-                          if (tipo) buscador.abrir(tipo, null, (item)=>{
-                            const val = tipo==='cuenta'  ? item.codigo :
-                                        tipo==='tercero' ? item.cedula  :
-                                                           item.codigo;
-                            setValorWiz(val);
-                            setErrWiz('');
-                          });
-                        }
-                      }}
-                      list={
-                        paso.tipo==='cuenta' ?'wiz-cuentas':
-                        paso.tipo==='tercero'?'wiz-terceros':
-                        paso.tipo==='cc'     ?'wiz-centros':undefined}
-                    />
+                    {/* Buscar por icono (PC/Móvil) + F3 también funciona en el wizard */}
+                    <div className="d-flex justify-content-center align-items-start gap-2">
+                      <input
+                        ref={inputRef}
+                        type={paso.tipo==='monto'?'number':'text'}
+                        min={paso.tipo==='monto'?'0':undefined}
+                        step={paso.tipo==='monto'?'0.01':undefined}
+                        className={`form-control form-control-lg text-center ${errWiz?'is-invalid':''}`}
+                        style={{fontSize:22,fontWeight:500,width:280,maxWidth:'90%'}}
+                        placeholder={
+                          paso.tipo==='monto'  ?'0.00':
+                          paso.tipo==='cuenta' ?'Ej: 110505':
+                          paso.tipo==='tercero'?'Ej: 1234567890':
+                          paso.tipo==='cc'     ?'Ej: CC001':'...'}
+                        value={valorWiz}
+                        onChange={e=>{setValorWiz(e.target.value);setErrWiz('');}}
+                        onKeyDown={e=>{
+                          if (e.key==='Enter') avanzarWizard();
+                          if (e.key==='F3') { e.preventDefault(); buscarEnWizard(); }
+                        }}
+                        list={
+                          paso.tipo==='cuenta' ?'wiz-cuentas':
+                          paso.tipo==='tercero'?'wiz-terceros':
+                          paso.tipo==='cc'     ?'wiz-centros':undefined}
+                      />
+                      {['cuenta','tercero','cc'].includes(paso.tipo) && (
+                        <button type="button" className="btn btn-outline-primary btn-lg"
+                          onClick={buscarEnWizard}
+                          title="Buscar">
+                          <i className="bi bi-search"></i>
+                        </button>
+                      )}
+                    </div>
                     {paso.tipo==='cuenta'  &&<datalist id="wiz-cuentas">{cuentas.map(c=><option key={c.id} value={c.codigo}>{c.descripcion}</option>)}</datalist>}
                     {paso.tipo==='tercero' &&<datalist id="wiz-terceros">{terceros.map(t=><option key={t.id} value={t.cedula}>{t.nombre_completo}</option>)}</datalist>}
                     {paso.tipo==='cc'      &&<datalist id="wiz-centros">{centros.map(c=><option key={c.id} value={c.codigo}>{c.descripcion}</option>)}</datalist>}
 
                     {errWiz&&<div className="invalid-feedback d-block mt-2">{errWiz}</div>}
                     <div className="text-muted small mt-2">
-                      <kbd>Enter</kbd> para avanzar &nbsp;|&nbsp; <kbd>F3</kbd> para buscar
+                      <kbd>Enter</kbd> para avanzar &nbsp;|&nbsp;
+                      <i className="bi bi-search me-1"></i> para buscar
                     </div>
                   </div>
                 </div>
@@ -854,7 +888,7 @@ export default function AsientoConPlantilla() {
                   {pendientes>0&&<span className="badge bg-danger ms-2">{pendientes} pendientes</span>}
                 </span>
                 <div className="d-flex align-items-center gap-3">
-                  <span className="text-muted small"><kbd>F3</kbd> en campos para buscar</span>
+                  <span className="text-muted small"><i className="bi bi-search me-1"></i>Buscar con el ícono</span>
                   <button className="btn btn-outline-success btn-sm" onClick={agregarLinea} disabled={!canAdd}>
                     <i className="bi bi-plus-lg me-1"></i>Agregar línea
                   </button>
@@ -864,12 +898,12 @@ export default function AsientoConPlantilla() {
                 <table className="table table-sm mb-0 align-middle">
                   <thead className="table-dark">
                     <tr>
-                      <th style={{width:140}}>Cuenta <kbd style={{fontSize:9}}>F3</kbd></th>
+                      <th style={{width:140}}>Cuenta</th>
                       <th style={{width:'8%'}}>Descripción</th>
                       <th style={{width:475}}>Observación</th>
-                      <th style={{width:140}}>Cédula <kbd style={{fontSize:9}}>F3</kbd></th>
+                      <th style={{width:140}}>Cédula</th>
                       <th style={{width:260}}>Tercero</th>
-                      <th style={{width:110}}>C.Costo <kbd style={{fontSize:9}}>F3</kbd></th>
+                      <th style={{width:110}}>C.Costo</th>
                       <th style={{width:120}} className="text-end">Débito</th>
                       <th style={{width:120}} className="text-end">Crédito</th>
                       <th style={{width:36}}></th>
@@ -887,7 +921,7 @@ export default function AsientoConPlantilla() {
                               <input
                                 className={`form-control form-control-sm font-monospace ${isDig(l.cuenta)?'border-danger':''}`}
                                 value={isDig(l.cuenta)?'':l.cuenta}
-                                placeholder="Código / F3"
+                                placeholder="Código"
                                 list={`f3-cuentas-${i}`}
                                 onChange={e=>updateLinea(i,'cuenta',e.target.value)}
                                 onKeyDown={e=>{
@@ -928,7 +962,7 @@ export default function AsientoConPlantilla() {
                               <input
                                 className={`form-control form-control-sm ${isDig(l.cedula)?'border-danger':''}`}
                                 value={isDig(l.cedula)?'':l.cedula}
-                                placeholder="Cédula / F3"
+                                placeholder="Cédula"
                                 list={`f3-terceros-${i}`}
                                 onChange={e=>updateLinea(i,'cedula',e.target.value)}
                                 onKeyDown={e=>{
@@ -971,7 +1005,7 @@ export default function AsientoConPlantilla() {
                               <input
                                 className={`form-control form-control-sm font-monospace ${isDig(l.centro_costo)?'border-danger':''}`}
                                 value={isDig(l.centro_costo)?'':l.centro_costo}
-                                placeholder="CC / F3"
+                                placeholder="C.Costo"
                                 list={`f3-cc-${i}`}
                                 onChange={e=>updateLinea(i,'centro_costo',e.target.value)}
                                 onKeyDown={e=>{

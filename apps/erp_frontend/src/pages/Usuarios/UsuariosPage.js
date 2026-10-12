@@ -18,7 +18,7 @@ const activar       = (id)      => API.post(`/users/${id}/activar/`);
 const eliminarDef   = (id)      => API.delete(`/users/${id}/eliminar-definitivo/`);
 const resetPassword = (id,pwd)  => API.post(`/users/${id}/reset-password/`, {password:pwd});
 
-const FORM_VACIO = { login:'', email:'', NameUser:'', caja_user:'', fecha_nacimiento:'', frase_verificacion:'', password:'', is_staff:false, is_active:true, role:null };
+const FORM_VACIO = { login:'', email:'', NameUser:'', caja_user:'', centro_costo_user:'', fecha_nacimiento:'', frase_verificacion:'', password:'', is_staff:false, is_active:true, role:null };
 
 export default function UsuariosPage() {
   const { canAdd, canEdit, canDel } = usePerm('/usuarios');
@@ -63,7 +63,8 @@ export default function UsuariosPage() {
   const abrirEditar = (u) => {
     setEditando(u);
     setForm({ login:u.login, email:u.email, NameUser:u.NameUser,
-              caja_user:u.caja_user||'', fecha_nacimiento:u.fecha_nacimiento||'',
+              caja_user:u.caja_user||'', centro_costo_user:u.centro_costo_user||'',
+              fecha_nacimiento:u.fecha_nacimiento||'',
               frase_verificacion:u.frase_verificacion||'',
               password:'', is_staff:u.is_staff, is_active:u.is_active, role:u.role||null });
     setModal(true);
@@ -78,6 +79,7 @@ export default function UsuariosPage() {
         email:     form.email.trim(),
         NameUser:    form.NameUser.trim(),
         caja_user: form.caja_user.trim(),
+        centro_costo_user: form.centro_costo_user.trim(),
         fecha_nacimiento: form.fecha_nacimiento || null,
         frase_verificacion: form.frase_verificacion.trim(),
         is_staff:  form.is_staff,
@@ -152,6 +154,7 @@ export default function UsuariosPage() {
             <th>Login</th><th>Nombre</th><th>Email</th>
             <th>Rol</th>
             <th className="text-center">Caja</th>
+            <th className="text-center">C. costo</th>
             <th className="text-center">Admin</th>
             <th className="text-center">Estado</th>
             <th className="text-center">Cierre</th>
@@ -161,7 +164,7 @@ export default function UsuariosPage() {
         </thead>
         <tbody>
           {lista.length === 0
-            ? <tr><td colSpan={10} className="text-center text-muted py-4">Sin registros</td></tr>
+            ? <tr><td colSpan={11} className="text-center text-muted py-4">Sin registros</td></tr>
             : lista.map(u => (
               <tr key={u.id} className={!u.is_active?'table-secondary':''}>
                 <td><code className="fw-bold">{u.login}</code></td>
@@ -171,6 +174,11 @@ export default function UsuariosPage() {
                 <td className="text-center">
                   {u.caja_user
                     ? <span className="badge bg-info text-dark">{u.caja_user}</span>
+                    : <span className="text-muted">—</span>}
+                </td>
+                <td className="text-center">
+                  {u.centro_costo_user
+                    ? <span className="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">{u.centro_costo_user}</span>
                     : <span className="text-muted">—</span>}
                 </td>
                 <td className="text-center">
@@ -314,13 +322,21 @@ export default function UsuariosPage() {
                         onChange={e=>setForm({...form,login:e.target.value})}/>
                       <div className="form-text">Máx. 10 caracteres</div>
                     </div>
-                    <div className="col-6">
+                    <div className="col-3">
                       <label className="form-label small fw-semibold">Caja user</label>
                       <input className="form-control font-monospace"
-                        maxLength={10} value={form.caja_user}
-                        autoComplete="off" placeholder="Código de caja"
+                        maxLength={8} value={form.caja_user}
+                        autoComplete="off" placeholder="Caja"
                         onChange={e=>setForm({...form,caja_user:e.target.value})}/>
-                      <div className="form-text">Máx. 10 caracteres</div>
+                      <div className="form-text">Máx. 8 car.</div>
+                    </div>
+                    <div className="col-3">
+                      <label className="form-label small fw-semibold">C. costo user</label>
+                      <input className="form-control font-monospace"
+                        maxLength={7} value={form.centro_costo_user}
+                        autoComplete="off" placeholder="C. costo"
+                        onChange={e=>setForm({...form,centro_costo_user:e.target.value})}/>
+                      <div className="form-text">Máx. 7 car.</div>
                     </div>
                     <div className="col-12">
                       <div className="form-check form-switch">

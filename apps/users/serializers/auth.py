@@ -102,7 +102,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model  = User
-        fields = ['id', 'login', 'email', 'NameUser', 'caja_user', 'fecha_nacimiento',
+        fields = ['id', 'login', 'email', 'NameUser', 'caja_user', 'centro_costo_user', 'fecha_nacimiento',
                   'frase_verificacion', 'verificacion_pendiente', 'estado',
                   'is_staff', 'is_active', 'is_superuser', 'role', 'role_nombre',
                   'permission_codes', 'controles', 'fecha_cierre', 'created_at']
@@ -126,7 +126,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     class Meta:
         model  = User
-        fields = ['login', 'email', 'NameUser', 'caja_user', 'fecha_nacimiento',
+        fields = ['login', 'email', 'NameUser', 'caja_user', 'centro_costo_user', 'fecha_nacimiento',
                   'frase_verificacion', 'password', 'role', 'is_staff', 'is_active']
 
     def create(self, validated_data):

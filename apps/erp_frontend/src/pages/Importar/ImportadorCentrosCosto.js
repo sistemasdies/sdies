@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createCentroCosto } from '../../api/centrosCosto';
+import { createCentroCosto, updateCentroCosto, getCentrosCosto } from '../../api/centrosCosto';
 import toast from 'react-hot-toast';
 
 const PLANTILLA_CSV = `codigo,descripcion,responsable
@@ -7,12 +7,31 @@ CC001,Administración General,
 CC002,Ventas Nacionales,1234567890
 CC003,Producción Planta 1,`;
 
+const MODOS = [
+  { id: 'solo_nuevos', label: 'Solo adicionar nuevos', desc: 'Omite los centros cuyo código ya existe' },
+  { id: 'reemplazar',  label: 'Reemplazar existentes', desc: 'Actualiza los que ya existen (los nuevos se omiten)' },
+  { id: 'ambos',       label: 'Ambos',                 desc: 'Actualiza los existentes y adiciona los nuevos' },
+];
+
+const extraerError = (err) => {
+  const data = err?.response?.data;
+  if (!data) return 'Error de conexión';
+  if (typeof data === 'string') return data;
+  if (typeof data.detail === 'string') return data.detail;
+  if (Array.isArray(data.detail)) return data.detail[0];
+  const primera = Object.values(data)[0];
+  if (Array.isArray(primera)) return primera[0];
+  if (typeof primera === 'string') return primera;
+  return JSON.stringify(data);
+};
+
 export default function ImportadorCentrosCosto() {
   const [filas,     setFilas]     = useState([]);
   const [errores,   setErrores]   = useState([]);
   const [resultado, setResultado] = useState(null);
   const [cargando,  setCargando]  = useState(false);
   const [paso,      setPaso]      = useState(1);
+  const [modo,      setModo]      = useState('solo_nuevos');
 
   const parsearCSV = (texto) => {
     const lineas  = texto.trim().split('\n');
@@ -49,34 +68,60 @@ export default function ImportadorCentrosCosto() {
       setFilas(datos); setErrores(errs); setPaso(2);
     };
     reader.readAsText(file, 'UTF-8');
+    e.target.value = '';
   };
 
   const importar = async () => {
     const validas = filas.filter(f => f._valida);
     if (!validas.length) { toast.error('No hay filas válidas'); return; }
     setCargando(true);
-    let ok = 0, fail = 0, erroresImport = [];
+
+    // Cargar centros de costo existentes en BD (código -> id)
+    const existentes = new Map();
+    try {
+      const res  = await getCentrosCosto();
+      const list = res.data.results || res.data;
+      list.forEach(c => existentes.set((c.codigo || '').toUpperCase(), c.id));
+    } catch {
+      toast.error('No se pudieron cargar los centros de costo existentes');
+      setCargando(false);
+      return;
+    }
+
+    let creados = 0, actualizados = 0, omitidos = 0, fail = 0;
+    const erroresImport = [];
+
     for (const f of validas) {
+      const codigo = f.codigo.toUpperCase();
+      const existe = existentes.has(codigo);
+      const payload = {
+        codigo,
+        descripcion: f.descripcion,
+        responsable: f.responsable || null,
+      };
       try {
-        await createCentroCosto({
-          codigo:      f.codigo.toUpperCase(),
-          descripcion: f.descripcion,
-          responsable: f.responsable || null,
-        });
-        ok++;
+        if (existe) {
+          if (modo === 'solo_nuevos') { omitidos++; continue; }
+          await updateCentroCosto(existentes.get(codigo), payload);
+          actualizados++;
+        } else {
+          if (modo === 'reemplazar') { omitidos++; continue; }
+          await createCentroCosto(payload);
+          creados++;
+        }
       } catch (err) {
         fail++;
-        erroresImport.push({
-          fila: f._fila, codigo: f.codigo,
-          error: err.response?.data?.codigo?.[0] || err.response?.data?.detail || 'Error',
-        });
+        erroresImport.push({ fila: f._fila, codigo, error: extraerError(err) });
       }
     }
+
     setCargando(false);
-    setResultado({ ok, fail, erroresImport });
+    setResultado({ creados, actualizados, omitidos, fail, erroresImport });
     setPaso(3);
-    if (ok)   toast.success(`${ok} centro(s) importado(s)`);
-    if (fail) toast.error(`${fail} con error`);
+    if (creados)      toast.success(`${creados} centro(s) creado(s)`);
+    if (actualizados) toast.success(`${actualizados} centro(s) actualizado(s)`);
+    if (omitidos)     toast.info(`${omitidos} omitido(s)`);
+    if (fail)         toast.error(`${fail} con error`);
   };
 
   const reiniciar = () => { setFilas([]); setErrores([]); setResultado(null); setPaso(1); };
@@ -106,6 +151,28 @@ export default function ImportadorCentrosCosto() {
               El campo <strong>responsable</strong> es la cédula del tercero responsable (opcional).
               Debe existir previamente en el sistema.
             </div>
+
+            <h6 className="fw-semibold mb-2">
+              <i className="bi bi-arrow-repeat me-1"></i>¿Cómo deseas importar?
+            </h6>
+            <div className="row g-2 mb-4">
+              {MODOS.map(m => (
+                <div key={m.id} className="col-md-4">
+                  <label className={`card border h-100 ${modo===m.id ? 'border-warning bg-warning-subtle' : ''}`}
+                    style={{ cursor:'pointer' }}>
+                    <div className="form-check p-3 mb-0">
+                      <input className="form-check-input" type="radio" name="modo-cc"
+                        checked={modo===m.id} onChange={() => setModo(m.id)} />
+                      <div className="ms-2">
+                        <div className="fw-semibold small">{m.label}</div>
+                        <div className="small text-muted">{m.desc}</div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              ))}
+            </div>
+
             <div className="table-responsive mb-4">
               <table className="table table-sm table-bordered">
                 <thead className="table-light">
@@ -180,11 +247,12 @@ export default function ImportadorCentrosCosto() {
           <div>
             <div className="row g-3 mb-4">
               {[
-                { label: 'Importados', value: resultado.ok,   color: 'success'   },
-                { label: 'Con error',  value: resultado.fail, color: 'danger'    },
-                { label: 'Total',      value: resultado.ok+resultado.fail, color: 'secondary' },
+                { label: 'Creados',      value: resultado.creados,      color: 'success'   },
+                { label: 'Actualizados', value: resultado.actualizados, color: 'primary'   },
+                { label: 'Omitidos',     value: resultado.omitidos,     color: 'secondary' },
+                { label: 'Con error',    value: resultado.fail,         color: 'danger'    },
               ].map(k => (
-                <div key={k.label} className="col-md-4">
+                <div key={k.label} className="col-md-3">
                   <div className={`card border-0 bg-${k.color} text-white text-center p-3`}>
                     <div className="display-6 fw-bold">{k.value}</div>
                     <div className="small">{k.label}</div>

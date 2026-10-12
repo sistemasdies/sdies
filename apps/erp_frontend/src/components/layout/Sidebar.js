@@ -97,6 +97,9 @@ export default function Sidebar() {
             : <i className="bi bi-calculator fs-4 text-success"></i>}
           <div className="overflow-hidden">
             <div className="fw-bold small text-truncate">{marca?.NombreOrganizacion || 'SDIES'}</div>
+            <div className="text-white-50 text-truncate" style={{ fontSize: 11 }}>
+              <i className="bi bi-person-circle me-1"></i>{user?.NameUser || user?.login}
+            </div>
             <div className="text-muted text-truncate" style={{ fontSize: 11 }}>
               {marca?.NIT ? `NIT ${marca.NIT}` : 'Sistema Contable'}
             </div>
