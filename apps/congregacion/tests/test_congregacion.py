@@ -158,25 +158,24 @@ class CongregacionApiTest(TestCase):
         r = self.client.patch(f'{self.url}{c.id}/', {'codigo': 'C001', 'nombre': 'Otro'}, format='json')
         self.assertEqual(r.status_code, 200)
 
-    # ── Eliminar ───────────────────────────────────────────────────────────
-    def test_borrado_logico_no_borra_de_la_base(self):
+# ── Eliminar (borrado duro) ────────────────────────────────────────────
+    def test_borrado_elimina_de_la_base(self):
         c = Congregacion.objects.create(codigo='C001', nombre='Catedral')
         r = self.client.delete(f'{self.url}{c.id}/')
         self.assertEqual(r.status_code, 204)
         self.assertFalse(Congregacion.objects.filter(pk=c.pk).exists())
-        self.assertTrue(Congregacion.all_objects.filter(pk=c.pk).exists())
-        self.assertTrue(Congregacion.all_objects.get(pk=c.pk).deleted)
+        self.assertFalse(Congregacion.all_objects.filter(pk=c.pk).exists())
 
     def test_registro_borrado_no_aparece_en_el_listado(self):
         c = Congregacion.objects.create(codigo='C001', nombre='Catedral')
         self.client.delete(f'{self.url}{c.id}/')
         self.assertEqual(self.client.get(self.url).data['count'], 0)
 
-    def test_codigo_de_registro_borrado_sigue_ocupado(self):
+    def test_codigo_de_registro_eliminado_queda_libre(self):
         c = Congregacion.objects.create(codigo='C001', nombre='Catedral')
         self.client.delete(f'{self.url}{c.id}/')
         r = self.client.post(self.url, {'codigo': 'C001', 'nombre': 'Reuso'}, format='json')
-        self._err(r, 'codigo')
+        self.assertEqual(r.status_code, 201)
 
     # ── Permisos ───────────────────────────────────────────────────────────
     def test_requiere_autenticacion(self):

@@ -101,21 +101,55 @@ export default function AsientoConPlantilla() {
   const [errWiz,     setErrWiz]     = useState('');
 
   const [saving, setSaving] = useState(false);
+  const [recargando, setRecargando] = useState(null); // tipo de catálogo que se está recargando
 
   // ── Cargar catálogos ──────────────────────────────────────────────────
+  const cargarCatalogo = (tipo) => {
+    const api = {
+      cuenta:      () => getCuentas({ page_size: 5000 }),
+      tercero:     () => getTerceros({ page_size: 2000 }),
+      cc:          () => getCentrosCosto(),
+      comprobante: () => getComprobantes(),
+    };
+    return api[tipo]().then(r => {
+      const data = r.data.results || r.data;
+      if (tipo === 'cuenta')      setCuentas(data);
+      if (tipo === 'tercero')     setTerceros(data);
+      if (tipo === 'cc')          setCentros(data);
+      if (tipo === 'comprobante') setComprobantes(data);
+    });
+  };
+
+  // Recargar un catálogo al tocar el ícono junto a la lupa
+  const recargarCatalogo = (tipo) => {
+    setRecargando(tipo);
+    cargarCatalogo(tipo)
+      .then(() => toast.success('Datos de búsqueda actualizados'))
+      .catch(() => toast.error('Error al actualizar los datos de búsqueda'))
+      .finally(() => setRecargando(null));
+  };
+
+  // Botón de recarga reutilizable (se coloca junto a cada lupa)
+  const BtnRecargar = ({ tipo, size }) => (
+    <button type="button" tabIndex={-1} title="Recargar datos"
+      className={`btn btn-outline-secondary ${size === 'sm' ? 'btn-sm' : ''} ${size === 'lg' ? 'btn-lg' : ''}`}
+      disabled={recargando === tipo}
+      onClick={(e) => { e.stopPropagation(); recargarCatalogo(tipo); }}>
+      {recargando === tipo
+        ? <><span className="spinner-border spinner-border-sm"></span></>
+        : <i className="bi bi-arrow-clockwise" style={{ fontSize: size === 'lg' ? 16 : (size === 'sm' ? 10 : 14) }}></i>}
+    </button>
+  );
+
   useEffect(() => {
     Promise.allSettled([
-      getComprobantes(),
-      getCuentas({ page_size: 5000 }),
-      getTerceros({ page_size: 2000 }),
-      getCentrosCosto(),
+      cargarCatalogo('comprobante'),
+      cargarCatalogo('cuenta'),
+      cargarCatalogo('tercero'),
+      cargarCatalogo('cc'),
       getPlantillas(),
-    ]).then(([c, cu, t, cc, pl]) => {
-      if (c.status  === 'fulfilled') setComprobantes(c.value.data.results  || c.value.data);
-      if (cu.status === 'fulfilled') setCuentas(     cu.value.data.results || cu.value.data);
-      if (t.status  === 'fulfilled') setTerceros(    t.value.data.results  || t.value.data);
-      if (cc.status === 'fulfilled') setCentros(     cc.value.data.results || cc.value.data);
-      if (pl.status === 'fulfilled') setPlantillas(  pl.value.data.results || pl.value.data);
+    ]).then(([, , , , pl]) => {
+      if (pl.status === 'fulfilled') setPlantillas(pl.value.data.results || pl.value.data);
     });
   }, []);
 
@@ -782,11 +816,14 @@ export default function AsientoConPlantilla() {
                           paso.tipo==='cc'     ?'wiz-centros':undefined}
                       />
                       {['cuenta','tercero','cc'].includes(paso.tipo) && (
-                        <button type="button" className="btn btn-outline-primary btn-lg"
-                          onClick={buscarEnWizard}
-                          title="Buscar">
-                          <i className="bi bi-search"></i>
-                        </button>
+                        <>
+                          <button type="button" className="btn btn-outline-primary btn-lg"
+                            onClick={buscarEnWizard}
+                            title="Buscar">
+                            <i className="bi bi-search"></i>
+                          </button>
+                          <BtnRecargar tipo={paso.tipo} size="lg" />
+                        </>
                       )}
                     </div>
                     {paso.tipo==='cuenta'  &&<datalist id="wiz-cuentas">{cuentas.map(c=><option key={c.id} value={c.codigo}>{c.descripcion}</option>)}</datalist>}
@@ -847,13 +884,16 @@ export default function AsientoConPlantilla() {
                 <div className="row g-3">
                   <div className="col-md-2">
                     <label className="form-label small fw-semibold">Comprobante *</label>
-                    <select className="form-select" value={cabecera.cod_comprob}
-                      onChange={e=>setCabecera({...cabecera,cod_comprob:e.target.value})}>
-                      <option value="">Seleccionar...</option>
-                      {comprobantes.map(c=>(
-                        <option key={c.id} value={c.codigo}>{c.codigo} — {c.descripcion}</option>
-                      ))}
-                    </select>
+                    <div className="input-group">
+                      <select className="form-select" value={cabecera.cod_comprob}
+                        onChange={e=>setCabecera({...cabecera,cod_comprob:e.target.value})}>
+                        <option value="">Seleccionar...</option>
+                        {comprobantes.map(c=>(
+                          <option key={c.id} value={c.codigo}>{c.codigo} — {c.descripcion}</option>
+                        ))}
+                      </select>
+                      <BtnRecargar tipo="comprobante" />
+                    </div>
                   </div>
                   <div className="col-md-2">
                     <label className="form-label small fw-semibold">Nº Comprobante</label>
@@ -936,6 +976,7 @@ export default function AsientoConPlantilla() {
                                 onClick={()=>buscador.abrir('cuenta',i,(item,idx)=>updateLinea(idx,'cuenta',item.codigo))}>
                                 <i className="bi bi-search" style={{fontSize:10}}></i>
                               </button>
+                              <BtnRecargar tipo="cuenta" size="sm" />
                               <datalist id={`f3-cuentas-${i}`}>
                                 {cuentas.map(c=><option key={c.id} value={c.codigo}>{c.descripcion}</option>)}
                               </datalist>
@@ -987,6 +1028,7 @@ export default function AsientoConPlantilla() {
                                 )}>
                                 <i className="bi bi-search" style={{fontSize:10}}></i>
                               </button>
+                              <BtnRecargar tipo="tercero" size="sm" />
                               <datalist id={`f3-terceros-${i}`}>
                                 {terceros.map(t=><option key={t.id} value={t.cedula}>{t.nombre_completo}</option>)}
                               </datalist>
@@ -1020,6 +1062,7 @@ export default function AsientoConPlantilla() {
                                 onClick={()=>buscador.abrir('cc',i,(item,idx)=>updateLinea(idx,'centro_costo',item.codigo))}>
                                 <i className="bi bi-search" style={{fontSize:10}}></i>
                               </button>
+                              <BtnRecargar tipo="cc" size="sm" />
                               <datalist id={`f3-cc-${i}`}>
                                 {centros.map(c=><option key={c.id} value={c.codigo}>{c.descripcion}</option>)}
                               </datalist>

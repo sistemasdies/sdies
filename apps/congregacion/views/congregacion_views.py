@@ -5,9 +5,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from apps.congregacion.models import Congregacion
 from apps.congregacion.serializers.congregacion import CongregacionSerializer
 from apps.core.utils.pagination import StandardPagination
+from apps.core.views import HardDeleteMixin
 
 
-class CongregacionViewSet(viewsets.ModelViewSet):
+class CongregacionViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     pagination_class   = StandardPagination
     serializer_class   = CongregacionSerializer
     module             = 'congregaciones'
@@ -26,6 +27,3 @@ class CongregacionViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
-
-    def perform_destroy(self, instance):
-        instance.soft_delete(user=self.request.user)

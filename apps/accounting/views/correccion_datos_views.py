@@ -7,13 +7,16 @@ valida el nuevo valor y registra el cambio en la bitácora (AuditLog).
 from datetime import datetime, date
 from decimal import Decimal, InvalidOperation
 
-from django.db import transaction
+from django.apps import apps as django_apps
+from django.db import models, transaction
+from django.db.models.deletion import ProtectedError
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.core.models.base import BaseModel
 from apps.core.permissions import HasPermission
 from apps.accounting.models import (
     CentroCosto, Comprobante, Cuenta, DetallePlantilla, MoviCont,
@@ -341,7 +344,7 @@ def _registrar_auditoria(request, tabla, filtros, total, campo, valor_db):
         pass
 
 
-# ── Vistas ───────────────────────────────────────────────────────────────────
+# ── Borrado Duro (eliminación física de registros con borrado suave) ─────────
 
 class _BaseCorreccion(APIView):
     permission_classes      = [IsAuthenticated, HasPermission]
@@ -350,6 +353,102 @@ class _BaseCorreccion(APIView):
     def _validar_tabla(self, tabla):
         return tabla in TABLAS
 
+
+def _orden_borrado():
+    """Todos los modelos BaseModel, ordenados para eliminar primero los registros
+    referenciados (hijos) y dejar para el final las tablas que otros referencian."""
+    modelos = [m for m in django_apps.get_models()
+               if issubclass(m, BaseModel) and not m._meta.abstract and not m._meta.proxy]
+    conjunto = set(modelos)
+    referencias = {m: set() for m in modelos}
+    for m in modelos:
+        for campo in m._meta.fields:
+            if isinstance(campo, models.ForeignKey) and campo.related_model in conjunto:
+                referencias[m].add(campo.related_model)
+
+    visitados = set()
+    orden = []
+
+    def visitar(m):
+        if m in visitados:
+            return
+        visitados.add(m)
+        orden.append(m)
+        for ref in referencias[m]:
+            visitar(ref)
+
+    for m in modelos:
+        visitar(m)
+    return orden
+
+
+class BorradoDuroView(_BaseCorreccion):
+    """GET: conteo por tabla de registros con borrado suave.
+    POST { confirmacion: 'BORRAR' }: los elimina físicamente de todas las tablas."""
+
+    def get(self, request):
+        por_tabla = []
+        total = 0
+        for m in _orden_borrado():
+            n = m.all_objects.filter(deleted=True).count()
+            if n:
+                por_tabla.append({
+                    'tabla': m.__name__,
+                    'etiqueta': m._meta.verbose_name_plural,
+                    'cantidad': n,
+                })
+                total += n
+        return Response({'total': total, 'por_tabla': por_tabla})
+
+    def post(self, request):
+        if str(request.data.get('confirmacion') or '').strip().upper() != 'BORRAR':
+            return Response({'detail': 'Debe escribir BORRAR para ejecutar el borrado duro.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        reporte = []
+        total_eliminados = 0
+        total_protegidos = 0
+        with transaction.atomic():
+            for modelo in _orden_borrado():
+                pks = list(modelo.all_objects.filter(deleted=True).values_list('pk', flat=True))
+                eliminados = 0
+                protegidos = 0
+                for pk in pks:
+                    try:
+                        modelo.all_objects.get(pk=pk).delete()
+                        eliminados += 1
+                    except ProtectedError:
+                        protegidos += 1
+                if eliminados or protegidos:
+                    reporte.append({
+                        'tabla': modelo.__name__,
+                        'eliminados': eliminados,
+                        'protegidos': protegidos,
+                    })
+                total_eliminados += eliminados
+                total_protegidos += protegidos
+
+        try:
+            from apps.audit.models import AuditLog
+            AuditLog.objects.create(
+                user=request.user, action='BORRADO_DURO',
+                resource='todas', resource_id='multiple',
+                before_data={'por_tabla': reporte},
+                after_data={'total_eliminados': total_eliminados,
+                            'total_protegidos': total_protegidos},
+                endpoint=request.path, http_method=request.method,
+            )
+        except Exception:
+            pass
+
+        return Response({
+            'total_eliminados': total_eliminados,
+            'total_protegidos': total_protegidos,
+            'por_tabla': reporte,
+        })
+
+
+# ── Vistas ───────────────────────────────────────────────────────────────────
 
 class PreviewView(_BaseCorreccion):
     """POST { tabla, filtros } → total, muestra y definición de campos editables."""

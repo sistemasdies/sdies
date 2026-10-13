@@ -3,7 +3,7 @@ import MainLayout from '../../components/layout/MainLayout';
 import TopBar from '../../components/layout/TopBar';
 import PageHeader from '../../components/common/PageHeader';
 import MultiSelect from '../../components/common/MultiSelect';
-import { previewCorreccion, aplicarCorreccion } from '../../api/correccionDatos';
+import { previewCorreccion, aplicarCorreccion, getBorradoDuro, ejecutarBorradoDuro } from '../../api/correccionDatos';
 import { getCuentas } from '../../api/cuentas';
 import { getCentrosCosto } from '../../api/centrosCosto';
 import { getTerceros } from '../../api/terceros';
@@ -48,6 +48,9 @@ export default function CorreccionDatosPage() {
   const [confirmText, setConfirmText] = useState('');
   const [cargando, setCargando] = useState(false);
   const [aplicando, setAplicando] = useState(false);
+  const [bd, setBd] = useState({
+    open: false, loading: false, preview: null, confirm: '', ejecutando: false, result: null,
+  });
 
   useEffect(() => {
     getCuentas({ page_size: 10000 }).then(r => setOpciones(o => ({ ...o, cuentas: r.data.results || r.data }))).catch(() => {});
@@ -129,6 +132,31 @@ export default function CorreccionDatosPage() {
     return v;
   };
 
+  const abrirBorradoDuro = async () => {
+    setBd({ open: true, loading: true, preview: null, confirm: '', ejecutando: false, result: null });
+    try {
+      const res = await getBorradoDuro();
+      setBd(b => ({ ...b, loading: false, preview: res.data }));
+    } catch (e) {
+      setBd(b => ({ ...b, loading: false }));
+      toast.error(e.response?.data?.detail || 'Error al consultar los registros');
+    }
+  };
+
+  const ejecutarBd = async () => {
+    if (bd.confirm.trim().toUpperCase() !== 'BORRAR' || bd.ejecutando) return;
+    try {
+      setBd(b => ({ ...b, ejecutando: true }));
+      const res = await ejecutarBorradoDuro(bd.confirm);
+      setBd(b => ({ ...b, ejecutando: false, result: res.data, confirm: '' }));
+      toast.success(`${res.data.total_eliminados} registro(s) eliminados definitivamente.`);
+    } catch (e) {
+      setBd(b => ({ ...b, ejecutando: false }));
+      const d = e.response?.data?.detail;
+      toast.error(Array.isArray(d) ? d.join(' ') : (d || 'Error al ejecutar el borrado duro'));
+    }
+  };
+
   return (
     <MainLayout>
       <TopBar title="Corrección de Datos" />
@@ -147,16 +175,29 @@ export default function CorreccionDatosPage() {
         <div className="card border-0 shadow-sm mb-3">
           <div className="card-body">
             <div className="text-muted small fw-semibold mb-2">1. Elija la tabla</div>
-            <div className="btn-group flex-wrap">
-              {TABLAS.map(t => (
-                <button key={t.id} type="button"
-                  className={`btn btn-sm ${tabla === t.id ? 'btn-success' : 'btn-outline-secondary'}`}
-                  onClick={() => cambiarTabla(t.id)}>
-                  <i className={`bi ${t.icon} me-1`}></i>{t.label}
+            <div className="d-flex justify-content-between align-items-start flex-wrap gap-3">
+              <div>
+                <div className="btn-group flex-wrap">
+                  {TABLAS.map(t => (
+                    <button key={t.id} type="button"
+                      className={`btn btn-sm ${tabla === t.id ? 'btn-success' : 'btn-outline-secondary'}`}
+                      onClick={() => cambiarTabla(t.id)}>
+                      <i className={`bi ${t.icon} me-1`}></i>{t.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-muted small mt-2">{PISTA_TABLA[tabla]}</div>
+              </div>
+              <div className="text-md-end">
+                <button type="button" className="btn btn-outline-danger btn-sm"
+                  onClick={abrirBorradoDuro}>
+                  <i className="bi bi-trash-fill me-1"></i>Borrado Duro
                 </button>
-              ))}
+                <div className="text-muted small mt-1" style={{ maxWidth: 280 }}>
+                  Elimina definitivamente los registros con borrado suave de todas las tablas.
+                </div>
+              </div>
             </div>
-            <div className="text-muted small mt-2">{PISTA_TABLA[tabla]}</div>
           </div>
         </div>
 
@@ -527,6 +568,133 @@ export default function CorreccionDatosPage() {
           </div>
         )}
       </div>
+
+      {/* Modal Borrado Duro */}
+      {bd.open && (
+        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.6)' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content shadow border-danger">
+              <div className="modal-header bg-danger text-white">
+                <h5 className="modal-title">
+                  <i className="bi bi-trash-fill me-2"></i>Borrado Duro
+                </h5>
+                <button type="button" className="btn-close btn-close-white"
+                  onClick={() => setBd({ open: false, loading: false, preview: null, confirm: '', ejecutando: false, result: null })}></button>
+              </div>
+              <div className="modal-body">
+                <div className="alert alert-danger border-0 mb-3">
+                  <i className="bi bi-exclamation-octagon me-2"></i>
+                  <strong>Acción irreversible.</strong> Se eliminarán físicamente de la base de datos
+                  los registros que tienen borrado suave (eliminados) en todas las tablas
+                  (movicont, plantillas, terceros, centros de costo, comprobantes, etc.).
+                </div>
+
+                {bd.loading ? (
+                  <div className="text-center py-3">
+                    <span className="spinner-border spinner-border-sm me-2"></span>Consultando...
+                  </div>
+                ) : bd.result ? (
+                  <div className="mb-2">
+                    <div className="row g-2 mb-3">
+                      <div className="col-md-6">
+                        <div className="border rounded p-3 text-center bg-success-subtle">
+                          <div className="fs-3 fw-bold text-success">{bd.result.total_eliminados}</div>
+                          <div className="small text-muted">Registros eliminados definitivamente</div>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="border rounded p-3 text-center bg-warning-subtle">
+                          <div className="fs-3 fw-bold text-warning">{bd.result.total_protegidos}</div>
+                          <div className="small text-muted">Registros protegidos (en uso)</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="table-responsive" style={{ maxHeight: 240, overflow: 'auto' }}>
+                      <table className="table table-sm table-hover align-middle mb-0">
+                        <thead className="table-light sticky-top">
+                          <tr>
+                            <th>Tabla</th>
+                            <th className="text-center">Eliminados</th>
+                            <th className="text-center">Protegidos</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {bd.result.por_tabla.map(f => (
+                            <tr key={f.tabla}>
+                              <td className="small fw-semibold">{f.tabla}</td>
+                              <td className="text-center small">{f.eliminados}</td>
+                              <td className="text-center small">{f.protegidos}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {!bd.preview || bd.preview.total === 0 ? (
+                      <div className="alert alert-secondary mb-0">
+                        <i className="bi bi-info-circle me-2"></i>
+                        No hay registros con borrado suave. Nada que borrar.
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mb-3">
+                          <span className="badge bg-danger fs-6">{bd.preview.total} registro(s) con borrado suave</span>
+                        </div>
+                        <div className="table-responsive mb-3" style={{ maxHeight: 240, overflow: 'auto' }}>
+                          <table className="table table-sm table-hover align-middle mb-0">
+                            <thead className="table-light sticky-top">
+                              <tr>
+                                <th>Tabla</th>
+                                <th className="text-center">Registros</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {bd.preview.por_tabla.map(t => (
+                                <tr key={t.tabla}>
+                                  <td className="small fw-semibold">{t.tabla}</td>
+                                  <td className="text-center small">{t.cantidad}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="row g-2 align-items-end">
+                          <div className="col-md-7">
+                            <label className="form-label small mb-0">
+                              Para ejecutar, escriba <code className="text-danger">BORRAR</code>
+                            </label>
+                            <input className="form-control form-control-sm" value={bd.confirm}
+                              onChange={e => setBd(b => ({ ...b, confirm: e.target.value }))}
+                              placeholder="BORRAR" disabled={bd.ejecutando}
+                              onKeyDown={e => { if (e.key === 'Enter') ejecutarBd(); }} />
+                          </div>
+                          <div className="col-md-5">
+                            <button className="btn btn-danger w-100"
+                              disabled={bd.ejecutando || bd.confirm.trim().toUpperCase() !== 'BORRAR'}
+                              onClick={ejecutarBd}>
+                              {bd.ejecutando
+                                ? <><span className="spinner-border spinner-border-sm me-2"></span>Borrando...</>
+                                : <><i className="bi bi-trash-fill me-2"></i>Ejecutar borrado duro</>}
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary"
+                  onClick={() => setBd({ open: false, loading: false, preview: null, confirm: '', ejecutando: false, result: null })}>
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }

@@ -2,10 +2,11 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from apps.accounting.models import CentroCosto
 from apps.accounting.serializers.centros_costo import CentroCostoSerializer
+from apps.core.views import HardDeleteMixin
 from apps.users.services.scopes import user_scope
 
 
-class CentroCostoViewSet(viewsets.ModelViewSet):
+class CentroCostoViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     pagination_class   = None
     serializer_class   = CentroCostoSerializer
     module             = 'centros_costo'
@@ -20,5 +21,3 @@ class CentroCostoViewSet(viewsets.ModelViewSet):
         return qs
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
-    def perform_destroy(self, instance):
-        instance.delete()

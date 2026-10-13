@@ -1,16 +1,15 @@
 from django.db import connection
-from django.db import connection
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from apps.accounting.models import Comprobante
 from apps.accounting.serializers.comprobantes import ComprobanteSerializer
+from apps.core.views import HardDeleteMixin
 from apps.users.services.scopes import user_scope
 
 
-
-class ComprobanteViewSet(viewsets.ModelViewSet):
+class ComprobanteViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     pagination_class   = None
     serializer_class   = ComprobanteSerializer
     module             = 'comprobantes'
@@ -38,38 +37,6 @@ class ComprobanteViewSet(viewsets.ModelViewSet):
             deleted_obj.save()
             return
         serializer.save(created_by=self.request.user)
-
-    def perform_destroy(self, instance):
-        instance.soft_delete(user=self.request.user)
-
-    @action(detail=True, methods=['delete'], url_path='eliminar-definitivo')
-    def eliminar_definitivo(self, request, pk=None):
-        try:
-            comp = Comprobante.all_objects.get(pk=pk)
-            comp.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Comprobante.DoesNotExist:
-            return Response({'detail': 'No encontrado'}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=False, methods=['get'], url_path='lista-eliminados')
-    def lista_eliminados(self, request):
-        qs = Comprobante.all_objects.filter(deleted=True).order_by('codigo')
-        return Response(ComprobanteSerializer(qs, many=True).data)
-
-    @action(detail=True, methods=['post'], url_path='restaurar')
-    def restaurar(self, request, pk=None):
-        try:
-            comp = Comprobante.all_objects.get(pk=pk, deleted=True)
-            comp.deleted    = False
-            comp.deleted_at = None
-            comp.deleted_by = None
-            comp.updated_by = request.user
-            comp.save()
-            return Response(ComprobanteSerializer(comp).data)
-        except Comprobante.DoesNotExist:
-            return Response({'detail': 'No encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=False, methods=['get'], url_path='siguiente-numero')
     def siguiente_numero(self, request):

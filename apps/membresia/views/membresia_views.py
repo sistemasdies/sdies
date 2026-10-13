@@ -11,9 +11,10 @@ from apps.membresia.serializers.membresia import (
     MembresiaSerializer, TerceroReferenciaSerializer,
 )
 from apps.core.utils.pagination import StandardPagination
+from apps.core.views import HardDeleteMixin
 
 
-class MembresiaViewSet(viewsets.ModelViewSet):
+class MembresiaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     pagination_class   = StandardPagination
     serializer_class   = MembresiaSerializer
     module             = 'membresias'
@@ -50,9 +51,6 @@ class MembresiaViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
-
-    def perform_destroy(self, instance):
-        instance.soft_delete(user=self.request.user)
 
     @action(detail=False, methods=['get'], url_path='cedulas-con-membresia')
     def cedulas_con_membresia(self, request):

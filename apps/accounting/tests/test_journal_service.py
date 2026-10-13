@@ -54,9 +54,6 @@ class TestValidarPeriodo(TestCase):
     def test_fecha_sin_periodo_lanza_error(self):
         import datetime
         # Sin ningún período configurado, cualquier fecha falla
-        # Usamos una empresa fake (no existe en DB)
-        class FakeCompany:
-            id = 'fake-id'
         with self.assertRaises(ValidationError) as ctx:
-            JournalService.validar_periodo(FakeCompany(), datetime.date(2025, 1, 15))
+            JournalService.validar_periodo(datetime.date(2025, 1, 15))
         self.assertIn('período', str(ctx.exception).lower())

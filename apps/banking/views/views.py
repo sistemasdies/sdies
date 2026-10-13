@@ -1,6 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from apps.core.utils.pagination import StandardPagination
+from apps.core.views import HardDeleteMixin
 
 from apps.banking.models import CuentaBancaria, TransaccionBancaria, ConciliacionBancaria
 from apps.banking.serializers.serializers import (
@@ -10,7 +11,7 @@ from apps.banking.serializers.serializers import (
 )
 
 
-class CuentaBancariaViewSet(viewsets.ModelViewSet):
+class CuentaBancariaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     serializer_class   = CuentaBancariaSerializer
     module             = 'comprobantes'
     permission_classes = [IsAuthenticated]
@@ -19,11 +20,8 @@ class CuentaBancariaViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return CuentaBancaria.objects.filter(deleted=False).order_by('nombre')
 
-    def perform_destroy(self, instance):
-        instance.soft_delete(user=self.request.user)
 
-
-class TransaccionBancariaViewSet(viewsets.ModelViewSet):
+class TransaccionBancariaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     serializer_class   = TransaccionBancariaSerializer
     module             = 'comprobantes'
     permission_classes = [IsAuthenticated]
@@ -38,17 +36,11 @@ class TransaccionBancariaViewSet(viewsets.ModelViewSet):
         if p.get('hasta'):   qs = qs.filter(fecha__lte=p['hasta'])
         return qs
 
-    def perform_destroy(self, instance):
-        instance.soft_delete(user=self.request.user)
 
-
-class ConciliacionBancariaViewSet(viewsets.ModelViewSet):
+class ConciliacionBancariaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     serializer_class   = ConciliacionBancariaSerializer
     module             = 'comprobantes'
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return ConciliacionBancaria.objects.filter(deleted=False).order_by('-created_at')
-
-    def perform_destroy(self, instance):
-        instance.soft_delete(user=self.request.user)

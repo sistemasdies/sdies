@@ -10,6 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from apps.accounting.models import Tercero
 from apps.accounting.serializers.terceros import TerceroSerializer
 from apps.core.utils.pagination import StandardPagination
+from apps.core.views import HardDeleteMixin
 
 
 EXPORT_COLUMNAS = [
@@ -39,7 +40,7 @@ EXPORT_COLUMNAS = [
 ]
 
 
-class TerceroViewSet(viewsets.ModelViewSet):
+class TerceroViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     pagination_class   = StandardPagination
     serializer_class   = TerceroSerializer
     module             = 'terceros'
@@ -54,8 +55,6 @@ class TerceroViewSet(viewsets.ModelViewSet):
     queryset           = Tercero.objects.filter(deleted=False)
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
-    def perform_destroy(self, instance):
-        instance.soft_delete(user=self.request.user)
 
     @action(detail=False, methods=['get'], url_path='siguiente-cedula')
     def siguiente_cedula(self, request):

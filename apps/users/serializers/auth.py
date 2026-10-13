@@ -137,6 +137,14 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return user
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+    """Edición de los propios datos del usuario (sin login, rol ni estado)."""
+    class Meta:
+        model  = User
+        fields = ['NameUser', 'email', 'caja_user', 'centro_costo_user',
+                  'fecha_nacimiento', 'frase_verificacion']
+
+
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField()
     new_password = serializers.CharField(min_length=8)

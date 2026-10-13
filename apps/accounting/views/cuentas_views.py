@@ -6,11 +6,12 @@ from apps.accounting.models import Cuenta
 from apps.accounting.serializers.cuentas import CuentaSerializer, CuentaArbolSerializer
 from apps.accounting.services.balance_service import BalanceService
 from apps.core.utils.pagination import StandardPagination
+from apps.core.views import HardDeleteMixin
 from apps.users.services.scopes import user_scope
 
 
 
-class CuentaViewSet(viewsets.ModelViewSet):
+class CuentaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     serializer_class   = CuentaSerializer
     module             = 'plan_cuentas'
     permission_classes = [IsAuthenticated]
@@ -34,9 +35,6 @@ class CuentaViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
-
-    def perform_destroy(self, instance):
-        instance.delete()
 
     @action(detail=False, methods=['get'])
     def arbol(self, request):

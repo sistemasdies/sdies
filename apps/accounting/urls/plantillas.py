@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from apps.accounting.models import PlantillaContable, DetallePlantilla
+from apps.core.views import HardDeleteMixin
 
 
 
@@ -60,7 +61,7 @@ class PlantillaSerializer(serializers.ModelSerializer):
 
 # ── ViewSets ─────────────────────────────────────────────────────────────────
 
-class PlantillaViewSet(viewsets.ModelViewSet):
+class PlantillaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     module             = 'plantillas'
     permission_classes = [IsAuthenticated]
     serializer_class   = PlantillaSerializer
@@ -75,11 +76,8 @@ class PlantillaViewSet(viewsets.ModelViewSet):
             .order_by('cod_plantilla')
         )
 
-    def perform_destroy(self, instance):
-        instance.soft_delete(user=self.request.user)
 
-
-class DetallePlantillaViewSet(viewsets.ModelViewSet):
+class DetallePlantillaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     """
     CRUD completo de renglones/detalles de plantilla.
     GET    /api/plantillas/detalles/?plantilla=<id>
@@ -99,9 +97,6 @@ class DetallePlantillaViewSet(viewsets.ModelViewSet):
         if plantilla_id:
             qs = qs.filter(plantilla_id=plantilla_id)
         return qs
-
-    def perform_destroy(self, instance):
-        instance.soft_delete(user=self.request.user)
 
     @action(detail=False, methods=['post'], url_path='bulk-import')
     def bulk_import(self, request):

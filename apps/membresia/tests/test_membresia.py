@@ -111,12 +111,12 @@ class MembresiaApiTest(TestCase):
         self.assertEqual(self.client.get(f'{self.url}?solo_bautizados=1').data['count'], 1)
         self.assertEqual(self.client.get(f'{self.url}?solo_promesados=1').data['count'], 0)
 
-    def test_borrado_logico(self):
+    def test_borrado_elimina_membresia_de_la_base(self):
         mid = self._crear()
         r = self.client.delete(f'{self.url}{mid}/')
         self.assertEqual(r.status_code, 204)
         self.assertEqual(Membresia.objects.count(), 0)
-        self.assertEqual(Membresia.all_objects.count(), 1)
+        self.assertEqual(Membresia.all_objects.count(), 0)
         # El tercero NO se borra: solo desaparece la membresía
         self.assertTrue(Tercero.all_objects.filter(cedula='99999999').exists())
 
@@ -139,21 +139,22 @@ class MembresiaApiTest(TestCase):
         self.assertTrue(r.data['ya_tiene_membresia'])
         self.assertFalse(r.data['membresia_dada_de_baja'])
 
-    def test_tercero_por_cedula_detecta_membresia_dada_de_baja(self):
+    def test_tercero_por_cedula_sin_membresia_tras_borrar_membresia(self):
         mid = self._crear()
         self.client.delete(f'{self.url}{mid}/')
         r = self.client.get(f'{self.url}tercero-por-cedula/?cedula=99999999')
+        self.assertTrue(r.data['existe'])
         self.assertFalse(r.data['ya_tiene_membresia'])
-        self.assertTrue(r.data['membresia_dada_de_baja'])
+        self.assertFalse(r.data['membresia_dada_de_baja'])
 
-    def test_no_se_puede_recrear_una_membresia_dada_de_baja(self):
+    def test_se_puede_recrear_membresia_tras_borrar_la_anterior(self):
         mid = self._crear()
         self.client.delete(f'{self.url}{mid}/')
         r = self.client.post(self.url, {
             'tercero': {'cedula': '99999999', 'nombre1': 'Juan'}, 'estado': '1',
         }, format='json')
-        self.assertEqual(r.status_code, 400)
-        self.assertEqual(Membresia.all_objects.filter(tercero_id='99999999').count(), 1)
+        self.assertEqual(r.status_code, 201)
+        self.assertEqual(Membresia.objects.filter(tercero_id='99999999').count(), 1)
 
     def test_tercero_por_cedula_sin_parametro(self):
         r = self.client.get(f'{self.url}tercero-por-cedula/')

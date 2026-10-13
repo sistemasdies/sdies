@@ -189,3 +189,81 @@ class PermisosTest(TestCase):
         self.client.force_authenticate(user)
         r = self.client.post(PREVIEW, {'tabla': 'movicont', 'filtros': {}}, format='json')
         self.assertEqual(r.status_code, 200)
+
+
+BORRADO_DURO = '/api/correccion-datos/borrado-duro/'
+
+
+class BorradoDuroTest(CorreccionDatosBase):
+
+    def test_preview_reporta_soft_deleted_de_todas_las_tablas(self):
+        self.comprobante.soft_delete()
+        self.tercero.soft_delete()
+        r = self.client.get(BORRADO_DURO)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data['total'], 2)
+        tablas = {t['tabla'] for t in r.data['por_tabla']}
+        self.assertIn('Comprobante', tablas)
+        self.assertIn('Tercero', tablas)
+
+    def test_preview_no_muestra_tablas_sin_registros(self):
+        r = self.client.get(BORRADO_DURO)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data['total'], 0)
+        self.assertEqual(r.data['por_tabla'], [])
+
+    def test_requiere_confirmacion(self):
+        self.comprobante.soft_delete()
+        r = self.client.post(BORRADO_DURO, {'confirmacion': 'NO'}, format='json')
+        self.assertEqual(r.status_code, 400)
+
+    def test_borra_soft_deleted_de_todas_las_tablas(self):
+        comp2 = Comprobante.objects.create(codigo='PI', descripcion='Pago ingresos')
+        carga = PlantillaContable.objects.create(cod_plantilla='P1', nombre='Ingresos')
+        DetallePlantilla.objects.create(plantilla=carga, item=1, cuenta='110505', tipo_mov='D')
+        comp2.soft_delete()
+        carga.soft_delete()
+        self.tercero.soft_delete()
+
+        r = self.client.post(BORRADO_DURO, {'confirmacion': 'BORRAR'}, format='json')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data['total_eliminados'], 3)
+        self.assertEqual(r.data['total_protegidos'], 0)
+        by = {t['tabla']: t for t in r.data['por_tabla']}
+        self.assertEqual(by['Tercero']['eliminados'], 1)
+        self.assertEqual(by['Comprobante']['eliminados'], 1)
+        self.assertEqual(by['PlantillaContable']['eliminados'], 1)
+
+        # No queda nada en all_objects (ni el detalle, borrado por cascada)
+        self.assertFalse(Tercero.all_objects.filter(pk=self.tercero.pk).exists())
+        self.assertFalse(Comprobante.all_objects.filter(pk=comp2.pk).exists())
+        self.assertFalse(PlantillaContable.all_objects.filter(pk=carga.pk).exists())
+        self.assertFalse(DetallePlantilla.all_objects.exists())
+        # El comprobante activo referenciado no se toca
+        self.assertTrue(Comprobante.all_objects.filter(pk=self.comprobante.pk, deleted=False).exists())
+
+    def test_registros_referenciados_quedan_protegidos(self):
+        # Tercero y comprobante referenciados por un movimiento
+        m = MoviCont.objects.create(
+            cod_comprob=self.comprobante, num_comprob=9, item_comprob=1,
+            fecha=datetime.date(2025, 7, 1), cuenta=self.cuenta,
+            observacion='Ref campana', cedula=self.tercero,
+            centro_costo=self.centro, vr_debitos=10, vr_creditos=0)
+        self.tercero.soft_delete()
+        self.comprobante.soft_delete()
+
+        r = self.client.post(BORRADO_DURO, {'confirmacion': 'BORRAR'}, format='json')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data['total_eliminados'], 0)
+        self.assertEqual(r.data['total_protegidos'], 2)
+        by = {t['tabla']: t for t in r.data['por_tabla']}
+        self.assertEqual(by['Tercero']['protegidos'], 1)
+        self.assertEqual(by['Comprobante']['protegidos'], 1)
+        # Siguen en BD aunque estén soft-deleted
+        self.assertTrue(Tercero.all_objects.filter(pk=self.tercero.pk, deleted=True).exists())
+        self.assertTrue(Comprobante.all_objects.filter(pk=self.comprobante.pk, deleted=True).exists())
+
+    def test_registra_auditoria(self):
+        self.tercero.soft_delete()
+        self.client.post(BORRADO_DURO, {'confirmacion': 'BORRAR'}, format='json')
+        self.assertTrue(AuditLog.objects.filter(action='BORRADO_DURO').exists())

@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .services import password_recovery
 from .models import User, Role, Permission, UserPreference
-from .serializers.auth import (UserSerializer, UserCreateSerializer,
+from .serializers.auth import (UserSerializer, UserCreateSerializer, ProfileSerializer,
                                 RoleSerializer, PermissionSerializer,
                                 ChangePasswordSerializer, UserPreferenceSerializer)
 
@@ -65,8 +65,17 @@ class UserViewSet(viewsets.ModelViewSet):
         user.save()
         return Response({'detail': f'Contraseña de {user.login} actualizada.'})
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get', 'patch'], url_path='me')
     def me(self, request):
+        if request.method == 'PATCH':
+            email = request.data.get('email')
+            if email is not None and User.objects.exclude(pk=request.user.pk).filter(
+                    email__iexact=email.strip()).exists():
+                return Response({'email': ['El email ya está registrado por otro usuario.']},
+                                status=status.HTTP_400_BAD_REQUEST)
+            s = ProfileSerializer(request.user, data=request.data, partial=True)
+            s.is_valid(raise_exception=True)
+            s.save()
         return Response(UserSerializer(request.user).data)
 
     @action(detail=False, methods=['post'], url_path='bloquear-fecha')
