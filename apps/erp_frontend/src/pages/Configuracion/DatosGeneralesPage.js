@@ -1,20 +1,22 @@
 import { useEffect, useState } from 'react';
+
+import { getDatosGenerales, saveDatosGenerales } from '../../api/datosGenerales';
+import CloudinaryPicker from '../../components/common/CloudinaryPicker';
+import PageHeader from '../../components/common/PageHeader';
+import SelectorTercero from '../../components/common/SelectorTercero';
+import Spinner from '../../components/common/Spinner';
 import MainLayout from '../../components/layout/MainLayout';
 import TopBar from '../../components/layout/TopBar';
-import PageHeader from '../../components/common/PageHeader';
-import Spinner from '../../components/common/Spinner';
-import SelectorTercero from '../../components/common/SelectorTercero';
-import { getDatosGenerales, saveDatosGenerales } from '../../api/datosGenerales';
-import { usePerm } from '../../hooks/usePerm';
 import { useAuth } from '../../context/AuthContext';
+import { usePerm } from '../../hooks/usePerm';
 import toast from 'react-hot-toast';
 
 const CAMPOS_TEXTO = ['NombreOrganizacion', 'NIT', 'direccion', 'telefono', 'email', 'ciudad', 'pais'];
 
 const IMAGENES = [
-  { campo: 'LogoDeLaOrganizacion', label: 'Logo de la organización', pista: 'Imagen institucional principal.' },
-  { campo: 'logoDeLaApp',          label: 'Logo de la app',          pista: 'Se muestra en el menú lateral.' },
-  { campo: 'FondoDeLaApp',         label: 'Fondo de la app',         pista: 'Imagen de fondo de las pantallas.' },
+  { campo: 'LogoDeLaOrganizacion', label: 'Logo de la organización', tipo: 'logos',  pista: 'Imagen institucional principal.' },
+  { campo: 'logoDeLaApp',          label: 'Logo de la app',          tipo: 'logos',  pista: 'Se muestra en el menú lateral.' },
+  { campo: 'FondoDeLaApp',         label: 'Fondo de la app',         tipo: 'fondos', pista: 'Imagen de fondo de las pantallas.' },
 ];
 
 export default function DatosGeneralesPage() {
@@ -27,10 +29,7 @@ export default function DatosGeneralesPage() {
 
   const [presidente, setPresidente] = useState(null);
   const [selectorAbierto, setSelectorAbierto] = useState(false);
-
-  const [archivos, setArchivos] = useState({});   // campo -> File
-  const [quitar, setQuitar]     = useState({});    // campo -> bool
-  const [preview, setPreview]   = useState({});    // campo -> objectURL
+  const [picker, setPicker] = useState(null);   // { campo, tipo }
 
   const cargar = () => {
     setCargando(true);
@@ -40,44 +39,32 @@ export default function DatosGeneralesPage() {
         setPresidente(data.CedulaPresidente
           ? { cedula: data.CedulaPresidente, nombre_completo: data.presidente_nombre }
           : null);
-        setArchivos({}); setQuitar({}); setPreview({});
       })
-      .catch(() => toast.error('No se pudieron cargar los datos generales'))
       .finally(() => setCargando(false));
   };
 
   useEffect(() => { cargar(); }, []);
 
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const set = (campo, valor) => setForm(f => ({ ...f, [campo]: valor }));
 
-  const elegirArchivo = (campo, file) => {
-    if (!file) return;
-    setArchivos(a => ({ ...a, [campo]: file }));
-    setQuitar(q => ({ ...q, [campo]: false }));
-    setPreview(p => ({ ...p, [campo]: URL.createObjectURL(file) }));
-  };
-
-  const marcarQuitar = (campo) => {
-    setArchivos(a => { const c = { ...a }; delete c[campo]; return c; });
-    setPreview(p => { const c = { ...p }; delete c[campo]; return c; });
-    setQuitar(q => ({ ...q, [campo]: true }));
+  const elegirImagen = (url) => {
+    set(picker.campo, url);
+    setPicker(null);
   };
 
   const guardar = async () => {
-    const fd = new FormData();
-    CAMPOS_TEXTO.forEach(k => fd.append(k, form[k] || ''));
-    fd.append('CedulaPresidente', presidente?.cedula || '');
-    Object.entries(archivos).forEach(([campo, file]) => fd.append(campo, file));
-    Object.entries(quitar).forEach(([campo, v]) => { if (v) fd.append(campo, ''); });
+    const payload = {};
+    CAMPOS_TEXTO.forEach(k => { payload[k] = form[k] || ''; });
+    IMAGENES.forEach(({ campo }) => { payload[campo] = form[campo] || ''; });
+    payload.CedulaPresidente = presidente?.cedula || null;
 
     try {
       setGuardando(true);
-      const { data } = await saveDatosGenerales(fd);
+      const { data } = await saveDatosGenerales(payload);
       setForm(data);
       setPresidente(data.CedulaPresidente
         ? { cedula: data.CedulaPresidente, nombre_completo: data.presidente_nombre }
         : null);
-      setArchivos({}); setQuitar({}); setPreview({});
       refrescarMarca();
       toast.success('Datos generales guardados');
     } catch (e) {
@@ -87,8 +74,6 @@ export default function DatosGeneralesPage() {
       setGuardando(false);
     }
   };
-
-  const imagenSrc = (campo) => preview[campo] || form?.[campo] || '';
 
   if (cargando) {
     return (
@@ -154,15 +139,15 @@ export default function DatosGeneralesPage() {
                 <div className="input-group input-group-sm">
                   <input className="form-control" disabled value={
                     presidente ? `${presidente.cedula} - ${presidente.nombre_completo}` : ''
-                  } placeholder="Sin asignar" readOnly />
+                  } />
                   <button type="button" className="btn btn-outline-secondary" disabled={!canEdit}
                     onClick={() => setSelectorAbierto(true)}>
                     <i className="bi bi-search"></i>
                   </button>
                   {presidente && (
                     <button type="button" className="btn btn-outline-danger" disabled={!canEdit}
-                      onClick={() => setPresidente(null)} title="Quitar">
-                      <i className="bi bi-x-lg"></i>
+                      onClick={() => setPresidente(null)} title="Quitar presidente">
+                      <i className="bi bi-x"></i>
                     </button>
                   )}
                 </div>
@@ -174,26 +159,28 @@ export default function DatosGeneralesPage() {
         <div className="card border-0 shadow-sm mb-3">
           <div className="card-body">
             <div className="text-muted small fw-semibold mb-3">
-              <i className="bi bi-image me-1"></i>Imágenes
+              <i className="bi bi-cloud me-1"></i>Imágenes (Cloudinary)
             </div>
             <div className="row g-3">
-              {IMAGENES.map(({ campo, label, pista }) => (
+              {IMAGENES.map(({ campo, label, tipo, pista }) => (
                 <div className="col-md-4" key={campo}>
                   <label className="form-label small mb-1">{label}</label>
                   <div className="border rounded d-flex align-items-center justify-content-center mb-2"
                     style={{ height: 140, background: '#f8f9fa', overflow: 'hidden' }}>
-                    {imagenSrc(campo)
-                      ? <img src={imagenSrc(campo)} alt={label}
+                    {form[campo]
+                      ? <img src={form[campo]} alt={label}
                           style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                       : <span className="text-muted small">Sin imagen</span>}
                   </div>
                   <div className="d-flex gap-2">
-                    <input type="file" accept="image/*" className="form-control form-control-sm"
+                    <button type="button" className="btn btn-outline-success btn-sm"
                       disabled={!canEdit}
-                      onChange={e => elegirArchivo(campo, e.target.files?.[0])} />
-                    {(imagenSrc(campo) || quitar[campo]) && canEdit && (
+                      onClick={() => setPicker({ campo, tipo })}>
+                      <i className="bi bi-cloud-arrow-down me-1"></i>Elegir de Cloudinary
+                    </button>
+                    {form[campo] && canEdit && (
                       <button type="button" className="btn btn-outline-danger btn-sm"
-                        onClick={() => marcarQuitar(campo)} title="Quitar imagen">
+                        onClick={() => set(campo, '')} title="Quitar imagen">
                         <i className="bi bi-trash"></i>
                       </button>
                     )}
@@ -221,6 +208,13 @@ export default function DatosGeneralesPage() {
         onCerrar={() => setSelectorAbierto(false)}
         onElegir={(item) => setPresidente({ cedula: item.cedula, nombre_completo: item.nombre_completo })}
         cedulaInicial={presidente?.cedula}
+      />
+
+      <CloudinaryPicker
+        abierto={!!picker}
+        tipo={picker?.tipo}
+        onCerrar={() => setPicker(null)}
+        onElegir={elegirImagen}
       />
     </MainLayout>
   );

@@ -35,15 +35,15 @@ class DatosGenerales(BaseModel):
                                             verbose_name='Ciudad')
     pais                 = models.CharField(max_length=80, blank=True,
                                             verbose_name='País')
-    LogoDeLaOrganizacion = models.ImageField(upload_to='datos_generales/',
-                                             null=True, blank=True,
-                                             verbose_name='Logo de la organización')
-    logoDeLaApp          = models.ImageField(upload_to='datos_generales/',
-                                             null=True, blank=True,
-                                             verbose_name='Logo de la app')
-    FondoDeLaApp         = models.ImageField(upload_to='datos_generales/',
-                                             null=True, blank=True,
-                                             verbose_name='Fondo de la app')
+    # Imágenes alojadas en Cloudinary: se guardan como enlace (URL).
+    #   LogoDeLaOrganizacion / logoDeLaApp → carpeta de logos
+    #   FondoDeLaApp                       → carpeta de fondos
+    LogoDeLaOrganizacion = models.URLField(max_length=500, blank=True, default='',
+                                           verbose_name='Logo de la organización')
+    logoDeLaApp          = models.URLField(max_length=500, blank=True, default='',
+                                           verbose_name='Logo de la app')
+    FondoDeLaApp         = models.URLField(max_length=500, blank=True, default='',
+                                           verbose_name='Fondo de la app')
 
     class Meta:
         verbose_name        = 'Datos generales'

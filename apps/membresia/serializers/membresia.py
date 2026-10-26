@@ -45,13 +45,14 @@ class MembresiaSerializer(serializers.ModelSerializer):
             'telefono_trabajo', 'comentarios_academico_laboral',
             'estado', 'comentarios_eclesiales',
             'congregacion', 'congregacion_nombre',
+            'foto',
             'sw_bautizado', 'serial_bautismo', 'fecha_bautismo',
             'lugar_bautismo', 'pastor_que_bautizo',
             'sw_promesado', 'serial_membresia', 'fecha_promesado',
             'lugar_promesado', 'congregacion_anterior', 'salio_para',
             'fecha_llegada', 'fecha_salida', 'created_at',
         ]
-        read_only_fields = ['id', 'created_at', 'congregacion_nombre']
+        read_only_fields = ['id', 'created_at', 'congregacion_nombre', 'foto']
 
     def get_congregacion_nombre(self, obj):
         if not obj.congregacion_id:

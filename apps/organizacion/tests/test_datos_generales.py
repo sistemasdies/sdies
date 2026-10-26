@@ -1,24 +1,15 @@
 """Tests del singleton DatosGenerales (modelo, permisos y endpoint)."""
-import io
-import tempfile
+from unittest.mock import patch
 
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
-from PIL import Image
+from django.test import TestCase
 from rest_framework.test import APIClient
 
 from apps.accounting.models import Tercero
 from apps.organizacion.models import DatosGenerales, SINGLETON_ID
 from apps.users.models import Permission, Role, User
 
-URL = '/api/datos-generales/'
-
-
-def _png(nombre='logo.png'):
-    buf = io.BytesIO()
-    Image.new('RGB', (4, 4), 'red').save(buf, format='PNG')
-    buf.seek(0)
-    return SimpleUploadedFile(nombre, buf.read(), content_type='image/png')
+URL     = '/api/datos-generales/'
+URL_IMG = '/api/datos-generales/imagenes-cloudinary/'
 
 
 def _usuario(login, codes=()):
@@ -35,7 +26,6 @@ def _usuario(login, codes=()):
     return user
 
 
-@override_settings(MEDIA_ROOT=tempfile.mkdtemp(prefix='org-media-'))
 class DatosGeneralesTest(TestCase):
 
     def setUp(self):
@@ -120,14 +110,44 @@ class DatosGeneralesTest(TestCase):
         self.assertIsNone(r.data['CedulaPresidente'])
         self.assertIsNone(DatosGenerales.get_solo().CedulaPresidente_id)
 
-    # --- imágenes (multipart) ---
+    # --- imágenes (enlaces de Cloudinary) ---
 
-    def test_subir_y_limpiar_imagen(self):
+    def test_guardar_y_limpiar_enlace_imagen(self):
         self.client.force_authenticate(self.superuser)
-        r = self.client.patch(URL, {'logoDeLaApp': _png()}, format='multipart')
+        url = 'https://res.cloudinary.com/p8xxqrm3/image/upload/v1/sdies/logos/logo.png'
+        r = self.client.patch(URL, {'logoDeLaApp': url}, format='json')
         self.assertEqual(r.status_code, 200)
-        self.assertTrue(DatosGenerales.get_solo().logoDeLaApp)
+        self.assertEqual(DatosGenerales.get_solo().logoDeLaApp, url)
 
-        r2 = self.client.patch(URL, {'logoDeLaApp': ''}, format='multipart')
+        r2 = self.client.patch(URL, {'logoDeLaApp': ''}, format='json')
         self.assertEqual(r2.status_code, 200)
-        self.assertFalse(DatosGenerales.get_solo().logoDeLaApp)
+        self.assertEqual(DatosGenerales.get_solo().logoDeLaApp, '')
+
+    def test_enlace_invalido_da_400(self):
+        self.client.force_authenticate(self.superuser)
+        r = self.client.patch(URL, {'FondoDeLaApp': 'no-es-url'}, format='json')
+        self.assertEqual(r.status_code, 400)
+        self.assertIn('FondoDeLaApp', str(r.data))
+
+    # --- listado de imágenes de Cloudinary ---
+
+    def test_listar_imagenes_cloudinary(self):
+        self.client.force_authenticate(self.superuser)
+        fake = [{'public_id': 'sdies/logos/a.png', 'url': 'https://cdn/a.png',
+                 'filename': 'a.png', 'width': 10, 'height': 10}]
+        with patch('apps.organizacion.views.datos_generales_views'
+                   '.cloudinary_service.listar_imagenes', return_value=fake) as mock:
+            r = self.client.get(URL_IMG, {'tipo': 'logos'})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(r.data['imagenes']), 1)
+        self.assertEqual(r.data['imagenes'][0]['url'], 'https://cdn/a.png')
+        mock.assert_called_once()
+
+    def test_listar_imagenes_tipo_invalido(self):
+        self.client.force_authenticate(self.superuser)
+        r = self.client.get(URL_IMG, {'tipo': 'otro'})
+        self.assertEqual(r.status_code, 400)
+
+    def test_listar_imagenes_requiere_autenticacion(self):
+        r = APIClient().get(URL_IMG, {'tipo': 'logos'})
+        self.assertIn(r.status_code, (401, 403))

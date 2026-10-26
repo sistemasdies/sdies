@@ -297,3 +297,171 @@ class MembresiaApiTest(TestCase):
         mid = self._crear(estado='6')
         self.assertEqual(Membresia.objects.get(pk=mid).estado, '6')
         self.assertTrue(Tercero.all_objects.get(cedula='99999999').is_active)
+
+
+class MembresiaFotoTest(TestCase):
+    """Subida/eliminación de foto vía Cloudinary (servicio mockeado)."""
+
+    def setUp(self):
+        from apps.users.models import User
+        self.admin = User.objects.create_superuser(
+            login='tester', email='tester@erp.local', password='Test2025*')
+        self.client = APIClient()
+        self.client.force_authenticate(self.admin)
+        self.url = '/api/membresias/'
+
+    def _crear(self):
+        r = self.client.post(self.url, {
+            'tercero': {'cedula': '80000001', 'nombre1': 'Foto', 'apellido1': 'Test'},
+            'estado': '1',
+        }, format='json')
+        self.assertEqual(r.status_code, 201)
+        return r.data['id']
+
+    @staticmethod
+    def _imagen():
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        return SimpleUploadedFile('f.jpg', b'fake-image-bytes', content_type='image/jpeg')
+
+    def test_subir_foto_guarda_url_y_public_id(self):
+        from unittest.mock import patch
+        mid = self._crear()
+        resultado = {'secure_url': 'https://cdn.test/foto.jpg',
+                     'public_id': f'membresia_{mid}'}
+        with patch('apps.membresia.views.membresia_views.cloudinary_service.subir_foto',
+                   return_value=resultado) as mock:
+            r = self.client.post(f'{self.url}{mid}/foto/', {'imagen': self._imagen()},
+                                 format='multipart')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data['foto'], 'https://cdn.test/foto.jpg')
+        m = Membresia.objects.get(pk=mid)
+        self.assertEqual(m.foto, 'https://cdn.test/foto.jpg')
+        self.assertEqual(m.foto_public_id, f'membresia_{mid}')
+        mock.assert_called_once()
+
+    def test_subir_sin_archivo_devuelve_400(self):
+        mid = self._crear()
+        r = self.client.post(f'{self.url}{mid}/foto/', {}, format='multipart')
+        self.assertEqual(r.status_code, 400)
+
+    def test_subir_con_servicio_no_configurado_devuelve_503(self):
+        from unittest.mock import patch
+        from apps.core.utils.exceptions import ServiceNotConfigured
+        mid = self._crear()
+        with patch('apps.membresia.views.membresia_views.cloudinary_service.subir_foto',
+                   side_effect=ServiceNotConfigured('sin credenciales')):
+            r = self.client.post(f'{self.url}{mid}/foto/', {'imagen': self._imagen()},
+                                 format='multipart')
+        self.assertEqual(r.status_code, 503)
+
+    def test_eliminar_foto_limpia_campos(self):
+        from unittest.mock import patch
+        mid = self._crear()
+        Membresia.objects.filter(pk=mid).update(
+            foto='https://cdn.test/foto.jpg', foto_public_id=f'membresia_{mid}')
+        with patch('apps.membresia.views.membresia_views.cloudinary_service.eliminar_foto') as mock:
+            r = self.client.delete(f'{self.url}{mid}/foto/')
+        self.assertEqual(r.status_code, 200)
+        m = Membresia.objects.get(pk=mid)
+        self.assertEqual(m.foto, '')
+        self.assertEqual(m.foto_public_id, '')
+        mock.assert_called_once_with(f'membresia_{mid}')
+
+    def test_foto_es_solo_lectura_en_serializer(self):
+        mid = self._crear()
+        r = self.client.patch(f'{self.url}{mid}/', {'foto': 'https://malicioso.test/x.jpg'},
+                              format='json')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(Membresia.objects.get(pk=mid).foto, '')
+
+
+class MembresiaImportarTest(TestCase):
+    """Importación masiva de membresías (mismos campos que la exportación)."""
+
+    def setUp(self):
+        from apps.users.models import User
+        self.admin = User.objects.create_superuser(
+            login='importador', email='importador@erp.local', password='Test2025*')
+        self.client = APIClient()
+        self.client.force_authenticate(self.admin)
+        self.url = '/api/membresias/importar/'
+        self.tercero = Tercero.objects.create(
+            cedula='1001', tipo_persona='N', nombre1='Ana', apellido1='Lopez')
+
+    def _registro(self, **kwargs):
+        dato = {
+            'cedula': '1001',
+            'estado': '2',
+            'estado_civil': '2',
+            'personas_a_cargo': '2',
+            'sw_bautizado': 'true',
+            'fecha_bautismo': '2010-04-10',
+            'comentario_familiar': 'Familia estable',
+        }
+        dato.update(kwargs)
+        return dato
+
+    def _post(self, registros, modo='solo_nuevos'):
+        return self.client.post(
+            self.url, {'modo': modo, 'registros': registros}, format='json')
+
+    def test_crea_membresia_con_todos_los_campos(self):
+        r = self._post([self._registro()])
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data['creados'], 1)
+        self.assertEqual(r.data['errores'], [])
+
+        m = Membresia.objects.get(tercero_id='1001')
+        self.assertEqual(m.estado, '2')
+        self.assertEqual(m.estado_civil, '2')
+        self.assertEqual(m.personas_a_cargo, 2)
+        self.assertTrue(m.sw_bautizado)
+        self.assertEqual(str(m.fecha_bautismo), '2010-04-10')
+        self.assertEqual(m.comentario_familiar, 'Familia estable')
+
+    def test_acepta_etiquetas_y_fechas_dd_mm_aaaa(self):
+        r = self._post([self._registro(
+            estado='Desconocido', estado_civil='Casado',
+            fecha_bautismo='10/04/2010')])
+        self.assertEqual(r.data['creados'], 1)
+        m = Membresia.objects.get(tercero_id='1001')
+        self.assertEqual(m.estado, '7')
+        self.assertEqual(m.estado_civil, '2')
+        self.assertEqual(str(m.fecha_bautismo), '2010-04-10')
+
+    def test_modo_ambos_actualiza_existente(self):
+        self._post([self._registro()])
+        r = self._post([self._registro(
+            estado='4', comentarios_eclesiales='Traslado')], modo='ambos')
+        self.assertEqual(r.data['actualizados'], 1)
+        self.assertEqual(r.data['creados'], 0)
+        m = Membresia.objects.get(tercero_id='1001')
+        self.assertEqual(m.estado, '4')
+        self.assertEqual(m.comentarios_eclesiales, 'Traslado')
+
+    def test_solo_nuevos_omite_existente(self):
+        self._post([self._registro()])
+        r = self._post([self._registro(estado='4')])
+        self.assertEqual(r.data['omitidos'], 1)
+        self.assertEqual(Membresia.objects.get(tercero_id='1001').estado, '2')
+
+    def test_tercero_inexistente_genera_error(self):
+        r = self._post([self._registro(cedula='9999')])
+        self.assertEqual(r.data['creados'], 0)
+        self.assertEqual(len(r.data['errores']), 1)
+        self.assertIn('No existe un tercero', r.data['errores'][0]['error'])
+
+    def test_fecha_invalida_genera_error(self):
+        r = self._post([self._registro(fecha_bautismo='2010-13-40')])
+        self.assertEqual(r.data['creados'], 0)
+        self.assertIn('fecha inválida', r.data['errores'][0]['error'])
+
+    def test_congregacion_inexistente_genera_error(self):
+        r = self._post([self._registro(congregacion='ZZZZ')])
+        self.assertEqual(r.data['creados'], 0)
+        self.assertIn('no existe el código', r.data['errores'][0]['error'])
+
+    def test_modo_invalido_devuelve_400(self):
+        r = self.client.post(self.url, {'modo': 'otro', 'registros': []}, format='json')
+        self.assertEqual(r.status_code, 400)
+

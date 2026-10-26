@@ -109,6 +109,14 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL   = '/media/'
 MEDIA_ROOT  = BASE_DIR / 'media'
 
+# Cloudinary (almacenamiento de imágenes externas)
+CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME') or env_file('CLOUDINARY_CLOUD_NAME', default='')
+CLOUDINARY_API_KEY    = os.environ.get('CLOUDINARY_API_KEY')    or env_file('CLOUDINARY_API_KEY', default='')
+CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET') or env_file('CLOUDINARY_API_SECRET', default='')
+CLOUDINARY_FOLDER     = os.environ.get('CLOUDINARY_FOLDER') or env_file('CLOUDINARY_FOLDER', default='sdies/fotos')
+CLOUDINARY_FOLDER_LOGOS  = os.environ.get('CLOUDINARY_FOLDER_LOGOS')  or env_file('CLOUDINARY_FOLDER_LOGOS',  default='sdies/logos')
+CLOUDINARY_FOLDER_FONDOS = os.environ.get('CLOUDINARY_FOLDER_FONDOS') or env_file('CLOUDINARY_FOLDER_FONDOS', default='sdies/fondos')
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME':    timedelta(hours=8),
     'REFRESH_TOKEN_LIFETIME':   timedelta(days=30),

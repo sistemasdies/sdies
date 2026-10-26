@@ -9,11 +9,13 @@ from rest_framework.test import APIClient
 from apps.accounting.models import (
     Comprobante, Cuenta, CentroCosto, Tercero,
 )
+from apps.membresia.import_export import CAMPOS_MEMBRESIA
+from apps.membresia.models import Membresia
 from apps.users.models import Permission, Role, User
 
 BASE_URL = '/api/reports/exportar-datos/'
-ENTIDADES = ['cuentas', 'terceros', 'centros_costo', 'comprobantes',
-             'movicont', 'plantillas', 'det_plantillas']
+ENTIDADES = ['cuentas', 'terceros', 'membresias', 'centros_costo',
+             'comprobantes', 'movicont', 'plantillas', 'det_plantillas']
 
 
 class ExportarDatosBase(TestCase):
@@ -25,8 +27,10 @@ class ExportarDatosBase(TestCase):
         self.client.force_authenticate(self.admin)
 
         Cuenta.objects.create(codigo='1105', descripcion='Caja')
-        Tercero.objects.create(cedula='1001', tipo_persona='N',
-                               nombre1='Ana', apellido1='Lopez')
+        self.tercero = Tercero.objects.create(
+            cedula='1001', tipo_persona='N', nombre1='Ana', apellido1='Lopez')
+        Membresia.objects.create(tercero=self.tercero, estado='1',
+                                 escolaridad='Universitaria')
         CentroCosto.objects.create(codigo='01', descripcion='Principal')
         Comprobante.objects.create(codigo='CC', descripcion='Contabilidad')
 
@@ -58,10 +62,17 @@ class ExportarEntidadTest(ExportarDatosBase):
         self.assertEqual(filas[0], ['codigo', 'descripcion', 'responsable'])
         self.assertIn(['01', 'Principal', ''], filas[1:])
 
+    def test_membresias_exporta_todos_los_campos(self):
+        r = self.client.get(f'{BASE_URL}membresias/')
+        filas = list(csv.reader(io.StringIO(r.content.decode('utf-8').lstrip('\ufeff'))))
+        self.assertEqual(filas[0], CAMPOS_MEMBRESIA)
+        self.assertEqual(len(filas), 2)
+        self.assertEqual(filas[1][0], '1001')
+
 
 class ExportarTodoTest(ExportarDatosBase):
 
-    def test_zip_contiene_las_siete_entidades(self):
+    def test_zip_contiene_todas_las_entidades(self):
         r = self.client.get(BASE_URL)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r['Content-Type'], 'application/zip')

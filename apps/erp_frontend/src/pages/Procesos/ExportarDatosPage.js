@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 const MODULOS = [
   { id: 'cuentas',        label: 'Plan de Cuentas',        icon: 'bi-diagram-3',        color: 'success', desc: 'codigo, descripcion' },
   { id: 'terceros',       label: 'Terceros',               icon: 'bi-people',           color: 'primary', desc: 'Datos completos del tercero' },
+  { id: 'membresias',     label: 'Membresías',             icon: 'bi-person-vcard',     color: 'success', desc: 'Todos los campos de la membresía' },
   { id: 'centros_costo',  label: 'Centros de Costo',       icon: 'bi-bullseye',         color: 'warning', desc: 'codigo, descripcion, responsable' },
   { id: 'comprobantes',   label: 'Comprobantes',           icon: 'bi-receipt',          color: 'info',    desc: 'codigo, descripcion, numero inicial, activo' },
   { id: 'movicont',       label: 'Movimientos (MoviCont)', icon: 'bi-journal-arrow-up', color: 'success', desc: '12 columnas de MoviCont' },

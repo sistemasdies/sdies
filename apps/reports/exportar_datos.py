@@ -21,6 +21,10 @@ from apps.accounting.models import (
     PlantillaContable, Tercero,
 )
 from apps.accounting.views.terceros_views import EXPORT_COLUMNAS
+from apps.membresia.import_export import (
+    CAMPOS_MEMBRESIA, valor_exportacion,
+)
+from apps.membresia.models import Membresia
 
 MODULE = 'exportar'
 
@@ -53,6 +57,16 @@ def _terceros():
     headers = [h for h, _ in EXPORT_COLUMNAS]
     rows = ([_clean(getattr(t, campo)) for _, campo in EXPORT_COLUMNAS]
             for t in Tercero.objects.order_by('apellido1', 'nombre1', 'razon_social'))
+    return headers, rows
+
+
+def _membresias():
+    headers = list(CAMPOS_MEMBRESIA)
+    qs = (Membresia.objects
+          .select_related('tercero', 'congregacion')
+          .order_by('tercero__apellido1', 'tercero__nombre1'))
+    rows = ([valor_exportacion(m, campo) for campo in CAMPOS_MEMBRESIA]
+            for m in qs.iterator())
     return headers, rows
 
 
@@ -132,6 +146,7 @@ def _detalle_plantillas():
 ENTIDADES = {
     'cuentas':        ('plan_de_cuentas.csv',    _cuentas),
     'terceros':       ('terceros.csv',           _terceros),
+    'membresias':     ('membresias.csv',         _membresias),
     'centros_costo':  ('centros_de_costo.csv',   _centros_costo),
     'comprobantes':   ('comprobantes.csv',       _comprobantes),
     'movicont':       ('movicont.csv',           _movicont),

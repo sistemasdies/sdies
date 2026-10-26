@@ -9,10 +9,12 @@ import ImportadorComprobantes      from './ImportadorComprobantes';
 import ImportadorPlantillas        from './ImportadorPlantillas';
 import ImportadorDetallePlantillas from './ImportadorDetallePlantillas';
 import ImportadorMoviCont          from './ImportadorMoviCont';
+import ImportadorMembresia        from './ImportadorMembresia';
 
 const MODULOS = [
   { id: 'cuentas',          label: 'Plan de Cuentas',       icon: 'bi-diagram-3',    color: 'success' },
   { id: 'terceros',         label: 'Terceros',               icon: 'bi-people',       color: 'primary' },
+  { id: 'membresias',       label: 'Membresía',              icon: 'bi-person-vcard', color: 'success' },
   { id: 'centros_costo',    label: 'Centros de Costo',       icon: 'bi-bullseye',     color: 'warning' },
   { id: 'comprobantes',     label: 'Comprobantes',           icon: 'bi-receipt',      color: 'info'    },
   { id: 'movicont',         label: 'Movimientos (MoviCont)', icon: 'bi-journal-arrow-up', color: 'success' },
@@ -47,6 +49,7 @@ export default function ImportarPage() {
 
         {activo === 'cuentas'        && <ImportadorCuentas />}
         {activo === 'terceros'       && <ImportadorTerceros />}
+        {activo === 'membresias'     && <ImportadorMembresia />}
         {activo === 'centros_costo'  && <ImportadorCentrosCosto />}
         {activo === 'comprobantes'   && <ImportadorComprobantes />}
         {activo === 'movicont'       && <ImportadorMoviCont />}

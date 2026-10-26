@@ -10,6 +10,7 @@ class EstadoMembresia(models.TextChoices):
     TRASLADADO = '4', 'Trasladado'
     ENFERMO   = '5', 'Enfermo'
     APARTADO  = '6', 'Apartado'
+    DESCONOCIDO = '7', 'Desconocido'
 
 
 class EstadoCivil(models.TextChoices):
@@ -64,6 +65,10 @@ class Membresia(BaseModel):
     estado                 = models.CharField(max_length=1, choices=EstadoMembresia.choices,
                                              default=EstadoMembresia.ACTIVO)
     comentarios_eclesiales = models.TextField(blank=True)
+
+    # ── 5. Foto del miembro (almacenada en Cloudinary) ────────────────────
+    foto           = models.URLField('Foto', max_length=500, blank=True)
+    foto_public_id = models.CharField('Foto (ID Cloudinary)', max_length=255, blank=True)
 
     congregacion = models.ForeignKey(
         'congregacion.Congregacion', null=True, blank=True,

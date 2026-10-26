@@ -3,8 +3,8 @@ from rest_framework import serializers
 from apps.accounting.models import Tercero
 from apps.organizacion.models import DatosGenerales
 
-CAMPOS_IMAGEN = ('LogoDeLaOrganizacion', 'logoDeLaApp', 'FondoDeLaApp')
-CAMPOS_VACIOS_A_NULO = CAMPOS_IMAGEN + ('CedulaPresidente',)
+# Campos que llegan como cadena vacía desde el formulario y deben guardarse vacíos.
+CAMPOS_VACIOS_A_NULO = ('CedulaPresidente',)
 
 
 class DatosGeneralesSerializer(serializers.ModelSerializer):

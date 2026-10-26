@@ -12,6 +12,7 @@ import { usePerm } from '../../hooks/usePerm';
 import {
   getMembresias, createMembresia, updateMembresia, deleteMembresia,
   buscarTerceroPorCedula, getCedulasConMembresia,
+  subirFotoMembresia, eliminarFotoMembresia,
 } from '../../api/membresias';
 
 const PAGE_SIZE = 50;
@@ -19,7 +20,7 @@ const PAGE_SIZE = 50;
 // ── Catálogos ───────────────────────────────────────────────────────────────
 const ESTADOS = [
   ['1', 'Activo'], ['2', 'Ausente'], ['3', 'Vacaciones'],
-  ['4', 'Trasladado'], ['5', 'Enfermo'], ['6', 'Apartado'],
+  ['4', 'Trasladado'], ['5', 'Enfermo'], ['6', 'Apartado'], ['7', 'Desconocido'],
 ];
 const ESTADOS_CIVIL = [
   ['1', 'Soltero'], ['2', 'Casado'], ['3', 'Divorciado'],
@@ -30,7 +31,7 @@ const TIPOS_MATRIMONIO = [
 ];
 const SEXOS = [['M', 'Masculino'], ['F', 'Femenino']];
 
-const ESTADO_COLOR = { 1:'success', 2:'secondary', 3:'info', 4:'primary', 5:'danger', 6:'warning' };
+const ESTADO_COLOR = { 1:'success', 2:'secondary', 3:'info', 4:'primary', 5:'danger', 6:'warning', 7:'dark' };
 const ESTADO_LABEL  = Object.fromEntries(ESTADOS);
 const CIVIL_LABEL   = Object.fromEntries(ESTADOS_CIVIL);
 
@@ -60,6 +61,7 @@ const FORM_VACIO = {
   telefono_trabajo: '', comentarios_academico_laboral: '',
   estado: '1', comentarios_eclesiales: '',
   congregacion: '', congregacion_nombre: '',
+  foto: '',
   sw_bautizado: false, serial_bautismo: '', fecha_bautismo: '',
   lugar_bautismo: '', pastor_que_bautizo: '',
   sw_promesado: false, serial_membresia: '', fecha_promesado: '', lugar_promesado: '',
@@ -67,7 +69,8 @@ const FORM_VACIO = {
 };
 
 const COLUMNAS = [
-  { label: 'Cédula',      campo: 'cedula',            orden: 'tercero__cedula' },
+  { label: 'Foto',        campo: 'foto',            orden: null },
+  { label: 'Cédula',      campo: 'cedula',          orden: 'tercero__cedula' },
   { label: 'Nombre',      campo: 'nombre_completo',   orden: 'tercero__apellido1' },
   { label: 'Estado',      campo: 'estado',            orden: 'estado' },
   { label: 'Congregación', campo: 'congregacion_nombre', orden: null },
@@ -491,6 +494,11 @@ export default function MembresiaPage() {
   const [selectorAbierto, setSelectorAbierto] = useState(false);
   const [lupaCongregacion, setLupaCongregacion] = useState(false);
 
+  // Foto del miembro (Cloudinary)
+  const [fotoFile,     setFotoFile]     = useState(null);   // archivo pendiente (registro nuevo)
+  const [fotoPreview,  setFotoPreview]  = useState('');     // URL local para previsualización
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
+
   const cargar = useCallback(() => {
     setLoading(true);
     const params = { page: pagina, page_size: PAGE_SIZE };
@@ -528,11 +536,69 @@ export default function MembresiaPage() {
     setTerceroInfo(null);
   };
 
+  const limpiarFoto = () => {
+    setFotoFile(null);
+    setFotoPreview('');
+  };
+
+  const elegirFoto = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast.error('Formato no permitido. Use JPG, PNG o WebP.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen supera el tamaño máximo (5 MB).');
+      return;
+    }
+    if (editando) {
+      // Ya existe la membresía: se sube de inmediato.
+      setSubiendoFoto(true);
+      try {
+        const { data } = await subirFotoMembresia(editando.id, file);
+        setForm(p => ({ ...p, foto: data.foto }));
+        setEditando(p => ({ ...p, foto: data.foto }));
+        toast.success('Foto actualizada');
+      } catch (err) {
+        toast.error(err.response?.data?.detail || 'No se pudo subir la foto');
+      } finally {
+        setSubiendoFoto(false);
+      }
+    } else {
+      // Registro nuevo: se guarda y se sube al crear.
+      setFotoFile(file);
+      setFotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const quitarFoto = async () => {
+    if (editando && form.foto) {
+      if (!window.confirm('¿Eliminar la foto de esta membresía?')) return;
+      setSubiendoFoto(true);
+      try {
+        await eliminarFotoMembresia(editando.id);
+        setForm(p => ({ ...p, foto: '' }));
+        setEditando(p => ({ ...p, foto: '' }));
+        limpiarFoto();
+        toast.success('Foto eliminada');
+      } catch {
+        toast.error('No se pudo eliminar la foto');
+      } finally {
+        setSubiendoFoto(false);
+      }
+    } else {
+      limpiarFoto();
+    }
+  };
+
   const abrirNuevo = () => {
     setEditando(null);
     setForm({ ...FORM_VACIO, tercero: { ...TERCERO_VACIO } });
     setTab('generales');
     limpiarCedula();
+    limpiarFoto();
     setModal(true);
   };
 
@@ -568,6 +634,7 @@ export default function MembresiaPage() {
       estado: m.estado || '1', comentarios_eclesiales: m.comentarios_eclesiales || '',
       congregacion: m.congregacion || '',
       congregacion_nombre: m.congregacion_nombre || '',
+      foto: m.foto || '',
       sw_bautizado: !!m.sw_bautizado, serial_bautismo: m.serial_bautismo ?? '',
       fecha_bautismo: m.fecha_bautismo || '', lugar_bautismo: m.lugar_bautismo || '',
       pastor_que_bautizo: m.pastor_que_bautizo || '',
@@ -578,6 +645,7 @@ export default function MembresiaPage() {
     });
     setTab('generales');
     limpiarCedula();
+    limpiarFoto();
     setModal(true);
   };
 
@@ -675,7 +743,14 @@ export default function MembresiaPage() {
 
     try {
       if (editando) { await updateMembresia(editando.id, payload); toast.success('Membresía actualizada'); }
-      else          { await createMembresia(payload);            toast.success('Membresía creada'); }
+      else {
+        const { data } = await createMembresia(payload);
+        if (fotoFile && data?.id) {
+          try { await subirFotoMembresia(data.id, fotoFile); }
+          catch { toast.error('La membresía se creó, pero la foto no se pudo subir'); }
+        }
+        toast.success('Membresía creada');
+      }
       setModal(false);
       cargar();
     } catch (err) {
@@ -776,6 +851,12 @@ export default function MembresiaPage() {
                   )}
                   {membresias.map(m => (
                     <tr key={m.id}>
+                      <td style={{ width: 48 }}>
+                        {m.foto
+                          ? <img src={m.foto} alt="" className="rounded border"
+                              style={{ width: 33, height: 44, objectFit: 'cover' }} />
+                          : <i className="bi bi-person-circle text-muted" style={{ fontSize: 24 }}></i>}
+                      </td>
                       <td><code className="small">{m.tercero.cedula}</code></td>
                       <td className="small">{m.nombre_completo}</td>
                       <td>
@@ -839,6 +920,45 @@ export default function MembresiaPage() {
               </div>
               <form onSubmit={guardar}>
                 <div className="modal-body" style={{ maxHeight: '68vh', overflowY: 'auto' }}>
+                  {/* Foto del miembro (Cloudinary) */}
+                  <div className="d-flex align-items-center gap-3 mb-3 p-2 border rounded bg-light">
+                    <div className="flex-shrink-0">
+                      {(fotoPreview || form.foto) ? (
+                        <img src={fotoPreview || form.foto} alt="Foto del miembro"
+                          style={{ width: 66, height: 88, objectFit: 'cover', borderRadius: 6 }}
+                          className="border" />
+                      ) : (
+                        <div className="d-flex align-items-center justify-content-center border rounded bg-white text-muted"
+                          style={{ width: 66, height: 88 }}>
+                          <i className="bi bi-person-bounding-box" style={{ fontSize: 30 }}></i>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-grow-1">
+                      <div className="fw-semibold small mb-1">Foto del miembro</div>
+                      <div className="text-muted" style={{ fontSize: '.78rem' }}>
+                        Foto tipo documento (3×4 cm) · JPG, PNG o WebP · máx. 5 MB
+                        {!editando && fotoFile && ' · se subirá al guardar'}
+                      </div>
+                      <div className="d-flex gap-2 mt-2">
+                        <label htmlFor="mem_foto_input"
+                          className={`btn btn-sm btn-outline-success mb-0 ${subiendoFoto ? 'disabled' : ''}`}>
+                          {subiendoFoto
+                            ? <><span className="spinner-border spinner-border-sm me-1"></span>Subiendo...</>
+                            : <><i className="bi bi-upload me-1"></i>{form.foto || fotoPreview ? 'Cambiar' : 'Subir'}</>}
+                        </label>
+                        <input id="mem_foto_input" type="file" className="d-none"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={elegirFoto} disabled={subiendoFoto} />
+                        {(form.foto || fotoPreview) && !subiendoFoto && (
+                          <button type="button" className="btn btn-sm btn-outline-danger" onClick={quitarFoto}>
+                            <i className="bi bi-trash me-1"></i>Eliminar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   <ul className="nav nav-tabs mb-3" role="tablist">
                     {SECCIONES.map(s => (
                       <li className="nav-item" key={s.key}>

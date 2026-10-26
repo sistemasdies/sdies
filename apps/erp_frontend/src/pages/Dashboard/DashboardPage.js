@@ -17,7 +17,7 @@ const etiquetaDias = (d) =>
   d === 0 ? 'Hoy' : d === 1 ? 'Mañana' : `En ${d} días`;
 
 export default function DashboardPage() {
-  const { user, refrescar } = useAuth();
+  const { user, refrescar, marca } = useAuth();
   const anio = new Date().getFullYear();
   const [desde, setDesde] = useState(`${anio}-01-01`);
   const [hasta, setHasta] = useState(hoyISO());
@@ -170,10 +170,16 @@ export default function DashboardPage() {
         </div>
 
         <div className="row g-3">
-          {/* Cuadro central (en blanco): ancho de dos rótulos (cols 1-6) */}
+          {/* Cuadro central: se ajusta a la proporción del fondo configurado */}
           <div className="col-md-6">
-            <div className="card border-0 shadow-sm h-100">
-              <div className="card-body" style={{ minHeight: 400 }}></div>
+            <div className="card border-0 shadow-sm">
+              {marca?.FondoDeLaApp ? (
+                <img src={marca.FondoDeLaApp} alt="Fondo"
+                  className="card-img"
+                  style={{ display: 'block', width: '100%', height: 'auto' }} />
+              ) : (
+                <div className="card-body" style={{ minHeight: 400 }}></div>
+              )}
             </div>
           </div>
 
