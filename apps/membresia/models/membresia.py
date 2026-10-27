@@ -3,15 +3,19 @@ from django.db import models
 from apps.core.models.base import BaseModel
 
 
-class EstadoMembresia(models.TextChoices):
-    ACTIVO    = '1', 'Activo'
-    AUSENTE   = '2', 'Ausente'
-    VACACIONES = '3', 'Vacaciones'
-    TRASLADADO = '4', 'Trasladado'
-    ENFERMO   = '5', 'Enfermo'
-    APARTADO  = '6', 'Apartado'
-    DESCONOCIDO = '7', 'Desconocido'
+class EstadoMembresia(models.Model):
+    """Catálogo de estados de una membresía (tabla EstadosMembresia)."""
+    estado      = models.CharField(max_length=1, primary_key=True)
+    descripcion = models.CharField(max_length=15)
 
+    class Meta:
+        db_table = 'membresia_estadomembresia'
+        ordering = ['estado']
+        verbose_name = 'Estado de membresía'
+        verbose_name_plural = 'Estados de membresía'
+
+    def __str__(self):
+        return f'{self.estado} - {self.descripcion}'
 
 class EstadoCivil(models.TextChoices):
     SOLTERO    = '1', 'Soltero'
@@ -62,8 +66,11 @@ class Membresia(BaseModel):
     comentarios_academico_laboral = models.TextField(blank=True)
 
     # ── 4. Datos eclesiales ───────────────────────────────────────────────
-    estado                 = models.CharField(max_length=1, choices=EstadoMembresia.choices,
-                                             default=EstadoMembresia.ACTIVO)
+    estado                 = models.ForeignKey(
+        EstadoMembresia, to_field='estado', db_column='estado',
+        on_delete=models.PROTECT, default='1',
+        verbose_name='Estado',
+    )
     comentarios_eclesiales = models.TextField(blank=True)
 
     # ── 5. Foto del miembro (almacenada en Cloudinary) ────────────────────

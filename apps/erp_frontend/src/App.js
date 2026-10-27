@@ -29,6 +29,7 @@ import BloquearFechaPage from './pages/BloquearFecha/BloquearFechaPage';
 import AuxiliaresPage    from './pages/Informes/AuxiliaresPage';
 import ComparativoMesesPage from './pages/Informes/ComparativoMesesPage';
 import MembresiaPage    from './pages/Membresia/MembresiaPage';
+import EstadosPage      from './pages/Estados/EstadosPage';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -76,6 +77,7 @@ function AppRoutes() {
       <Route path="/configuracion/datos-generales" element={<PrivateRoute><DatosGeneralesPage /></PrivateRoute>} />
       <Route path="/secretaria/membresia"        element={<PrivateRoute><MembresiaPage /></PrivateRoute>} />
       <Route path="/secretaria/congregaciones"   element={<PrivateRoute><CongregacionesPage /></PrivateRoute>} />
+<Route path="/secretaria/estados"          element={<PrivateRoute><EstadosPage /></PrivateRoute>} />
       <Route path="/informes/auxiliares"          element={<PrivateRoute><AuxiliaresPage /></PrivateRoute>} />
       <Route path="/informes/comparativo-meses"   element={<PrivateRoute><ComparativoMesesPage /></PrivateRoute>} />
       <Route path="/informes/balances"            element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />

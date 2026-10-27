@@ -6,9 +6,11 @@ import MainLayout from '../../components/layout/MainLayout';
 import TopBar from '../../components/layout/TopBar';
 import PageHeader from '../../components/common/PageHeader';
 import Spinner from '../../components/common/Spinner';
+import AnotacionesTab from './AnotacionesTab';
 import SelectorTercero from '../../components/common/SelectorTercero';
 import SelectorCongregacion from '../../components/common/SelectorCongregacion';
 import { usePerm } from '../../hooks/usePerm';
+import { useAuth } from '../../context/AuthContext';
 import {
   getMembresias, createMembresia, updateMembresia, deleteMembresia,
   buscarTerceroPorCedula, getCedulasConMembresia,
@@ -20,7 +22,8 @@ const PAGE_SIZE = 50;
 // ── Catálogos ───────────────────────────────────────────────────────────────
 const ESTADOS = [
   ['1', 'Activo'], ['2', 'Ausente'], ['3', 'Vacaciones'],
-  ['4', 'Trasladado'], ['5', 'Enfermo'], ['6', 'Apartado'], ['7', 'Desconocido'],
+  ['4', 'Trasladado'], ['5', 'Enfermo'], ['6', 'Apartado'],
+  ['7', 'Desconocido'], ['8', 'Renuncia'],
 ];
 const ESTADOS_CIVIL = [
   ['1', 'Soltero'], ['2', 'Casado'], ['3', 'Divorciado'],
@@ -31,7 +34,7 @@ const TIPOS_MATRIMONIO = [
 ];
 const SEXOS = [['M', 'Masculino'], ['F', 'Femenino']];
 
-const ESTADO_COLOR = { 1:'success', 2:'secondary', 3:'info', 4:'primary', 5:'danger', 6:'warning', 7:'dark' };
+const ESTADO_COLOR = { 1:'success', 2:'secondary', 3:'info', 4:'primary', 5:'danger', 6:'warning', 7:'dark', 8:'secondary' };
 const ESTADO_LABEL  = Object.fromEntries(ESTADOS);
 const CIVIL_LABEL   = Object.fromEntries(ESTADOS_CIVIL);
 
@@ -40,6 +43,8 @@ const SECCIONES = [
   { key: 'familiares', label: 'Datos Familiares',    icon: 'bi-people'      },
   { key: 'laboral',    label: 'Académico Laboral',   icon: 'bi-briefcase'   },
   { key: 'eclesiastico', label: 'Datos Eclesiásticos', icon: 'bi-cross'       },
+  { key: 'anotaciones_pastor', label: 'Notas Pastor', icon: 'bi-chat-left-text' },
+  { key: 'anotaciones_misionero', label: 'Notas Misionero', icon: 'bi-chat-left-dots' },
 ];
 
 // ── Estado vacío del formulario ─────────────────────────────────────────────
@@ -475,6 +480,12 @@ function SeccionEclesiastica({ f, set, setLupaCongregacion }) {
 export default function MembresiaPage() {
   const location = useLocation();
   const { canAdd, canEdit, canDel } = usePerm(location.pathname);
+  const { hasControl } = useAuth();
+  const seccionesVisibles = SECCIONES.filter(s => {
+    if (s.key === 'anotaciones_pastor') return hasControl('ver_notas_pastor');
+    if (s.key === 'anotaciones_misionero') return hasControl('ver_notas_misionero');
+    return true;
+  });
 
   const [membresias, setMembresias] = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -488,6 +499,10 @@ export default function MembresiaPage() {
   const [editando,     setEditando]     = useState(null);
   const [form,         setForm]         = useState(FORM_VACIO);
   const [tab,          setTab]          = useState('generales');
+
+  useEffect(() => {
+    if (!seccionesVisibles.some(s => s.key === tab)) setTab('generales');
+  }, [seccionesVisibles, tab]);
   const [cedulaEstado, setCedulaEstado] = useState('');
   const [terceroInfo,  setTerceroInfo]  = useState(null);
   const [buscando,     setBuscando]     = useState(false);
@@ -840,6 +855,7 @@ export default function MembresiaPage() {
                         )}
                       </th>
                     ))}
+                    <th className="text-center">Notas</th>
                     <th className="text-center">Acciones</th>
                   </tr>
                 </thead>
@@ -873,6 +889,11 @@ export default function MembresiaPage() {
                       <td className="small">{CIVIL_LABEL[m.estado_civil] || '—'}</td>
                       <td className="small">{m.fecha_bautismo || '—'}</td>
                       <td className="small">{m.tercero.celular || '—'}</td>
+                      <td className="text-center">
+                        {m.tiene_notas_pastor && <i className="bi bi-chat-left-text text-primary me-1" title="Notas del pastor"></i>}
+                        {m.tiene_notas_misionero && <i className="bi bi-chat-left-dots text-success" title="Notas del misionero"></i>}
+                        {!m.tiene_notas_pastor && !m.tiene_notas_misionero && <span className="text-muted">—</span>}
+                      </td>
                       <td className="text-center">
                         <div className="btn-group btn-group-sm">
                           <button className="btn btn-outline-primary" onClick={() => abrirEditar(m)}
@@ -960,7 +981,7 @@ export default function MembresiaPage() {
                   </div>
 
                   <ul className="nav nav-tabs mb-3" role="tablist">
-                    {SECCIONES.map(s => (
+                    {seccionesVisibles.map(s => (
                       <li className="nav-item" key={s.key}>
                         <button type="button" role="tab"
                           aria-selected={tab === s.key}
@@ -984,6 +1005,8 @@ export default function MembresiaPage() {
                     {tab === 'familiares'   && <SeccionFamiliares   f={form} set={set} />}
                     {tab === 'laboral'      && <SeccionLaboral      f={form} set={set} />}
                     {tab === 'eclesiastico' && <SeccionEclesiastica f={form} set={set} setLupaCongregacion={setLupaCongregacion} />}
+{tab === 'anotaciones_pastor' && <AnotacionesTab cedula={form.tercero?.cedula} tipo="pastor" />}
+{tab === 'anotaciones_misionero' && <AnotacionesTab cedula={form.tercero?.cedula} tipo="misionero" />}
                   </div>
                 </div>
                 <div className="modal-footer">

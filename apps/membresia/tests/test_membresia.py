@@ -70,7 +70,7 @@ class MembresiaApiTest(TestCase):
         }, format='json')
         self.assertEqual(r.status_code, 200)
         self.assertEqual(Tercero.all_objects.get(cedula='99999999').nombre1, 'Juan Carlos')
-        self.assertEqual(Membresia.objects.get(pk=mid).estado, '4')
+        self.assertEqual(Membresia.objects.get(pk=mid).estado_id, '4')
 
     def test_cedula_no_se_puede_modificar(self):
         mid = self._crear()
@@ -295,7 +295,7 @@ class MembresiaApiTest(TestCase):
     # ── Aislamiento de estado ─────────────────────────────────────────────
     def test_estado_no_sincroniza_con_terceros(self):
         mid = self._crear(estado='6')
-        self.assertEqual(Membresia.objects.get(pk=mid).estado, '6')
+        self.assertEqual(Membresia.objects.get(pk=mid).estado_id, '6')
         self.assertTrue(Tercero.all_objects.get(cedula='99999999').is_active)
 
 
@@ -412,7 +412,7 @@ class MembresiaImportarTest(TestCase):
         self.assertEqual(r.data['errores'], [])
 
         m = Membresia.objects.get(tercero_id='1001')
-        self.assertEqual(m.estado, '2')
+        self.assertEqual(m.estado_id, '2')
         self.assertEqual(m.estado_civil, '2')
         self.assertEqual(m.personas_a_cargo, 2)
         self.assertTrue(m.sw_bautizado)
@@ -425,7 +425,7 @@ class MembresiaImportarTest(TestCase):
             fecha_bautismo='10/04/2010')])
         self.assertEqual(r.data['creados'], 1)
         m = Membresia.objects.get(tercero_id='1001')
-        self.assertEqual(m.estado, '7')
+        self.assertEqual(m.estado_id, '7')
         self.assertEqual(m.estado_civil, '2')
         self.assertEqual(str(m.fecha_bautismo), '2010-04-10')
 
@@ -436,14 +436,14 @@ class MembresiaImportarTest(TestCase):
         self.assertEqual(r.data['actualizados'], 1)
         self.assertEqual(r.data['creados'], 0)
         m = Membresia.objects.get(tercero_id='1001')
-        self.assertEqual(m.estado, '4')
+        self.assertEqual(m.estado_id, '4')
         self.assertEqual(m.comentarios_eclesiales, 'Traslado')
 
     def test_solo_nuevos_omite_existente(self):
         self._post([self._registro()])
         r = self._post([self._registro(estado='4')])
         self.assertEqual(r.data['omitidos'], 1)
-        self.assertEqual(Membresia.objects.get(tercero_id='1001').estado, '2')
+        self.assertEqual(Membresia.objects.get(tercero_id='1001').estado_id, '2')
 
     def test_tercero_inexistente_genera_error(self):
         r = self._post([self._registro(cedula='9999')])

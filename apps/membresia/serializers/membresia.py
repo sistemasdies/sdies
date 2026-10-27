@@ -31,6 +31,8 @@ class MembresiaSerializer(serializers.ModelSerializer):
     tercero            = TerceroReferenciaSerializer()
     nombre_completo    = serializers.CharField(read_only=True)
     congregacion_nombre = serializers.SerializerMethodField()
+    tiene_notas_pastor = serializers.BooleanField(read_only=True)
+    tiene_notas_misionero = serializers.BooleanField(read_only=True)
 
     class Meta:
         model  = Membresia
@@ -45,6 +47,7 @@ class MembresiaSerializer(serializers.ModelSerializer):
             'telefono_trabajo', 'comentarios_academico_laboral',
             'estado', 'comentarios_eclesiales',
             'congregacion', 'congregacion_nombre',
+            'tiene_notas_pastor', 'tiene_notas_misionero',
             'foto',
             'sw_bautizado', 'serial_bautismo', 'fecha_bautismo',
             'lugar_bautismo', 'pastor_que_bautizo',

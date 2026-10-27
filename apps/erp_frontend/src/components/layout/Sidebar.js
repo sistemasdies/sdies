@@ -51,6 +51,7 @@ const GRUPOS = [
     hijos: [
       { to: '/secretaria/membresia', icon: 'bi-person-badge', label: 'Membresía', mod: 'membresias' },
       { to: '/secretaria/congregaciones', icon: 'bi-house-door', label: 'Congregaciones', mod: 'congregaciones' },
+      { to: '/secretaria/estados', icon: 'bi-tags', label: 'Estados', mod: 'estados' },
     ],
   },
   {
@@ -91,7 +92,11 @@ export default function Sidebar() {
 
   const puedeVer = (item) => {
     if (item.soloStaff) return !!(user?.is_superuser || user?.is_staff);
-    return !item.mod || user?.is_superuser || hasModulePermission(item.mod, 'acceder');
+    if (!item.mod) return true;
+    if (user?.is_superuser) return true;
+    // Visible si tiene cualquier permiso del módulo (no solo 'acceder')
+    return ['acceder', 'listar', 'agregar', 'editar', 'borrar', 'anular']
+      .some(a => hasModulePermission(item.mod, a));
   };
 
   return (

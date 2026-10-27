@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Exists, OuterRef
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -10,7 +10,7 @@ from apps.accounting.models import Tercero
 from apps.congregacion.models import Congregacion
 from apps.core.utils.exceptions import ServiceNotConfigured
 from apps.membresia.import_export import CAMPOS_MEMBRESIA, convertir_campo
-from apps.membresia.models import Membresia
+from apps.membresia.models import Membresia, AnotacionPastor, AnotacionMisionero
 from apps.membresia.serializers.membresia import (
     MembresiaSerializer, TerceroReferenciaSerializer,
 )
@@ -38,7 +38,12 @@ class MembresiaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
                           'created_at', 'estado', 'fecha_bautismo', 'fecha_llegada']
     ordering           = ['tercero__apellido1', 'tercero__nombre1']
     queryset           = Membresia.objects.filter(deleted=False).select_related(
-                             'tercero', 'congregacion')
+                             'tercero', 'congregacion', 'estado').annotate(
+        tiene_notas_pastor=Exists(
+            AnotacionPastor.objects.filter(cedula=OuterRef('tercero_id'))),
+        tiene_notas_misionero=Exists(
+            AnotacionMisionero.objects.filter(cedula=OuterRef('tercero_id'))),
+    )
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -200,7 +205,8 @@ class MembresiaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
 
         # El estado vacío se interpreta como activo (valor por defecto).
         if 'estado' in dato and not datos.get('estado'):
-            datos['estado'] = '1'
+            from apps.membresia.models import EstadoMembresia
+            datos['estado'] = EstadoMembresia.objects.get(estado='1')
 
         if 'congregacion' in dato:
             codigo = str(dato.get('congregacion') or '').strip()

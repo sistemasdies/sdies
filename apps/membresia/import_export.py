@@ -12,6 +12,27 @@ from apps.membresia.models import (
 )
 
 
+def _estados_membresia_choices():
+    """Lista (codigo, descripcion) de la tabla EstadosMembresia.
+
+    Se intenta leer de BD; si no está disponible (p. ej. durante migraciones)
+    se usa un listado fijo equivalente a los 8 estados semilla.
+    """
+    try:
+        return list(EstadoMembresia.objects.values_list('estado', 'descripcion'))
+    except Exception:
+        return [
+            ('1', 'Activo'),
+            ('2', 'Ausente'),
+            ('3', 'Vacaciones'),
+            ('4', 'Trasladado'),
+            ('5', 'Enfermo'),
+            ('6', 'Apartado'),
+            ('7', 'Desconocido'),
+            ('8', 'Renuncia'),
+        ]
+
+
 # Todos los campos de datos de la tabla Membresia. La cédula es la llave hacia
 # accounting.Tercero y "congregacion" se maneja por código.
 CAMPOS_MEMBRESIA = [
@@ -47,7 +68,7 @@ CAMPOS_ENTEROS = frozenset({
 })
 
 _CHOICES = {
-    'estado':          EstadoMembresia.choices,
+    'estado':          _estados_membresia_choices(),
     'estado_civil':    EstadoCivil.choices,
     'tipo_matrimonio': TipoMatrimonio.choices,
 }
@@ -139,7 +160,17 @@ def convertir_campo(campo, valor):
     if campo in CAMPOS_ENTEROS:
         return _parse_entero(campo, valor)
     if campo in _MAPAS_CHOICES:
-        return _parse_choice(campo, valor)
+        codigo, error = _parse_choice(campo, valor)
+        if error:
+            return None, error
+        if campo == 'estado' and codigo not in ('', None):
+            from apps.membresia.models import EstadoMembresia
+            try:
+                return EstadoMembresia.objects.get(estado=codigo), None
+            except EstadoMembresia.DoesNotExist:
+                opciones = ', '.join(etiqueta for _, etiqueta in _CHOICES['estado'])
+                return None, f'{valor}: valor no válido (use {opciones})'
+        return codigo, None
 
     texto = '' if valor is None else str(valor).strip()
     limite = _MAX_LENGTHS.get(campo)
@@ -154,6 +185,8 @@ def valor_exportacion(membresia, campo):
         return membresia.tercero_id or ''
     if campo == 'congregacion':
         return membresia.congregacion_id or ''
+    if campo == 'estado':
+        return membresia.estado_id or ''
 
     valor = getattr(membresia, campo)
     if valor is None:
