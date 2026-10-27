@@ -4,17 +4,27 @@ Semántica: si el rol NO tiene nada seleccionado en una categoría, se considera
 que tiene acceso a TODOS los ítems de esa categoría (None). Si tiene selección,
 solo los códigos seleccionados (y, para cuentas, sus descendientes) son válidos.
 """
+from apps.users.services.role_context import (
+    es_superusuario_efectivo,
+    rol_efectivo,
+)
 
 
 def user_scope(user):
-    """Devuelve los códigos permitidos según el rol de `user`.
+    """Devuelve los códigos permitidos según el rol efectivo de `user`.
 
     Retorna un dict con las claves 'centros_costo', 'cuentas' y 'comprobantes'.
     Valor None = sin restricción (todos).
     """
-    if not user or user.is_superuser or not getattr(user, 'role', None):
+    if not user:
         return {'centros_costo': None, 'cuentas': None, 'comprobantes': None}
-    role = user.role
+
+    role = rol_efectivo(user)
+    if role is None:
+        if user.is_superuser or not getattr(user, 'role', None):
+            return {'centros_costo': None, 'cuentas': None, 'comprobantes': None}
+        role = user.role
+
     return {
         'centros_costo': _codigos_o_none(role.centros_costo),
         'comprobantes':  _codigos_o_none(role.comprobantes),
@@ -25,9 +35,10 @@ def user_scope(user):
 def fecha_cierre_usuario(user):
     """Fecha de cierre contable del usuario (None si no tiene restricción).
 
-    Los superusuarios no tienen restricción de fecha de cierre.
+    Los superusuarios no tienen restricción de fecha de cierre, salvo que estén
+    asumiendo un rol.
     """
-    if not user or user.is_superuser:
+    if not user or es_superusuario_efectivo(user):
         return None
     return getattr(user, 'fecha_cierre', None)
 

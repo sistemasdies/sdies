@@ -4,7 +4,10 @@ from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from apps.core.permissions import ModulePermission
+
 from .services import password_recovery
+from .services.role_context import es_administrador
 from .models import User, Role, Permission, UserPreference
 from .serializers.auth import (UserSerializer, UserCreateSerializer, ProfileSerializer,
                                 RoleSerializer, PermissionSerializer,
@@ -21,10 +24,28 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         return UserCreateSerializer if self.action == 'create' else UserSerializer
 
+    # Acciones propias: cualquier usuario autenticado, sin importar su rol.
+    ACCIONES_PROPIAS = {'me', 'change_password', 'preferencias'}
+
+    # Permiso por acción; si no está en el mapa se deduce del método HTTP.
+    PERMISOS_ACCION = {
+        'list':              'usuarios.listar',
+        'retrieve':          'usuarios.listar',
+        'create':            'usuarios.agregar',
+        'update':            'usuarios.editar',
+        'partial_update':    'usuarios.editar',
+        'reset_password':    'usuarios.editar',
+        'bloquear_fecha':    'usuarios.editar',
+        'destroy':           'usuarios.borrar',
+        'eliminar_definitivo': 'usuarios.borrar',
+        'activar':           'usuarios.borrar',
+    }
+
     def get_permissions(self):
-        if self.action in ['me', 'change_password']:
+        if self.action in self.ACCIONES_PROPIAS:
             return [permissions.IsAuthenticated()]
-        return [permissions.IsAuthenticated()]
+        self.required_permission = self.PERMISOS_ACCION.get(self.action)
+        return [ModulePermission()]
 
     def destroy(self, request, *args, **kwargs):
         # Desactivar en lugar de borrar físicamente
@@ -129,14 +150,74 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response({'data': pref.data})
 
 
+class AsumirRolView(APIView):
+    """POST {role_id}: el administrador empieza a usar temporalmente ese rol."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if not es_administrador(request.user):
+            return Response({'detail': 'Solo un administrador puede usar otro rol.'},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        role_id = request.data.get('role_id')
+        try:
+            role = Role.objects.filter(pk=int(role_id)).first()
+        except (TypeError, ValueError):
+            role = None
+        if role is None:
+            return Response({'detail': 'Seleccione un rol válido.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        request.user.rol_efectivo = role
+        return Response(UserSerializer(request.user).data)
+
+
+class RetomarRolView(APIView):
+    """POST: vuelve al rol real del administrador (quita el rol asumido)."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # No se exige ser administrador aquí: si su rol real cambió mientras
+        # estaba asumiendo otro, igual debe poder salir del estado.
+        request.user.rol_efectivo = None
+        return Response(UserSerializer(request.user).data)
+
+
 class RoleViewSet(viewsets.ModelViewSet):
     queryset           = Role.objects.prefetch_related('permissions', 'centros_costo', 'cuentas', 'comprobantes').all()
     serializer_class   = RoleSerializer
     pagination_class   = None
     module             = 'roles'
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [ModulePermission]
+
+    def _bloqueado_por_rol(self, request):
+        if getattr(request.user, 'rol_efectivo', None) is not None:
+            return Response({'detail': 'Retome su rol para administrar roles.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        return None
+
+    def create(self, request, *args, **kwargs):
+        bloqueo = self._bloqueado_por_rol(request)
+        if bloqueo:
+            return bloqueo
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        bloqueo = self._bloqueado_por_rol(request)
+        if bloqueo:
+            return bloqueo
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        bloqueo = self._bloqueado_por_rol(request)
+        if bloqueo:
+            return bloqueo
+        return super().partial_update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
+        bloqueo = self._bloqueado_por_rol(request)
+        if bloqueo:
+            return bloqueo
         instance = self.get_object()
         if instance.is_system:
             return Response({'detail': 'No se puede eliminar un rol del sistema.'},
@@ -152,7 +233,7 @@ class PermissionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class   = PermissionSerializer
     pagination_class   = None
     module             = 'roles'
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [ModulePermission]
 
     @action(detail=False, methods=['get'])
     def grouped(self, request):

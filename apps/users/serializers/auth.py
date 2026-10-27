@@ -3,6 +3,12 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.db import models
 from apps.users.models import User, Role, Permission, UserPreference
 from apps.users.services.controls import CONTROLES_CATALOGO, controles_usuario
+from apps.users.services.role_context import (
+    es_administrador,
+    es_staff_efectivo,
+    es_superusuario_efectivo,
+    rol_efectivo,
+)
 from apps.accounting.models import CentroCosto, Cuenta, Comprobante
 
 
@@ -99,19 +105,43 @@ class UserSerializer(serializers.ModelSerializer):
     permission_codes = serializers.SerializerMethodField()
     verificacion_pendiente = serializers.SerializerMethodField()
     controles        = serializers.SerializerMethodField()
+    rol_activo       = serializers.SerializerMethodField()
+    puede_asumir_roles = serializers.SerializerMethodField()
 
     class Meta:
         model  = User
         fields = ['id', 'login', 'email', 'NameUser', 'caja_user', 'centro_costo_user', 'fecha_nacimiento',
                   'frase_verificacion', 'verificacion_pendiente', 'estado',
                   'is_staff', 'is_active', 'is_superuser', 'role', 'role_nombre',
-                  'permission_codes', 'controles', 'fecha_cierre', 'created_at']
+                  'permission_codes', 'controles', 'rol_activo', 'puede_asumir_roles',
+                  'fecha_cierre', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Mientras se usa otro rol, el frontend no debe recibir los privilegios
+        # del administrador (is_superuser/is_staff) porque los usa para saltarse
+        # las comprobaciones de permisos.
+        data['is_superuser'] = es_superusuario_efectivo(instance)
+        data['is_staff']     = es_staff_efectivo(instance)
+        return data
 
     def get_controles(self, obj):
         return controles_usuario(obj)
 
+    def get_rol_activo(self, obj):
+        role = rol_efectivo(obj)
+        if role is None:
+            return None
+        return {'id': role.id, 'nombre': role.NameRole}
+
+    def get_puede_asumir_roles(self, obj):
+        return es_administrador(obj)
+
     def get_permission_codes(self, obj):
+        role = rol_efectivo(obj)
+        if role is not None:
+            return list(role.permissions.values_list('code', flat=True))
         if obj.is_superuser:
             return list(Permission.objects.values_list('code', flat=True))
         if not obj.role:

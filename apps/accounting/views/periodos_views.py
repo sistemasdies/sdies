@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from apps.accounting.models import PeriodoContable
 from apps.accounting.serializers.periodos import PeriodoContableSerializer
 from apps.accounting.services.cierre_service import CierreService
+from apps.users.services.role_context import es_staff_efectivo, es_superusuario_efectivo
 
 
 class PeriodoContableViewSet(viewsets.ModelViewSet):
@@ -21,7 +22,7 @@ class PeriodoContableViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def cerrar(self, request, pk=None):
-        if not (request.user.is_superuser or request.user.is_staff):
+        if not (es_superusuario_efectivo(request.user) or es_staff_efectivo(request.user)):
             return Response({'detail': 'Solo administradores pueden cerrar períodos.'}, status=403)
         periodo = self.get_object()
         try:

@@ -1,11 +1,4 @@
 ﻿import datetime
-import gzip
-import io
-import os
-import subprocess
-import tempfile
-import zipfile
-import zlib
 
 from django.conf import settings
 from django.http import StreamingHttpResponse
@@ -17,11 +10,13 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 
+from apps.reports.services import backup
 from apps.reports.services.balance_sheet import ReportService
 from apps.reports.services.auxiliares import auxiliares, CAMPOS_ORDEN
 from apps.reports.services.comparativo import comparativo_meses, PeriodoInvalido
 from apps.accounting.services.balance_service import BalanceService
 from apps.users.services.scopes import user_scope
+from apps.users.services.role_context import es_superusuario_efectivo
 
 
 def _multi(p, key):
@@ -177,25 +172,12 @@ class ExportarReporteView(APIView):
             return Response({'estado': 'ok', 'email': email})
 
 
-def _gzip_stream(fileobj, chunk_size=64 * 1024):
-    comp = zlib.compressobj(9, zlib.DEFLATED, 31)
-    while True:
-        chunk = fileobj.read(chunk_size)
-        if not chunk:
-            break
-        data = comp.compress(chunk)
-        if data:
-            yield data
-    tail = comp.flush()
-    if tail:
-        yield tail
-
-
 class IsSuperUser(BasePermission):
     message = 'Solo el superusuario puede gestionar copias de seguridad.'
 
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and request.user.is_superuser)
+        return bool(request.user and request.user.is_authenticated
+                    and es_superusuario_efectivo(request.user))
 
 
 class BackupExportView(APIView):
@@ -203,61 +185,36 @@ class BackupExportView(APIView):
 
     def get(self, request):
         incluir_media = request.query_params.get('incluir_media', 'false').lower() == 'true'
-
-        db = settings.DATABASES['default']
-        host = db.get('HOST') or 'localhost'
-        port = db.get('PORT') or '5432'
-        user = db.get('USER') or ''
-        name = db.get('NAME') or ''
-        password = db.get('PASSWORD') or ''
-
         timestamp = now().strftime('%Y%m%d_%H%M%S')
 
-        env = os.environ.copy()
-        if password:
-            env['PGPASSWORD'] = str(password)
-
-        dump_cmd = [
-            'pg_dump',
-            '-h', str(host),
-            '-p', str(port),
-            '-U', str(user),
-            '-d', str(name),
-            '--format=plain',
-            '--no-owner',
-            '--no-privileges',
-        ]
-        db_filename = f'sdies_backup_{timestamp}.sql.gz'
-
         try:
-            dump_proc = subprocess.Popen(dump_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-        except FileNotFoundError as e:
-            return Response({'detail': f'pg_dump no encontrado. Verifica la instalación en el servidor. Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            ruta_sql = backup.crear_dump_temporal()
+        except backup.BackupError as e:
+            return Response({'detail': str(e)},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        if not incluir_media:
-            response = StreamingHttpResponse(_gzip_stream(dump_proc.stdout), content_type='application/gzip')
-            response['Content-Disposition'] = f'attachment; filename="{db_filename}"'
-            response['Cache-Control'] = 'no-cache'
-            return response
+        if incluir_media:
+            nombre_sql = f'sdies_backup_{timestamp}.sql'
+            try:
+                ruta = backup.crear_zip_temporal(
+                    ruta_sql, nombre_sql, getattr(settings, 'MEDIA_ROOT', None),
+                )
+            except Exception as e:
+                return Response({'detail': f'No se pudo crear el archivo .zip: {e}'},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            response = StreamingHttpResponse(backup.leer_y_borrar(ruta),
+                                             content_type='application/zip')
+            response['Content-Disposition'] = (
+                f'attachment; filename="sdies_backup_completo_{timestamp}.zip"'
+            )
+        else:
+            response = StreamingHttpResponse(backup.gzip_y_borrar(ruta_sql),
+                                             content_type='application/gzip')
+            response['Content-Disposition'] = (
+                f'attachment; filename="sdies_backup_{timestamp}.sql.gz"'
+            )
 
-        bio = io.BytesIO()
-        with zipfile.ZipFile(bio, 'w', zipfile.ZIP_DEFLATED) as zf:
-            sql_gz_bytes = b''.join(_gzip_stream(dump_proc.stdout))
-            zf.writestr(db_filename, sql_gz_bytes)
-            media_root = getattr(settings, 'MEDIA_ROOT', None)
-            if media_root and os.path.exists(media_root):
-                for root, dirs, files in os.walk(media_root):
-                    for f in files:
-                        full = os.path.join(root, f)
-                        arc = os.path.relpath(full, media_root)
-                        try:
-                            zf.write(full, os.path.join('media', arc))
-                        except Exception:
-                            pass
-        bio.seek(0)
-        response = StreamingHttpResponse(io.BytesIO(bio.getvalue()), content_type='application/zip')
-        response['Content-Disposition'] = f'attachment; filename="sdies_backup_completo_{timestamp}.zip"'
-        response['Cache-Control'] = 'no-cache'
+        response['Cache-Control'] = 'no-store'
         return response
 
 
@@ -267,54 +224,28 @@ class BackupImportView(APIView):
 
     def post(self, request):
         if 'archivo' not in request.FILES:
-            return Response({'detail': 'Archivo requerido: archivo (.sql o .sql.gz)'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Archivo requerido: archivo (.sql, .sql.gz o .zip)'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         archivo = request.FILES['archivo']
-        nombre = archivo.name.lower()
+        nombre = (archivo.name or '').lower()
 
-        if not (nombre.endswith('.sql') or nombre.endswith('.sql.gz')):
-            return Response({'detail': 'Formato inválido. Usa .sql o .sql.gz'}, status=status.HTTP_400_BAD_REQUEST)
-
-        db = settings.DATABASES['default']
-        host = db.get('HOST') or 'localhost'
-        port = db.get('PORT') or '5432'
-        user = db.get('USER') or ''
-        name = db.get('NAME') or ''
-        password = db.get('PASSWORD') or ''
-
-        env = os.environ.copy()
-        if password:
-            env['PGPASSWORD'] = str(password)
+        if not nombre.endswith(('.sql', '.sql.gz', '.zip')):
+            return Response(
+                {'detail': 'Formato inválido. Usa .sql, .sql.gz o .zip'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
-            with tempfile.TemporaryDirectory() as tmpdir:
-                fpath = os.path.join(tmpdir, archivo.name)
-                with open(fpath, 'wb') as f:
-                    for chunk in archivo.chunks():
-                        f.write(chunk)
+            salida = backup.restaurar_desde_archivo(archivo)
+        except backup.BackupError as e:
+            return Response({'detail': str(e)},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-                sql_path = fpath
-                if nombre.endswith('.sql.gz'):
-                    sql_path = os.path.join(tmpdir, archivo.name[:-3])
-                    with gzip.open(fpath, 'rb') as gz:
-                        data = gz.read()
-                    with open(sql_path, 'wb') as f:
-                        f.write(data)
+        return Response({
+            'detail': 'Restauración completada con éxito.',
+            'salida': salida[:2000],
+        })
 
-                cmd = [
-                    'psql',
-                    '-h', str(host),
-                    '-p', str(port),
-                    '-U', str(user),
-                    '-d', str(name),
-                    '--single-transaction',
-                    '-f', sql_path,
-                ]
-                result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, text=True)
-                if result.returncode != 0:
-                    return Response({'detail': 'Error al restaurar', 'stderr': result.stderr, 'stdout': result.stdout}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                return Response({'detail': 'Restauración completada con éxito', 'stdout': result.stdout}, status=status.HTTP_200_OK)
-        except FileNotFoundError as e:
-            return Response({'detail': f'psql no encontrado. Verifica la instalación en el servidor. Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except Exception as e:
-            return Response({'detail': f'Error inesperado: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

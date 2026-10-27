@@ -18,10 +18,17 @@ CONTROLES_CATALOGO = [
 
 def controles_usuario(user):
     """Devuelve {code: 'P'|'D'} resueltos. Por defecto todo permitido (P)."""
+    from .role_context import es_superusuario_efectivo, rol_efectivo
+
     resultado = {c['code']: 'P' for c in CONTROLES_CATALOGO}
-    if user.is_superuser or not user.role:
+    if not user or es_superusuario_efectivo(user):
         return resultado
-    rc = user.role.controles or {}
+
+    role = rol_efectivo(user) or getattr(user, 'role', None)
+    if not role:
+        return resultado
+
+    rc = role.controles or {}
     for c in CONTROLES_CATALOGO:
         if rc.get(c['code']) in ('P', 'D'):
             resultado[c['code']] = rc[c['code']]
