@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import MainLayout from '../../components/layout/MainLayout';
 import TopBar from '../../components/layout/TopBar';
 import PageHeader from '../../components/common/PageHeader';
@@ -7,6 +8,7 @@ import MultiSelect from '../../components/common/MultiSelect';
 import API from '../../api/client';
 import toast from 'react-hot-toast';
 import { usePerm } from '../../hooks/usePerm';
+import { useAuth } from '../../context/AuthContext';
 import { getCentrosCosto } from '../../api/centrosCosto';
 import { getCuentas } from '../../api/cuentas';
 import { getComprobantes } from '../../api/comprobantes';
@@ -52,6 +54,8 @@ const CONTROLS_CATALOGO = [
 ];
 
 export default function RolesPage() {
+  const navigate = useNavigate();
+  const { user, asumirRol, retomarRol } = useAuth();
   const { canAdd, canEdit, canDel } = usePerm('/roles');
   const [roles,     setRoles]     = useState([]);
   const [permisos,  setPermisos]  = useState({});
@@ -63,6 +67,14 @@ export default function RolesPage() {
   const [form,     setForm]       = useState(FORM_VACIO);
   const [saving,   setSaving]     = useState(false);
   const [modalDel, setModalDel]   = useState(null);
+  const [modalRol, setModalRol]   = useState(false);
+  const [asumiendo, setAsumiendo] = useState(false);
+
+  const rolActivo      = user?.rol_activo || null;
+  const bloqueadoPorRol = !!rolActivo;
+  const puedeAsumir    = !!user?.puede_asumir_roles;
+  const puedeListar    = !!user?.is_superuser
+    || (user?.permission_codes || []).includes('roles.listar');
 
   const cargar = useCallback(() => {
     setLoading(true);
@@ -72,18 +84,25 @@ export default function RolesPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { cargar(); }, [cargar]);
   useEffect(() => {
+    if (!puedeListar) { setLoading(false); return; }
+    cargar();
+  }, [cargar, puedeListar]);
+
+  useEffect(() => {
+    if (!puedeListar) return;
     getPermisos().then(r => {
       const data = r.data.results || r.data;
       const grouped = {};
       data.forEach(p => { grouped[p.module] = grouped[p.module] || []; grouped[p.module].push(p); });
       setPermisos(grouped);
     }).catch(()=>{});
-    getCentrosCosto().then(r => setCatOpciones(o => ({ ...o, centros: r.data.results || r.data }))).catch(()=>{});
-    getCuentas({ page_size: 10000 }).then(r => setCatOpciones(o => ({ ...o, cuentas: r.data.results || r.data }))).catch(()=>{});
-    getComprobantes().then(r => setCatOpciones(o => ({ ...o, comprobantes: r.data.results || r.data }))).catch(()=>{});
-  }, []);
+    if (canAdd || canEdit) {
+      getCentrosCosto().then(r => setCatOpciones(o => ({ ...o, centros: r.data.results || r.data }))).catch(()=>{});
+      getCuentas({ page_size: 10000 }).then(r => setCatOpciones(o => ({ ...o, cuentas: r.data.results || r.data }))).catch(()=>{});
+      getComprobantes().then(r => setCatOpciones(o => ({ ...o, comprobantes: r.data.results || r.data }))).catch(()=>{});
+    }
+  }, [puedeListar, canAdd, canEdit]);
 
   const abrirNuevo = () => { setEditando(null); setForm(FORM_VACIO); setTab('areas'); setModal(true); };
 
@@ -178,6 +197,29 @@ export default function RolesPage() {
     }
   };
 
+  const handleAsumir = async (rol) => {
+    setAsumiendo(true);
+    try {
+      await asumirRol(rol.id);
+      toast.success(`Ahora está usando el rol "${rol.NameRole}"`);
+      setModalRol(false);
+      navigate('/dashboard');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'No se pudo usar el rol');
+    } finally {
+      setAsumiendo(false);
+    }
+  };
+
+  const handleRetomar = async () => {
+    try {
+      await retomarRol();
+      toast.success('Retomó su rol de administrador');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Se retomó el rol localmente');
+    }
+  };
+
   const getModCount = (r) => {
     const modules = new Set(r.permissions.map(p => p.module));
     return modules.size;
@@ -189,11 +231,29 @@ export default function RolesPage() {
       <div className="p-4">
         <PageHeader title="Gestión de Roles y Permisos"
           subtitle={`${roles.length} rol(es) definido(s)`}>
-          <button className="btn btn-success" onClick={abrirNuevo} disabled={!canAdd}>
+          {puedeAsumir && (
+            <button className="btn btn-outline-primary" onClick={() => setModalRol(true)}
+              disabled={bloqueadoPorRol || roles.length === 0}>
+              <i className="bi bi-person-badge me-1"></i>Usar Rol
+            </button>
+          )}
+          <button className="btn btn-success" onClick={abrirNuevo}
+            disabled={!canAdd || bloqueadoPorRol}>
             <i className="bi bi-shield-plus me-1"></i>Nuevo rol
           </button>
+          {puedeAsumir && bloqueadoPorRol && (
+            <button className="btn btn-outline-warning" onClick={handleRetomar}>
+              <i className="bi bi-arrow-counterclockwise me-1"></i>Retomar el Rol
+            </button>
+          )}
         </PageHeader>
 
+        {!puedeListar ? (
+          <div className="alert alert-warning border-0 shadow-sm">
+            <i className="bi bi-lock me-2"></i>
+            El rol que está usando no tiene acceso a la administración de roles.
+          </div>
+        ) : (
         <div className="card border-0 shadow-sm mb-3">
           {loading ? <div className="card-body"><Spinner /></div>
             : <div className="table-responsive">
@@ -238,12 +298,14 @@ export default function RolesPage() {
                           <td className="text-center">
                             <div className="btn-group btn-group-sm">
                               <button className="btn btn-outline-primary"
-                                onClick={() => abrirEditar(r)} title="Editar" disabled={!canEdit}>
+                                onClick={() => abrirEditar(r)} title="Editar"
+                                disabled={!canEdit || bloqueadoPorRol}>
                                 <i className="bi bi-pencil"></i>
                               </button>
                               {!r.is_system && (
                                 <button className="btn btn-outline-danger"
-                                  onClick={() => setModalDel(r)} title="Eliminar" disabled={!canDel}>
+                                  onClick={() => setModalDel(r)} title="Eliminar"
+                                  disabled={!canDel || bloqueadoPorRol}>
                                   <i className="bi bi-trash"></i>
                                 </button>
                               )}
@@ -256,6 +318,7 @@ export default function RolesPage() {
               </div>
           }
         </div>
+        )}
       </div>
 
       {/* Modal crear/editar */}
@@ -532,6 +595,53 @@ export default function RolesPage() {
                 <button className="btn btn-secondary" onClick={() => setModalDel(null)}>Cancelar</button>
                 <button className="btn btn-danger" onClick={handleEliminar}>
                   <i className="bi bi-trash-fill me-1"></i>Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal usar rol */}
+      {modalRol && (
+        <div className="modal d-block" style={{background:'rgba(0,0,0,0.5)'}}>
+          <div className="modal-dialog modal-dialog-centered" style={{maxWidth:520}}>
+            <div className="modal-content shadow">
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title">
+                  <i className="bi bi-person-badge me-2"></i>Usar Rol
+                </h5>
+                <button className="btn-close btn-close-white" onClick={() => setModalRol(false)}></button>
+              </div>
+              <div className="modal-body">
+                <p className="small text-muted mb-3">
+                  Elija el rol con el que quiere trabajar. Los permisos, los datos
+                  visibles y los controles serán los de ese rol hasta que presione
+                  <strong> Retomar el Rol</strong>.
+                </p>
+                {roles.length === 0
+                  ? <p className="text-muted small mb-0">No hay roles disponibles.</p>
+                  : <div className="list-group">
+                      {roles.map(r => (
+                        <button key={r.id} type="button"
+                          className="list-group-item list-group-item-action d-flex
+                                     align-items-center justify-content-between"
+                          onClick={() => handleAsumir(r)} disabled={asumiendo}>
+                          <span>
+                            <i className="bi bi-shield-fill me-2 text-success"></i>
+                            <span className="fw-semibold">{r.NameRole}</span>
+                            {r.description && (
+                              <span className="text-muted small ms-2">{r.description}</span>
+                            )}
+                          </span>
+                          <span className="badge bg-secondary">{r.permissions.length} permisos</span>
+                        </button>
+                      ))}
+                    </div>
+                }
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => setModalRol(false)}>
+                  Cancelar
                 </button>
               </div>
             </div>

@@ -30,13 +30,14 @@ const GRUPOS = [
     icon: 'bi-gear',
     label: 'Procesos',
     mod: null,
+    requerir_hijos: true,
     hijos: [
-      { to: '/procesos/bloquear-fecha',     icon: 'bi-calendar-x',     label: 'Bloquear Fecha' },
-      { to: '/procesos/cierre-periodo',    icon: 'bi-calendar-check', label: 'Cierre de Periodo' },
-      { to: '/procesos/generar-balance',   icon: 'bi-calculator',     label: 'Generar Balance' },
-      { to: '/procesos/generar-presupuesto', icon: 'bi-journal-check', label: 'Generar Presupuesto' },
+      { to: '/procesos/bloquear-fecha',     icon: 'bi-calendar-x',     label: 'Bloquear Fecha',     mod: 'usuarios' },
+      { to: '/procesos/cierre-periodo',    icon: 'bi-calendar-check', label: 'Cierre de Periodo',   mod: 'periodos' },
+      { to: '/procesos/generar-balance',   icon: 'bi-calculator',     label: 'Generar Balance',     mod: 'reportes' },
+      { to: '/procesos/generar-presupuesto', icon: 'bi-journal-check', label: 'Generar Presupuesto', mod: 'reportes' },
       { to: '/procesos/correccion-datos',  icon: 'bi-tools',          label: 'Corrección de Datos', mod: 'correccion_datos' },
-      { to: '/procesos/copia-seguridad',   icon: 'bi-database-down',  label: 'Copia de Seguridad' },
+      { to: '/procesos/copia-seguridad',   icon: 'bi-database-down',  label: 'Copia de Seguridad',  soloStaff: true },
       { to: '/importar',                   icon: 'bi-cloud-upload',   label: 'Importar datos',     mod: 'importar' },
       { to: '/procesos/exportar-datos',    icon: 'bi-cloud-download', label: 'Exportar datos',     mod: 'exportar' },
     ],
@@ -46,6 +47,7 @@ const GRUPOS = [
     icon: 'bi-building',
     label: 'Secretaría',
     mod: null,
+    requerir_hijos: true,
     hijos: [
       { to: '/secretaria/membresia', icon: 'bi-person-badge', label: 'Membresía', mod: 'membresias' },
       { to: '/secretaria/congregaciones', icon: 'bi-house-door', label: 'Congregaciones', mod: 'congregaciones' },
@@ -56,10 +58,11 @@ const GRUPOS = [
     icon: 'bi-file-earmark-bar-graph',
     label: 'Informes',
     mod: null,
+    requerir_hijos: true,
     hijos: [
-      { to: '/informes/auxiliares',          icon: 'bi-list-ul',       label: 'Auxiliares' },
-      { to: '/informes/comparativo-meses',    icon: 'bi-calendar3',     label: 'Saldos Meses/Años' },
-      { to: '/informes/estado-presupuestal', icon: 'bi-graph-up-arrow', label: 'Estado Presupuestal' },
+      { to: '/informes/auxiliares',          icon: 'bi-list-ul',       label: 'Auxiliares',          mod: 'reportes' },
+      { to: '/informes/comparativo-meses',    icon: 'bi-calendar3',     label: 'Saldos Meses/Años',   mod: 'reportes' },
+      { to: '/informes/estado-presupuestal', icon: 'bi-graph-up-arrow', label: 'Estado Presupuestal', mod: 'reportes' },
       { to: '/reportes',                    icon: 'bi-cash-coin',        label: 'Balances',          mod: 'reportes' },
     ],
   },
@@ -86,6 +89,11 @@ export default function Sidebar() {
 
   const toggle = (key) => setAbiertos(p => ({ ...p, [key]: !p[key] }));
 
+  const puedeVer = (item) => {
+    if (item.soloStaff) return !!(user?.is_superuser || user?.is_staff);
+    return !item.mod || user?.is_superuser || hasModulePermission(item.mod, 'acceder');
+  };
+
   return (
     <div className="d-flex flex-column bg-dark text-white vh-100 position-fixed"
          style={{ width: 240, zIndex: 100 }}>
@@ -110,7 +118,7 @@ export default function Sidebar() {
       {/* Menú */}
       <nav className="flex-grow-1 overflow-auto py-2">
         {MENU.map(({ to, icon, label, mod }) => {
-          const visible = !mod || user?.is_superuser || hasModulePermission(mod, 'acceder');
+          const visible = puedeVer({ mod });
           if (!visible) return null;
           return (
             <NavLink key={to} to={to}
@@ -124,10 +132,9 @@ export default function Sidebar() {
         })}
 
         {GRUPOS.map(g => {
-          const hijosVisibles = g.hijos.filter(h =>
-            !h.mod || user?.is_superuser || hasModulePermission(h.mod, 'acceder'));
+          const hijosVisibles = g.hijos.filter(puedeVer);
           const visible = g.mod
-            ? (user?.is_superuser || hasModulePermission(g.mod, 'acceder'))
+            ? puedeVer(g)
             : (g.requerir_hijos ? hijosVisibles.length > 0 : true);
           if (!visible) return null;
           const abierto = abiertos[g.key];

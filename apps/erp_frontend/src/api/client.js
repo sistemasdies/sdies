@@ -9,6 +9,8 @@ const API = axios.create({
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  const rolActivo = localStorage.getItem('rol_activo_id');
+  if (rolActivo) config.headers['X-Rol-Activo'] = rolActivo;
   return config;
 });
 

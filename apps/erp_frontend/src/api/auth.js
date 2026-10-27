@@ -3,6 +3,8 @@ export const login  = (username, password) => API.post('/auth/login/', { usernam
 export const logout = (refresh)         => API.post('/auth/logout/', { refresh });
 export const getMe  = ()                => API.get('/users/me/');
 export const updateMe = (data)          => API.patch('/users/me/', data);
+export const asumirRol  = (roleId)      => API.post('/users/asumir-rol/', { role_id: roleId });
+export const retomarRol = ()            => API.post('/users/retomar-rol/', {});
 export const recuperarPaso1 = (login)                 => API.post('/auth/recuperar/paso1/', { login });
 export const recuperarPaso2 = (login, fecha_nacimiento) => API.post('/auth/recuperar/paso2/', { login, fecha_nacimiento });
 export const recuperarPaso3 = (login, frase)          => API.post('/auth/recuperar/paso3/', { login, frase });
