@@ -326,7 +326,7 @@ export default function RolesPage() {
       {/* Modal crear/editar */}
       {modal && (
         <div className="modal d-block" style={{background:'rgba(0,0,0,0.5)'}}>
-          <div className="modal-dialog modal-lg modal-dialog-centered" style={{maxWidth:700}}>
+          <div className="modal-dialog modal-xl modal-dialog-centered" style={{maxWidth:1080}}>
             <div className="modal-content shadow d-flex" style={{maxHeight:'85vh'}}>
               <div className="modal-header bg-success text-white flex-shrink-0">
                 <h5 className="modal-title">
@@ -400,7 +400,7 @@ export default function RolesPage() {
                     <table className="table table-bordered table-sm mb-0 align-middle">
                       <thead className="table-light" style={{position:'sticky', top:0, zIndex:1}}>
                         <tr>
-                          <th style={{minWidth:150}}>
+                          <th style={{minWidth:220}}>
                             <div className="form-check">
                               <input type="checkbox" className="form-check-input"
                                 id="allMod"
