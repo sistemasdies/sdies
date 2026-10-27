@@ -1,10 +1,17 @@
 ﻿from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
+def health_check(request):
+    return HttpResponse("OK", content_type="text/plain")
+
+
 urlpatterns = [
+    path('health',  health_check, name='health'),
+    path('health/', health_check, name='health-slash'),
     path('admin/',             admin.site.urls),
     path('api/auth/',          include('apps.users.urls.auth')),
     path('api/users/',         include('apps.users.urls.users')),
