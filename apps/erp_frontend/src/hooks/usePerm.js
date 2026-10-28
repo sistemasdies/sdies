@@ -19,6 +19,8 @@ const MODULE_MAP = {
   '/secretaria/membresia':'membresias',
   '/secretaria/congregaciones': 'congregaciones',
   '/secretaria/estados':        'estados',
+  '/secretaria/estados-pastor': 'estadospastor',
+  '/secretaria/pastores':      'pastores',
 };
 
 export function usePerm(pathname) {

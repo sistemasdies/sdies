@@ -29,7 +29,9 @@ import BloquearFechaPage from './pages/BloquearFecha/BloquearFechaPage';
 import AuxiliaresPage    from './pages/Informes/AuxiliaresPage';
 import ComparativoMesesPage from './pages/Informes/ComparativoMesesPage';
 import MembresiaPage    from './pages/Membresia/MembresiaPage';
+import PastoresPage     from './pages/Pastores/PastoresPage';
 import EstadosPage      from './pages/Estados/EstadosPage';
+import EstadosPastorPage from './pages/EstadosPastor/EstadosPastorPage';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -78,6 +80,8 @@ function AppRoutes() {
       <Route path="/secretaria/membresia"        element={<PrivateRoute><MembresiaPage /></PrivateRoute>} />
       <Route path="/secretaria/congregaciones"   element={<PrivateRoute><CongregacionesPage /></PrivateRoute>} />
 <Route path="/secretaria/estados"          element={<PrivateRoute><EstadosPage /></PrivateRoute>} />
+<Route path="/secretaria/pastores"         element={<PrivateRoute><PastoresPage /></PrivateRoute>} />
+<Route path="/secretaria/estados-pastor"   element={<PrivateRoute><EstadosPastorPage /></PrivateRoute>} />
       <Route path="/informes/auxiliares"          element={<PrivateRoute><AuxiliaresPage /></PrivateRoute>} />
       <Route path="/informes/comparativo-meses"   element={<PrivateRoute><ComparativoMesesPage /></PrivateRoute>} />
       <Route path="/informes/balances"            element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />

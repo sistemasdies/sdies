@@ -50,8 +50,10 @@ const GRUPOS = [
     requerir_hijos: true,
     hijos: [
       { to: '/secretaria/membresia', icon: 'bi-person-badge', label: 'Membresía', mod: 'membresias' },
+      { to: '/secretaria/estados', icon: 'bi-tags', label: 'Estados Membresía', mod: 'estados' },
+      { to: '/secretaria/estados-pastor', icon: 'bi-tags', label: 'Estados Pastor', mod: 'estadospastor' },
+      { to: '/secretaria/pastores', icon: 'bi-person-badge', label: 'Pastores', mod: 'pastores' },
       { to: '/secretaria/congregaciones', icon: 'bi-house-door', label: 'Congregaciones', mod: 'congregaciones' },
-      { to: '/secretaria/estados', icon: 'bi-tags', label: 'Estados', mod: 'estados' },
     ],
   },
   {
@@ -79,7 +81,7 @@ const GRUPOS = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onToggle }) {
   const { user, hasModulePermission, logout, marca } = useAuth();
   const location = useLocation();
   const [abiertos, setAbiertos] = useState(() => {
@@ -102,6 +104,12 @@ export default function Sidebar() {
   return (
     <div className="d-flex flex-column bg-dark text-white vh-100 position-fixed"
          style={{ width: 240, zIndex: 100 }}>
+      <button type="button"
+        className="btn btn-sm btn-outline-light position-absolute"
+        style={{ top: 8, right: 8, zIndex: 101 }}
+        onClick={onToggle} title="Ocultar menú">
+        <i className="bi bi-chevron-left"></i>
+      </button>
       {/* Logo */}
       <div className="px-3 py-3 border-bottom border-secondary">
         <div className="d-flex align-items-center gap-2">

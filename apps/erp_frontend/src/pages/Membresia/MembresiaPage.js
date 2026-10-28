@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -7,6 +7,8 @@ import TopBar from '../../components/layout/TopBar';
 import PageHeader from '../../components/common/PageHeader';
 import Spinner from '../../components/common/Spinner';
 import AnotacionesTab from './AnotacionesTab';
+import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import SelectorTercero from '../../components/common/SelectorTercero';
 import SelectorCongregacion from '../../components/common/SelectorCongregacion';
 import { usePerm } from '../../hooks/usePerm';
@@ -513,6 +515,11 @@ export default function MembresiaPage() {
   const [fotoFile,     setFotoFile]     = useState(null);   // archivo pendiente (registro nuevo)
   const [fotoPreview,  setFotoPreview]  = useState('');     // URL local para previsualización
   const [subiendoFoto, setSubiendoFoto] = useState(false);
+  const [cropSrc,      setCropSrc]      = useState('');     // imagen a recortar
+  const [crop,         setCrop]         = useState();
+  const [completedCrop, setCompletedCrop] = useState();
+  const [showCrop,     setShowCrop]     = useState(false);
+  const imgRef = useRef(null);
 
   const cargar = useCallback(() => {
     setLoading(true);
@@ -556,7 +563,7 @@ export default function MembresiaPage() {
     setFotoPreview('');
   };
 
-  const elegirFoto = async (e) => {
+  const elegirFoto = (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
@@ -568,8 +575,51 @@ export default function MembresiaPage() {
       toast.error('La imagen supera el tamaño máximo (5 MB).');
       return;
     }
+    setCropSrc(URL.createObjectURL(file));
+    setCrop(undefined);
+    setCompletedCrop(undefined);
+    setShowCrop(true);
+  };
+
+  const onImageLoad = (e) => {
+    const { width, height } = e.currentTarget;
+    const c = centerCrop(
+      makeAspectCrop({ unit: 'px', width: Math.min(width, 240) }, 3 / 4, width, height),
+      width, height
+    );
+    setCrop(c);
+  };
+
+  const aplicarRecorte = async () => {
+    if (!imgRef.current || !completedCrop) {
+      toast.error('Seleccione un área de recorte.');
+      return;
+    }
+    const image = imgRef.current;
+    const canvas = document.createElement('canvas');
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    canvas.width = Math.max(1, completedCrop.width * scaleX);
+    canvas.height = Math.max(1, completedCrop.height * scaleY);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(
+      image,
+      completedCrop.x * scaleX,
+      completedCrop.y * scaleY,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY,
+      0, 0,
+      canvas.width,
+      canvas.height
+    );
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+    if (!blob) { toast.error('No se pudo procesar la imagen.'); return; }
+    const file = new File([blob], 'foto.jpg', { type: 'image/jpeg' });
+    setShowCrop(false);
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc('');
+
     if (editando) {
-      // Ya existe la membresía: se sube de inmediato.
       setSubiendoFoto(true);
       try {
         const { data } = await subirFotoMembresia(editando.id, file);
@@ -582,10 +632,15 @@ export default function MembresiaPage() {
         setSubiendoFoto(false);
       }
     } else {
-      // Registro nuevo: se guarda y se sube al crear.
       setFotoFile(file);
       setFotoPreview(URL.createObjectURL(file));
     }
+  };
+
+  const cancelarRecorte = () => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc('');
+    setShowCrop(false);
   };
 
   const quitarFoto = async () => {
@@ -934,7 +989,7 @@ export default function MembresiaPage() {
               <div className="modal-header bg-success text-white">
                 <h5 className="modal-title">
                   <i className="bi bi-person-badge me-2"></i>
-                  {editando ? 'Editar membresía' : 'Nueva membresía'}
+                  {editando ? `Editar membresía — ${editando.nombre_completo || ''}` : 'Nueva membresía'}
                 </h5>
                 <button type="button" className="btn-close btn-close-white"
                   onClick={() => setModal(false)}></button>
@@ -1005,8 +1060,8 @@ export default function MembresiaPage() {
                     {tab === 'familiares'   && <SeccionFamiliares   f={form} set={set} />}
                     {tab === 'laboral'      && <SeccionLaboral      f={form} set={set} />}
                     {tab === 'eclesiastico' && <SeccionEclesiastica f={form} set={set} setLupaCongregacion={setLupaCongregacion} />}
-{tab === 'anotaciones_pastor' && <AnotacionesTab cedula={form.tercero?.cedula} tipo="pastor" />}
-{tab === 'anotaciones_misionero' && <AnotacionesTab cedula={form.tercero?.cedula} tipo="misionero" />}
+{tab === 'anotaciones_pastor' && <AnotacionesTab cedula={form.tercero?.cedula} nombre={editando?.nombre_completo || form.tercero?.nombre_completo} tipo="pastor" />}
+{tab === 'anotaciones_misionero' && <AnotacionesTab cedula={form.tercero?.cedula} nombre={editando?.nombre_completo || form.tercero?.nombre_completo} tipo="misionero" />}
                   </div>
                 </div>
                 <div className="modal-footer">
@@ -1039,6 +1094,50 @@ export default function MembresiaPage() {
         onElegir={c => setForm(f => ({
           ...f, congregacion: c.codigo, congregacion_nombre: c.nombre,
         }))} />
+
+      {/* Modal de recorte de foto (formato pasaporte 3×4) */}
+      {showCrop && cropSrc && (
+        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 520 }}>
+            <div className="modal-content shadow">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title">
+                  <i className="bi bi-crop me-2"></i>Encuadrar foto (3×4)
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={cancelarRecorte}></button>
+              </div>
+              <div className="modal-body text-center">
+                <ReactCrop
+                  crop={crop}
+                  onChange={c => setCrop(c)}
+                  onComplete={c => setCompletedCrop(c)}
+                  aspect={3 / 4}
+                  minWidth={60}
+                >
+                  <img
+                    ref={imgRef}
+                    src={cropSrc}
+                    alt="Recortar"
+                    onLoad={onImageLoad}
+                    style={{ maxHeight: '60vh', maxWidth: '100%' }}
+                  />
+                </ReactCrop>
+                <div className="form-text mt-2">
+                  Arrastra el cuadro para encuadrar la foto en formato pasaporte (3×4).
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline-secondary" onClick={cancelarRecorte}>
+                  Cancelar
+                </button>
+                <button type="button" className="btn btn-success" onClick={aplicarRecorte}>
+                  <i className="bi bi-check2 me-1"></i>Aplicar recorte
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }

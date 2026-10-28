@@ -4,13 +4,14 @@ import TopBar from '../../components/layout/TopBar';
 import PageHeader from '../../components/common/PageHeader';
 import Spinner from '../../components/common/Spinner';
 import EmptyState from '../../components/common/EmptyState';
-import SelectorTercero from '../../components/common/SelectorTercero';
+
 import {
   getCongregaciones, createCongregacion,
   updateCongregacion, deleteCongregacion,
 } from '../../api/congregaciones';
 import toast from 'react-hot-toast';
 import { usePerm } from '../../hooks/usePerm';
+import { getPastores } from '../../api/pastores';
 
 const PAGE_SIZE = 50;
 
@@ -38,7 +39,7 @@ export default function CongregacionesPage() {
   const [saving,     setSaving]     = useState(false);
   const [pastorSel,  setPastorSel]  = useState(null);
 
-  const [lupa,       setLupa]       = useState(false);
+
 
   const cargar = useCallback(() => {
     setLoading(true);
@@ -74,10 +75,37 @@ export default function CongregacionesPage() {
     setModal(true);
   };
 
-  const elegirPastor = (t) => {
-    setForm(f => ({ ...f, pastor: t.cedula }));
-    setPastorSel({ cedula: t.cedula, nombre_completo: t.nombre_completo });
-    setLupa(false);
+  const [lupaPastor, setLupaPastor] = useState(false);
+  const [listaPastores, setListaPastores] = useState([]);
+  const [busqPastor, setBusqPastor] = useState('');
+  const [loadingPastor, setLoadingPastor] = useState(false);
+
+  const abrirLupaPastor = () => {
+    setBusqPastor('');
+    setLupaPastor(true);
+    setLoadingPastor(true);
+    getPastores({ page: 1, page_size: 100 })
+      .then(r => setListaPastores(r.data.results || []))
+      .catch(() => toast.error('No se pudieron cargar los pastores'))
+      .finally(() => setLoadingPastor(false));
+  };
+
+  const buscarPastorLupa = (termino) => {
+    setBusqPastor(termino);
+    setLoadingPastor(true);
+    const params = { page: 1, page_size: 100 };
+    if (termino.trim()) params.search = termino.trim();
+    getPastores(params)
+      .then(r => setListaPastores(r.data.results || []))
+      .catch(() => toast.error('No se pudieron cargar los pastores'))
+      .finally(() => setLoadingPastor(false));
+  };
+
+  const elegirPastor = (p) => {
+    const cedula = p?.codigo_pastor || '';
+    setForm(f => ({ ...f, pastor: cedula }));
+    setPastorSel({ cedula, nombre_completo: p?.pastor_nombre || p?.nombre_pastor_postulante || '' });
+    setLupaPastor(false);
   };
 
   const quitarPastor = () => {
@@ -295,8 +323,8 @@ export default function CongregacionesPage() {
                         </div>
                       ) : (
                         <button type="button" className="btn btn-outline-primary w-100"
-                          onClick={() => setLupa(true)}>
-                          <i className="bi bi-search me-1"></i>Buscar tercero
+                          onClick={abrirLupaPastor}>
+                          <i className="bi bi-search me-1"></i>Buscar pastor
                         </button>
                       )}
                       <div className="form-text">
@@ -322,12 +350,57 @@ export default function CongregacionesPage() {
         </div>
       )}
 
-      {/* Lupa de búsqueda del pastor — mismo componente que usa Membresía */}
-      <SelectorTercero
-        abierto={lupa}
-        cedulaInicial={form.pastor}
-        onCerrar={() => setLupa(false)}
-        onElegir={elegirPastor} />
+      {/* Lupa de búsqueda de pastor (tabla Pastores) */}
+      {lupaPastor && (
+        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content shadow">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title"><i className="bi bi-search me-2"></i>Seleccionar pastor</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setLupaPastor(false)}></button>
+              </div>
+              <div className="modal-body">
+                <div className="input-group mb-3">
+                  <span className="input-group-text bg-white"><i className="bi bi-search text-muted"></i></span>
+                  <input className="form-control border-start-0"
+                    placeholder="Buscar por cédula o nombre..."
+                    value={busqPastor}
+                    onChange={e => buscarPastorLupa(e.target.value)} />
+                </div>
+                {loadingPastor ? (
+                  <Spinner />
+                ) : listaPastores.length === 0 ? (
+                  <EmptyState icon="bi-person-badge" title="Sin pastores" subtitle="No hay pastores que coincidan" />
+                ) : (
+                  <div className="table-responsive" style={{ maxHeight: '50vh' }}>
+                    <table className="table table-hover table-sm mb-0 align-middle">
+                      <thead className="table-dark" style={{ position: 'sticky', top: 0 }}>
+                        <tr>
+                          <th>Cédula</th>
+                          <th>Nombre</th>
+                          <th>Tipo licencia</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {listaPastores.map(p => (
+                          <tr key={p.id} style={{ cursor: 'pointer' }} onClick={() => elegirPastor(p)}>
+                            <td><code className="small">{p.codigo_pastor}</code></td>
+                            <td className="small">{p.pastor_nombre || p.nombre_pastor_postulante || '—'}</td>
+                            <td className="small">{p.tipo_licencia}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline-secondary" onClick={() => setLupaPastor(false)}>Cerrar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }

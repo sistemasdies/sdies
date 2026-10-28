@@ -7,6 +7,7 @@ import {
   getAnotacionesMisionero, createAnotacionMisionero,
   updateAnotacionMisionero, deleteAnotacionMisionero,
 } from '../../api/anotaciones';
+import { getPastores } from '../../api/pastores';
 import toast from 'react-hot-toast';
 
 const API_BY_TIPO = {
@@ -26,7 +27,7 @@ const API_BY_TIPO = {
   },
 };
 
-export default function AnotacionesTab({ cedula, tipo }) {
+export default function AnotacionesTab({ cedula, nombre, tipo }) {
   const api = API_BY_TIPO[tipo];
   const [lista, setLista] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -35,6 +36,39 @@ export default function AnotacionesTab({ cedula, tipo }) {
   const [firmaNombre, setFirmaNombre] = useState('');
   const [editando, setEditando] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  // Lupa de membresía para cédula firma
+  const [lupaFirma, setLupaFirma] = useState(false);
+  const [listaMembresias, setListaMembresias] = useState([]);
+  const [busqFirma, setBusqFirma] = useState('');
+  const [loadingFirma, setLoadingFirma] = useState(false);
+
+  const abrirLupaFirma = () => {
+    setBusqFirma('');
+    setLupaFirma(true);
+    setLoadingFirma(true);
+    getPastores({ page: 1, page_size: 100 })
+      .then(r => setListaMembresias(r.data.results || []))
+      .catch(() => toast.error('No se pudieron cargar las membresías'))
+      .finally(() => setLoadingFirma(false));
+  };
+
+  const buscarFirma = (termino) => {
+    setBusqFirma(termino);
+    setLoadingFirma(true);
+    const params = { page: 1, page_size: 100 };
+    if (termino.trim()) params.search = termino.trim();
+    getPastores(params)
+      .then(r => setListaMembresias(r.data.results || []))
+      .catch(() => toast.error('No se pudieron cargar las membresías'))
+      .finally(() => setLoadingFirma(false));
+  };
+
+  const elegirFirma = (p) => {
+    const cedula = p?.codigo_pastor || '';
+    setForm(f => ({ ...f, cedula_firma: cedula }));
+    setLupaFirma(false);
+  };
 
   const cargar = useCallback(() => {
     if (!cedula) { setLista([]); return; }
@@ -161,7 +195,7 @@ export default function AnotacionesTab({ cedula, tipo }) {
             <div className="modal-content shadow">
               <div className="modal-header bg-success text-white">
                 <h5 className="modal-title">
-                  {editando ? 'Editar anotación' : 'Nueva anotación'}
+                  {editando ? `Editar anotación — ${nombre || ''}` : `Nueva anotación — ${nombre || ''}`}
                 </h5>
                 <button className="btn-close btn-close-white" onClick={() => setModal(false)}></button>
               </div>
@@ -179,9 +213,14 @@ export default function AnotacionesTab({ cedula, tipo }) {
                   </div>
                   <div className="mb-3">
                     <label className="form-label small fw-semibold">Cédula firma</label>
-                    <input className="form-control" value={form.cedula_firma}
-                      placeholder="Cédula de quien firma"
-                      onChange={e => setForm(f => ({ ...f, cedula_firma: e.target.value }))} />
+                    <div className="input-group">
+                      <input className="form-control" value={form.cedula_firma}
+                        placeholder="Cédula de quien firma"
+                        onChange={e => setForm(f => ({ ...f, cedula_firma: e.target.value }))} />
+                      <button type="button" className="btn btn-outline-secondary" onClick={abrirLupaFirma} title="Buscar membresía">
+                        <i className="bi bi-search"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div className="modal-footer">
@@ -190,6 +229,58 @@ export default function AnotacionesTab({ cedula, tipo }) {
                     {saving ? 'Guardando...' : (editando ? 'Actualizar' : 'Crear')}
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lupa de membresía para cédula firma */}
+      {lupaFirma && (
+        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content shadow">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title"><i className="bi bi-search me-2"></i>Seleccionar membresía</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setLupaFirma(false)}></button>
+              </div>
+              <div className="modal-body">
+                <div className="input-group mb-3">
+                  <span className="input-group-text bg-white"><i className="bi bi-search text-muted"></i></span>
+                  <input className="form-control border-start-0"
+                    placeholder="Buscar por cédula o nombre..."
+                    value={busqFirma}
+                    onChange={e => buscarFirma(e.target.value)} />
+                </div>
+                {loadingFirma ? (
+                  <Spinner />
+                ) : listaMembresias.length === 0 ? (
+                  <EmptyState icon="bi-people" title="Sin membresías" subtitle="No hay membresías que coincidan" />
+                ) : (
+                  <div className="table-responsive" style={{ maxHeight: '50vh' }}>
+                    <table className="table table-hover table-sm mb-0 align-middle">
+                      <thead className="table-dark" style={{ position: 'sticky', top: 0 }}>
+                        <tr>
+                          <th>Cédula</th>
+                          <th>Nombre</th>
+                          <th>Tipo licencia</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {listaMembresias.map(p => (
+                          <tr key={p.id} style={{ cursor: 'pointer' }} onClick={() => elegirFirma(p)}>
+                            <td><code className="small">{p.codigo_pastor}</code></td>
+                            <td className="small">{p.pastor_nombre || p.nombre_pastor_postulante || '—'}</td>
+                            <td className="small">{p.tipo_licencia}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline-secondary" onClick={() => setLupaFirma(false)}>Cerrar</button>
               </div>
             </div>
           </div>
