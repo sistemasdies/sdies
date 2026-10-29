@@ -37,35 +37,35 @@ def _configurar():
     )
 
 
-def subir_foto(archivo, public_id=None, folder=None):
-    """Sube una imagen y devuelve {'secure_url': ..., 'public_id': ...}.
-
-    Si se pasa ``public_id`` la imagen reemplaza a la anterior (overwrite),
-    evitando dejar archivos huérfanos al cambiar la foto.
-    """
+def subir_foto(archivo, public_id=None, folder=None, transformar=True):
+    """Sube una imagen y devuelve dict con secure_url y public_id."""
     _configurar()
+    folder = folder or settings.CLOUDINARY_FOLDER
     opciones = {
-        'folder':        settings.CLOUDINARY_FOLDER,
+        'folder': folder,
         'resource_type': 'image',
-        'overwrite':     True,
-        'invalidate':    True,
-        # Recorte tipo documento (3x4 cm) centrado en el rostro detectado.
-        'transformation': {
-            'width':  FOTO_ANCHO,
+        'overwrite': True,
+        'invalidate': True,
+    }
+    if transformar:
+        opciones['transformation'] = {
+            'width': FOTO_ANCHO,
             'height': FOTO_ALTO,
-            'crop':   'fill',
+            'crop': 'fill',
             'gravity': 'face',
             'quality': 'auto:good',
             'fetch_format': 'auto',
-        },
-    }
+        }
+    else:
+        opciones['quality'] = 'auto:good'
+        opciones['fetch_format'] = 'auto'
     if public_id:
         opciones['public_id'] = public_id
 
     resultado = cloudinary.uploader.upload(archivo, **opciones)
     return {
         'secure_url': resultado.get('secure_url'),
-        'public_id':  resultado.get('public_id'),
+        'public_id': resultado.get('public_id'),
     }
 
 

@@ -32,6 +32,7 @@ urlpatterns = [
     path('api/anotaciones-pastor/',    include('apps.membresia.urls.anotaciones_pastor')),
     path('api/anotaciones-misionero/', include('apps.membresia.urls.anotaciones_misionero')),
     path('api/pastores/',              include('apps.membresia.urls.pastores')),
+    path('api/activos/',               include('apps.activos.urls')),
     path('api/estados-pastor/',        include('apps.membresia.urls.estados_pastor')),
     path('api/datos-generales/', include('apps.organizacion.urls.datos_generales')),
     path('api/schema/',        SpectacularAPIView.as_view(),                      name='schema'),

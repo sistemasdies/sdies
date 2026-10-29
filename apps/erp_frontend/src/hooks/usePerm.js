@@ -21,6 +21,10 @@ const MODULE_MAP = {
   '/secretaria/estados':        'estados',
   '/secretaria/estados-pastor': 'estadospastor',
   '/secretaria/pastores':      'pastores',
+  '/activos/categorias':       'activos',
+  '/activos/ubicaciones':      'activos',
+  '/activos/estados':          'activos',
+  '/activos/activos':          'activos',
 };
 
 export function usePerm(pathname) {

@@ -25,6 +25,7 @@ from apps.membresia.import_export import (
     CAMPOS_MEMBRESIA, valor_exportacion,
 )
 from apps.membresia.models import Membresia
+from apps.activos.models import Categoria, Ubicacion, EstadoActivoF, ActivoF
 
 MODULE = 'exportar'
 
@@ -142,6 +143,52 @@ def _detalle_plantillas():
     return headers, rows
 
 
+def _categorias_activos():
+    headers = ['categoria', 'nombre_categoria']
+    rows = ([c.categoria, _clean(c.nombre_categoria)]
+            for c in Categoria.objects.order_by('categoria'))
+    return headers, rows
+
+
+def _ubicaciones_activos():
+    headers = ['ubicacion', 'descripcion']
+    rows = ([u.ubicacion, _clean(u.descripcion)]
+            for u in Ubicacion.objects.order_by('ubicacion'))
+    return headers, rows
+
+
+def _estados_activos():
+    headers = ['estado_activo_f', 'descripcion_estado_activo_f']
+    rows = ([e.estado_activo_f, _clean(e.descripcion_estado_activo_f)]
+            for e in EstadoActivoF.objects.order_by('estado_activo_f'))
+    return headers, rows
+
+
+def _activos_fijos():
+    headers = ['id_activo_f', 'nombre_activo_f', 'categoria', 'marca', 'modelo',
+               'numero_serie', 'congregacion', 'ubicacion', 'responsable',
+               'estado_actual', 'fecha_adquisicion', 'valor_compra', 'comentarios']
+    qs = (ActivoF.objects
+          .select_related('categoria', 'ubicacion', 'congregacion', 'responsable', 'estado_actual')
+          .order_by('id_activo_f'))
+    rows = ([
+        a.id_activo_f,
+        _clean(a.nombre_activo_f),
+        a.categoria_id or '',
+        _clean(a.marca),
+        _clean(a.modelo),
+        _clean(a.numero_serie),
+        a.congregacion_id or '',
+        a.ubicacion_id or '',
+        a.responsable_id or '',
+        a.estado_actual_id or '',
+        a.fecha_adquisicion.strftime('%Y-%m-%d') if a.fecha_adquisicion else '',
+        a.valor_compra if a.valor_compra is not None else '',
+        _clean(a.comentarios),
+    ] for a in qs.iterator())
+    return headers, rows
+
+
 # Orden idéntico a las pestañas de "Importar Datos".
 ENTIDADES = {
     'cuentas':        ('plan_de_cuentas.csv',    _cuentas),
@@ -152,6 +199,10 @@ ENTIDADES = {
     'movicont':       ('movicont.csv',           _movicont),
     'plantillas':     ('plantillas.csv',         _plantillas),
     'det_plantillas': ('detalle_plantillas.csv', _detalle_plantillas),
+    'categorias_activos': ('categorias_activos.csv', _categorias_activos),
+    'ubicaciones_activos': ('ubicaciones_activos.csv', _ubicaciones_activos),
+    'estados_activos': ('estados_activos.csv', _estados_activos),
+    'activos_fijos': ('activos_fijos.csv', _activos_fijos),
 }
 
 

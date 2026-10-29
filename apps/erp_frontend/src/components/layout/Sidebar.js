@@ -57,6 +57,19 @@ const GRUPOS = [
     ],
   },
   {
+    key: 'activos_fijos',
+    icon: 'bi-pc-display',
+    label: 'Activos Fijos',
+    mod: null,
+    requerir_hijos: true,
+    hijos: [
+      { to: '/activos/categorias', icon: 'bi-tags', label: 'Categorías', mod: 'activos' },
+      { to: '/activos/ubicaciones', icon: 'bi-geo-alt', label: 'Ubicaciones', mod: 'activos' },
+      { to: '/activos/estados', icon: 'bi-check2-circle', label: 'Estados', mod: 'activos' },
+      { to: '/activos/activos', icon: 'bi-pc-display', label: 'Activos', mod: 'activos' },
+    ],
+  },
+  {
     key: 'informes',
     icon: 'bi-file-earmark-bar-graph',
     label: 'Informes',

@@ -14,6 +14,10 @@ const MODULOS = [
   { id: 'movicont',       label: 'Movimientos (MoviCont)', icon: 'bi-journal-arrow-up', color: 'success', desc: '12 columnas de MoviCont' },
   { id: 'plantillas',     label: 'Títulos de Plantillas',  icon: 'bi-journals',         color: 'success', desc: 'cod_plantilla, nombre, descripcion, comprobante' },
   { id: 'det_plantillas', label: 'Detalles de Plantillas', icon: 'bi-list-ul',          color: 'primary', desc: '12 columnas de detalle' },
+  { id: 'categorias_activos', label: 'Categorías Activos', icon: 'bi-tags', color: 'warning', desc: 'categoria, nombre_categoria' },
+  { id: 'ubicaciones_activos', label: 'Ubicaciones Activos', icon: 'bi-geo-alt', color: 'info', desc: 'ubicacion, descripcion' },
+  { id: 'estados_activos', label: 'Estados Activos', icon: 'bi-check2-circle', color: 'success', desc: 'estado_activo_f, descripcion' },
+  { id: 'activos_fijos', label: 'Activos Fijos', icon: 'bi-pc-display', color: 'primary', desc: 'Todos los campos del activo' },
 ];
 
 const descargar = (data, res, nombreDefault) => {

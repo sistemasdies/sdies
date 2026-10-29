@@ -10,11 +10,19 @@ import ImportadorPlantillas        from './ImportadorPlantillas';
 import ImportadorDetallePlantillas from './ImportadorDetallePlantillas';
 import ImportadorMoviCont          from './ImportadorMoviCont';
 import ImportadorMembresia        from './ImportadorMembresia';
+import ImportadorCategorias       from './ImportadorCategorias';
+import ImportadorUbicaciones     from './ImportadorUbicaciones';
+import ImportadorEstadosActivos  from './ImportadorEstadosActivos';
+import ImportadorActivos         from './ImportadorActivos';
 
 const MODULOS = [
   { id: 'cuentas',          label: 'Plan de Cuentas',       icon: 'bi-diagram-3',    color: 'success' },
   { id: 'terceros',         label: 'Terceros',               icon: 'bi-people',       color: 'primary' },
   { id: 'membresias',       label: 'Membresía',              icon: 'bi-person-vcard', color: 'success' },
+  { id: 'categorias_activos', label: 'Categorías Activos',   icon: 'bi-tags', color: 'warning' },
+  { id: 'ubicaciones_activos', label: 'Ubicaciones Activos', icon: 'bi-geo-alt', color: 'info' },
+  { id: 'estados_activos', label: 'Estados Activos',         icon: 'bi-check2-circle', color: 'success' },
+  { id: 'activos_fijos',   label: 'Activos Fijos',           icon: 'bi-pc-display', color: 'primary' },
   { id: 'centros_costo',    label: 'Centros de Costo',       icon: 'bi-bullseye',     color: 'warning' },
   { id: 'comprobantes',     label: 'Comprobantes',           icon: 'bi-receipt',      color: 'info'    },
   { id: 'movicont',         label: 'Movimientos (MoviCont)', icon: 'bi-journal-arrow-up', color: 'success' },
@@ -50,7 +58,10 @@ export default function ImportarPage() {
         {activo === 'cuentas'        && <ImportadorCuentas />}
         {activo === 'terceros'       && <ImportadorTerceros />}
         {activo === 'membresias'     && <ImportadorMembresia />}
-        {activo === 'centros_costo'  && <ImportadorCentrosCosto />}
+        {activo === 'categorias_activos' && <ImportadorCategorias />}
+        {activo === 'ubicaciones_activos' && <ImportadorUbicaciones />}
+        {activo === 'estados_activos' && <ImportadorEstadosActivos />}
+        {activo === 'activos_fijos'  && <ImportadorActivos />}        {activo === 'centros_costo'  && <ImportadorCentrosCosto />}
         {activo === 'comprobantes'   && <ImportadorComprobantes />}
         {activo === 'movicont'       && <ImportadorMoviCont />}
         {activo === 'plantillas'     && <ImportadorPlantillas />}
