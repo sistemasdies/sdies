@@ -63,6 +63,7 @@ export default function RolesPage() {
   const [permisos,  setPermisos]  = useState({});
   const [catOpciones, setCatOpciones] = useState({ centros: [], cuentas: [], comprobantes: [] });
   const [tab,       setTab]       = useState('areas');
+  const [rolFuente, setRolFuente] = useState('');
   const [loading,  setLoading]    = useState(true);
   const [modal,    setModal]      = useState(false);
   const [editando, setEditando]   = useState(null);
@@ -121,6 +122,19 @@ export default function RolesPage() {
     });
     setTab('areas');
     setModal(true);
+  };
+
+  const copiarRol = () => {
+    if (!rolFuente) { toast.error('Seleccione un rol en la lista.'); return; }
+    const r = roles.find(x => String(x.id) === String(rolFuente));
+    if (!r) return;
+    setForm(f => ({
+      ...f,
+      permission_ids: (r.permissions || []).map(p => p.id),
+      controles: r.controles || {},
+    }));
+    toast.success(`Configuración copiada de "${r.NameRole}"`);
+    setRolFuente('');
   };
 
   const togglePerm = (id) => {
@@ -354,6 +368,28 @@ export default function RolesPage() {
                         onChange={e => setForm({ ...form, description: e.target.value })} />
                     </div>
                   </div>
+
+                  {editando && (
+                    <div className="row g-2 mb-3 align-items-end">
+                      <div className="col-md-8">
+                        <label className="form-label small fw-semibold">Copiar configuración de</label>
+                        <select className="form-select form-select-sm" value={rolFuente}
+                          onChange={e => setRolFuente(e.target.value)}>
+                          <option value="">Seleccione un rol...</option>
+                          {roles.filter(r => String(r.id) !== String(editando.id)).map(r => (
+                            <option key={r.id} value={r.id}>{r.NameRole}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="col-md-4">
+                        <button type="button" className="btn btn-sm btn-outline-primary w-100"
+                          onClick={copiarRol}
+                          title="Copiar la configuración del rol seleccionado">
+                          <i className="bi bi-clipboard me-1"></i>Copiar Rol de
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Pestañas */}
                   <ul className="nav nav-tabs mb-3">

@@ -55,7 +55,7 @@ export default function LoginPage() {
           <div className="text-center mb-4">
             <i className="bi bi-calculator display-4 text-success"></i>
             <h4 className="fw-bold mt-2">SDIES</h4>
-            <p className="text-muted small">Sistema de Contabilidad Profesional</p>
+            <p className="text-muted small">Gestión integral para tu iglesia</p>
           </div>
           <form onSubmit={handleSubmit}>
             <div className="mb-3">

@@ -9,6 +9,7 @@ import Spinner from '../../components/common/Spinner';
 import AnotacionesTab from './AnotacionesTab';
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import Draggable from 'react-draggable';
 import SelectorTercero from '../../components/common/SelectorTercero';
 import SelectorCongregacion from '../../components/common/SelectorCongregacion';
 import { usePerm } from '../../hooks/usePerm';
@@ -501,6 +502,8 @@ export default function MembresiaPage() {
   const [editando,     setEditando]     = useState(null);
   const [form,         setForm]         = useState(FORM_VACIO);
   const [tab,          setTab]          = useState('generales');
+  const [soloLectura,  setSoloLectura]  = useState(false);
+  const [maximizado,   setMaximizado]   = useState(false);
 
   useEffect(() => {
     if (!seccionesVisibles.some(s => s.key === tab)) setTab('generales');
@@ -665,6 +668,8 @@ export default function MembresiaPage() {
 
   const abrirNuevo = () => {
     setEditando(null);
+    setSoloLectura(false);
+    setMaximizado(false);
     setForm({ ...FORM_VACIO, tercero: { ...TERCERO_VACIO } });
     setTab('generales');
     limpiarCedula();
@@ -672,8 +677,10 @@ export default function MembresiaPage() {
     setModal(true);
   };
 
-  const abrirEditar = (m) => {
+  const abrirModal = (m, soloLecturaFlag = false) => {
     setEditando(m);
+    setSoloLectura(soloLecturaFlag);
+    setMaximizado(false);
     setForm({
       tercero: {
         cedula: m.tercero.cedula, tipo_documento: m.tercero.tipo_documento || '',
@@ -718,6 +725,9 @@ export default function MembresiaPage() {
     limpiarFoto();
     setModal(true);
   };
+
+  const abrirEditar = (m) => abrirModal(m, false);
+  const verMembresia = (m) => abrirModal(m, true);
 
   // ── Consultar cédula en Terceros ────────────────────────────────────────
   const cargarTercero = async (cedula) => {
@@ -951,6 +961,9 @@ export default function MembresiaPage() {
                       </td>
                       <td className="text-center">
                         <div className="btn-group btn-group-sm">
+                          <button type="button" className="btn btn-outline-info" onClick={() => verMembresia(m)} title="Ver">
+                            <i className="bi bi-eye"></i>
+                          </button>
                           <button className="btn btn-outline-primary" onClick={() => abrirEditar(m)}
                             disabled={!canEdit} title="Editar">
                             <i className="bi bi-pencil"></i>
@@ -984,15 +997,26 @@ export default function MembresiaPage() {
       {/* Modal */}
       {modal && (
         <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1055 }}>
-          <div className="modal-dialog modal-xl modal-dialog-scrollable">
+          <Draggable handle=".modal-header" bounds="parent">
+            <div className="modal-dialog modal-xl modal-dialog-scrollable"
+              style={maximizado ? { maxWidth: '95vw', width: '95vw' } : {}}>
             <div className="modal-content">
               <div className="modal-header bg-success text-white">
                 <h5 className="modal-title">
                   <i className="bi bi-person-badge me-2"></i>
-                  {editando ? `Editar membresía — ${editando.nombre_completo || ''}` : 'Nueva membresía'}
+                  {soloLectura
+                    ? `Ver membresía — ${editando?.nombre_completo || ''}`
+                    : (editando ? `Editar membresía — ${editando.nombre_completo || ''}` : 'Nueva membresía')}
                 </h5>
-                <button type="button" className="btn-close btn-close-white"
-                  onClick={() => setModal(false)}></button>
+                <div className="d-flex align-items-center gap-2">
+                  <button type="button" className="btn btn-sm btn-outline-light"
+                    onClick={() => setMaximizado(m => !m)}
+                    title={maximizado ? 'Restaurar' : 'Maximizar'}>
+                    <i className={`bi ${maximizado ? 'bi-fullscreen-exit' : 'bi-fullscreen'}`}></i>
+                  </button>
+                  <button type="button" className="btn-close btn-close-white"
+                    onClick={() => setModal(false)}></button>
+                </div>
               </div>
               <form onSubmit={guardar}>
                 <div className="modal-body" style={{ maxHeight: '68vh', overflowY: 'auto' }}>
@@ -1025,9 +1049,10 @@ export default function MembresiaPage() {
                         </label>
                         <input id="mem_foto_input" type="file" className="d-none"
                           accept="image/jpeg,image/png,image/webp"
-                          onChange={elegirFoto} disabled={subiendoFoto} />
+                          onChange={elegirFoto} disabled={subiendoFoto || soloLectura} />
                         {(form.foto || fotoPreview) && !subiendoFoto && (
-                          <button type="button" className="btn btn-sm btn-outline-danger" onClick={quitarFoto}>
+                          <button type="button" className="btn btn-sm btn-outline-danger" onClick={quitarFoto}
+                            disabled={soloLectura}>
                             <i className="bi bi-trash me-1"></i>Eliminar
                           </button>
                         )}
@@ -1047,6 +1072,7 @@ export default function MembresiaPage() {
                       </li>
                     ))}
                   </ul>
+                  <fieldset disabled={soloLectura}>
                   <div className="tab-content">
                     {tab === 'generales' && (
                       <SeccionGenerales
@@ -1063,19 +1089,23 @@ export default function MembresiaPage() {
 {tab === 'anotaciones_pastor' && <AnotacionesTab cedula={form.tercero?.cedula} nombre={editando?.nombre_completo || form.tercero?.nombre_completo} tipo="pastor" />}
 {tab === 'anotaciones_misionero' && <AnotacionesTab cedula={form.tercero?.cedula} nombre={editando?.nombre_completo || form.tercero?.nombre_completo} tipo="misionero" />}
                   </div>
+                  </fieldset>
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={() => setModal(false)}>
                     Cancelar
                   </button>
-                  <button type="submit" className="btn btn-success"
-                    disabled={editando ? !canEdit : !canAdd}>
-                    <i className="bi bi-check2 me-1"></i>Guardar
-                  </button>
+                  {!soloLectura && (
+                    <button type="submit" className="btn btn-success"
+                      disabled={editando ? !canEdit : !canAdd}>
+                      <i className="bi bi-check2 me-1"></i>Guardar
+                    </button>
+                  )}
                 </div>
               </form>
             </div>
           </div>
+          </Draggable>
         </div>
       )}
 
