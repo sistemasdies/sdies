@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (BalanceGeneralView, EstadoResultadosView,
                     BalanceComprobacionView, AuxiliaresView,
                     ComparativoMesesView, ExportarReporteView,
-                    BackupExportView, BackupImportView)
+                    BackupExportView, BackupImportView, FichaMembresiaView)
 from .exportar_datos import ExportarDatosView, ExportarTodoView
 urlpatterns = [
     path('balance-general/',     BalanceGeneralView.as_view(),     name='balance-general'),
@@ -15,4 +15,5 @@ urlpatterns = [
     path('exportar-datos/<str:entidad>/', ExportarDatosView.as_view(), name='exportar-datos'),
     path('backup-export/',       BackupExportView.as_view(),       name='backup-export'),
     path('backup-import/',       BackupImportView.as_view(),       name='backup-import'),
+    path('ficha-membresia/',     FichaMembresiaView.as_view(),     name='ficha-membresia'),
 ]

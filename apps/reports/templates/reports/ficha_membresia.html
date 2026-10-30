@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Ficha de Membresía</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 11px; margin: 20px; }
+  h1 { font-size: 16px; text-align: center; margin: 0; }
+  h2 { font-size: 12px; text-align: center; margin: 4px 0 12px; color: #555; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  td, th { border: 1px solid #999; padding: 3px 5px; vertical-align: top; }
+  th { background: #eee; font-weight: bold; }
+  .label { font-weight: bold; background: #f5f5f5; width: 22%; }
+  .val { width: 28%; }
+  .section { font-weight: bold; background: #d9ead3; padding: 4px; margin-top: 8px; }
+  .small { font-size: 9px; color: #666; }
+  @page { margin: 0; }
+  @media print { body { margin: 10mm; } .no-print { display: none; } }
+</style>
+</head>
+<body>
+  <table style="border:none; margin-bottom:8px;">
+    <tr>
+      <td style="border:none; width:33%; vertical-align:middle;">
+        {% if org_logo %}<img src="{{ org_logo }}" alt="Logo" style="max-height:90px;" />{% endif %}
+      </td>
+      <td style="border:none; width:34%; text-align:center; vertical-align:middle;">
+        <h1 style="margin:0;">{{ org_nombre|default:'EGLISE PENTECÔTISTE UNIE EN EUROPE' }}</h1>
+        <h2 style="margin:4px 0 0;">Ficha de Membresía</h2>
+        <div class="small">{{ fecha_hoy }}</div>
+      </td>
+      <td style="border:none; width:33%; text-align:right; vertical-align:middle;">
+        <div style="display:inline-block; text-align:center;">
+          {% if foto %}<img src="{{ foto }}" alt="Foto" style="max-height:135px; border:1px solid #999;" /><br />{% endif %}
+          {{ cedula }}
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="section">Datos Generales</div>
+  <table>
+    <tr><td class="label">Nombre completo</td><td class="val" colspan="3">{{ nombre_completo }}</td></tr>
+    <tr>
+      <td class="label">Documento</td><td class="val">{{ tipo_documento }} {{ cedula }}</td>
+      <td class="label">Fecha de Nacimiento</td><td class="val">{{ fecha_nacimiento }}</td>
+    </tr>
+    <tr>
+      <td class="label">Lugar de Nacimiento</td><td class="val">{{ lugar_nacimiento }}</td>
+      <td class="label">Sexo</td><td class="val">{{ sexo }} — {{ sexo_label }}</td>
+    </tr>
+    <tr>
+      <td class="label">Dirección</td><td class="val" colspan="3">{{ direccion }}</td>
+    </tr>
+    <tr>
+      <td class="label">Barrio</td><td class="val">{{ barrio }}</td>
+      <td class="label">Código postal</td><td class="val">{{ codigo_postal }}</td>
+    </tr>
+    <tr>
+      <td class="label">Distrito</td><td class="val">{{ distrito }}</td>
+      <td class="label">Teléfono Fijo</td><td class="val">{{ telefono1 }}</td>
+    </tr>
+    <tr>
+      <td class="label">Celular</td><td class="val">{{ celular }}</td>
+      <td class="label">e-Mail</td><td class="val">{{ email }}</td>
+    </tr>
+    <tr>
+      <td class="label">Estado</td><td class="val">{{ estado }} — {{ estado_label }}</td>
+      <td class="label">Congregación</td><td class="val">{{ congregacion }} {{ congregacion_nombre }}</td>
+    </tr>
+    <tr>
+      <td class="label">Comentarios generales</td><td class="val" colspan="3">{{ comentarios }}</td>
+    </tr>
+  </table>
+
+  <div class="section">Datos Familiares</div>
+  <table>
+    <tr>
+      <td class="label">Estado civil</td><td class="val">{{ estado_civil }} — {{ estado_civil_label }}</td>
+      <td class="label">Tipo matrimonio</td><td class="val">{{ tipo_matrimonio }} — {{ tipo_matrimonio_label }}</td>
+    </tr>
+    <tr>
+      <td class="label">Cónyuge</td><td class="val">{{ nombre_conyuge }}</td>
+      <td class="label">Fecha matrimonio</td><td class="val">{{ fecha_matrimonio }}</td>
+    </tr>
+    <tr>
+      <td class="label">Lugar matrimonio</td><td class="val">{{ lugar_matrimonio }}</td>
+      <td class="label">Oficiado por</td><td class="val">{{ nombre_oficiado_por }}</td>
+    </tr>
+    <tr>
+      <td class="label">Nombre del Padre</td><td class="val">{{ nombre_papa }}</td>
+      <td class="label">Nombre de la Madre</td><td class="val">{{ nombre_mama }}</td>
+    </tr>
+    <tr>
+      <td class="label">Personas a cargo</td><td class="val">{{ personas_a_cargo }}</td>
+      <td class="label"></td><td class="val"></td>
+    </tr>
+    <tr>
+      <td class="label">Folio del Registro Civil</td><td class="val">{{ folio_reg_civil }}</td>
+      <td class="label">Oficina reg. civil</td><td class="val">{{ oficina_reg_civil }}</td>
+    </tr>
+    <tr>
+      <td class="label">Fecha fallecimiento</td><td class="val">{{ fecha_fallecido }}</td>
+      <td class="label">Lugar fallecimiento</td><td class="val">{{ lugar_fallecimiento }}</td>
+    </tr>
+    <tr>
+      <td class="label">Comentarios familiares</td><td class="val" colspan="3">{{ comentario_familiar }}</td>
+    </tr>
+  </table>
+
+  <div class="section">Académico Laboral</div>
+  <table>
+    <tr>
+      <td class="label">Escolaridad</td><td class="val">{{ escolaridad }}</td>
+      <td class="label">Profesión</td><td class="val">{{ profesion }}</td>
+    </tr>
+    <tr>
+      <td class="label">Ocupación</td><td class="val">{{ ocupacion }}</td>
+      <td class="label">Lugar de trabajo</td><td class="val">{{ lugar_de_trabajo }}</td>
+    </tr>
+    <tr>
+      <td class="label">Tel. trabajo</td><td class="val">{{ telefono_trabajo }}</td>
+      <td class="label"></td><td class="val"></td>
+    </tr>
+    <tr>
+      <td class="label">Comentarios</td><td class="val" colspan="3">{{ comentarios_academico_laboral }}</td>
+    </tr>
+  </table>
+
+  <div class="section">Datos Eclesiásticos</div>
+  <table>
+    <tr>
+      <td class="label">Congregación anterior</td><td class="val">{{ congregacion_anterior }}</td>
+      <td class="label">Salió para</td><td class="val">{{ salio_para }}</td>
+    </tr>
+    <tr>
+      <td class="label">Fecha llegada</td><td class="val">{{ fecha_llegada }}</td>
+      <td class="label">Fecha salida</td><td class="val">{{ fecha_salida }}</td>
+    </tr>
+    <tr>
+      <td class="label">Bautizado</td><td class="val">{% if sw_bautizado %}Sí{% else %}No{% endif %}</td>
+      <td class="label">Serial bautismo</td><td class="val">{{ serial_bautismo }}</td>
+    </tr>
+    <tr>
+      <td class="label">Fecha bautismo</td><td class="val">{{ fecha_bautismo }}</td>
+      <td class="label">Lugar bautismo</td><td class="val">{{ lugar_bautismo }}</td>
+    </tr>
+    <tr>
+      <td class="label">Pastor que bautizó</td><td class="val" colspan="3">{{ pastor_que_bautizo }}</td>
+    </tr>
+    <tr>
+      <td class="label">Promesado</td><td class="val">{% if sw_promesado %}Sí{% else %}No{% endif %}</td>
+      <td class="label">Serial membresía</td><td class="val">{{ serial_membresia }}</td>
+    </tr>
+    <tr>
+      <td class="label">Fecha promesado</td><td class="val">{{ fecha_promesado }}</td>
+      <td class="label">Lugar promesado</td><td class="val">{{ lugar_promesado }}</td>
+    </tr>
+    <tr>
+      <td class="label">Comentarios eclesiales</td><td class="val" colspan="3">{{ comentarios_eclesiales }}</td>
+    </tr>
+  </table>
+
+  <div class="no-print" style="margin-top:12px; text-align:center;">
+    <button onclick="window.print()">Imprimir</button>
+  </div>
+</body>
+</html>

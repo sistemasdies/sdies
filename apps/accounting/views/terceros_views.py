@@ -25,7 +25,7 @@ EXPORT_COLUMNAS = [
     ('RazonSocial',       'razon_social'),
     ('Direccion',         'direccion'),
     ('Telefono1',         'telefono1'),
-    ('Telefono2',         'telefono2'),
+
     ('Celular',           'celular'),
     ('eMail',             'email'),
     ('Fax',               'fax'),
@@ -34,8 +34,7 @@ EXPORT_COLUMNAS = [
     ('Sexo',              'sexo'),
     ('Comentarios',       'comentarios'),
     ('Distrito',          'distrito'),
-    ('Departamento',      'departamento'),
-    ('Municipio',         'municipio'),
+    ('CodigoPostal',      'codigo_postal'),
     ('FechaNacimiento',   'fecha_nacimiento'),
 ]
 

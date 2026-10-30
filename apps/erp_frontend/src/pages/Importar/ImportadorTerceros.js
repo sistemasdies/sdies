@@ -25,8 +25,7 @@ const MAPEO_HEADERS = {
   sexo: 'sexo',
   comentarios: 'comentarios',
   distrito: 'distrito',
-  departamento: 'departamento',
-  municipio: 'municipio',
+  codigopostal: 'codigo_postal',
   fechanacimiento: 'fecha_nacimiento',
 };
 
@@ -61,8 +60,7 @@ const COLUMNAS = [
   { key: 'sexo',              label: 'sexo',             req: false, ejemplo: 'M o F' },
   { key: 'comentarios',       label: 'comentarios',      req: false },
   { key: 'distrito',          label: 'distrito',         req: false, ejemplo: 'Código 2 dígitos' },
-  { key: 'departamento',      label: 'departamento',     req: false, ejemplo: 'Código 2 dígitos' },
-  { key: 'municipio',         label: 'municipio',        req: false, ejemplo: 'Código 3 dígitos' },
+  { key: 'codigo_postal',     label: 'codigo_postal',    req: false, ejemplo: '6 dígitos' },
   { key: 'fecha_nacimiento',  label: 'fecha_nacimiento', req: false, ejemplo: 'YYYY-MM-DD' },
 ];
 
@@ -138,8 +136,7 @@ export default function ImportadorTerceros() {
         celular:           f.celular           || '',
         fax:               f.fax               || '',
         email:             f.email             || '',
-        departamento:      f.departamento      || '',
-        municipio:         f.municipio         || '',
+        codigo_postal:     f.codigo_postal     || '',
         distrito:          f.distrito          || '',
         comentarios:       f.comentarios       || '',
       }));

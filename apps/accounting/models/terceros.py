@@ -18,11 +18,10 @@ class Tercero(BaseModel):
     razon_social   = models.CharField(max_length=200, blank=True)
     direccion      = models.CharField(max_length=200, blank=True)
     barrio         = models.CharField(max_length=50, blank=True)
-    municipio      = models.CharField(max_length=3, blank=True)
-    departamento   = models.CharField(max_length=2, blank=True)
+    codigo_postal  = models.CharField(max_length=6, blank=True)
     distrito       = models.CharField(max_length=2, blank=True)
     telefono1      = models.CharField(max_length=30, blank=True)
-    telefono2      = models.CharField(max_length=20, blank=True)
+
     celular        = models.CharField(max_length=20, blank=True)
     fax            = models.CharField(max_length=20, blank=True)
     email          = models.EmailField(max_length=80, blank=True)

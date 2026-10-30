@@ -1,7 +1,8 @@
 ﻿import datetime
 
 from django.conf import settings
-from django.http import StreamingHttpResponse
+from django.http import StreamingHttpResponse, HttpResponse
+from django.template.loader import render_to_string
 from django.utils.timezone import now
 
 from rest_framework.views import APIView
@@ -11,6 +12,9 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 
 from apps.reports.services import backup
+from django.shortcuts import get_object_or_404
+from apps.membresia.models import Membresia, EstadoCivil, TipoMatrimonio, EstadoMembresia
+from apps.organizacion.models.datos_generales import DatosGenerales
 from apps.reports.services.balance_sheet import ReportService
 from apps.reports.services.auxiliares import auxiliares, CAMPOS_ORDEN
 from apps.reports.services.comparativo import comparativo_meses, PeriodoInvalido
@@ -249,3 +253,80 @@ class BackupImportView(APIView):
             'salida': salida[:2000],
         })
 
+class FichaMembresiaView(APIView):
+    module = 'reportes'
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        mid = request.query_params.get('id')
+        if not mid:
+            return Response({'detail': 'Debe indicar id de la membresia.'}, status=status.HTTP_400_BAD_REQUEST)
+        m = get_object_or_404(Membresia, pk=mid)
+        t = m.tercero
+        org = DatosGenerales.get_solo()
+        context = {
+            'fecha_hoy': datetime.date.today(),
+            'org_nombre': org.NombreOrganizacion,
+            'org_logo': org.LogoDeLaOrganizacion,
+            'nombre_completo': m.nombre_completo,
+            'membresia_id': str(m.id),
+            'foto': m.foto or '',
+            'org_logo': org.LogoDeLaOrganizacion,
+            'org_nombre': org.NombreOrganizacion,
+            'tipo_documento': t.tipo_documento,
+            'cedula': t.cedula,
+            'fecha_nacimiento': t.fecha_nacimiento,
+            'lugar_nacimiento': t.lugar_nacimiento,
+            'sexo': t.sexo,
+            'sexo_label': 'Masculino' if t.sexo == 'M' else ('Femenino' if t.sexo == 'F' else t.sexo),
+            'estado_civil': m.estado_civil,
+            'estado_civil_label': dict(EstadoCivil.choices).get(m.estado_civil, m.estado_civil),
+            'tipo_matrimonio': m.tipo_matrimonio,
+            'tipo_matrimonio_label': dict(TipoMatrimonio.choices).get(m.tipo_matrimonio, m.tipo_matrimonio),
+            'nombre_conyuge': m.nombre_conyuge,
+            'fecha_matrimonio': m.fecha_matrimonio,
+            'lugar_matrimonio': m.lugar_matrimonio,
+            'nombre_oficiado_por': m.nombre_oficiado_por,
+            'nombre_papa': m.nombre_papa,
+            'nombre_mama': m.nombre_mama,
+            'personas_a_cargo': m.personas_a_cargo,
+            'estado': m.estado_id if m.estado_id else '',
+            'estado_label': (m.estado.descripcion if m.estado else ''),
+            'direccion': t.direccion,
+            'barrio': t.barrio,
+            'codigo_postal': t.codigo_postal,
+            'distrito': t.distrito,
+            'telefono1': t.telefono1,
+            'celular': t.celular,
+            'email': t.email,
+            'escolaridad': m.escolaridad,
+            'profesion': m.profesion,
+            'ocupacion': m.ocupacion,
+            'lugar_de_trabajo': m.lugar_de_trabajo,
+            'telefono_trabajo': m.telefono_trabajo,
+            'comentarios_academico_laboral': m.comentarios_academico_laboral,
+            'congregacion': m.congregacion,
+            'congregacion_nombre': (m.congregacion.nombre if m.congregacion else ''),
+            'sw_bautizado': m.sw_bautizado,
+            'serial_bautismo': m.serial_bautismo,
+            'fecha_bautismo': m.fecha_bautismo,
+            'lugar_bautismo': m.lugar_bautismo,
+            'pastor_que_bautizo': m.pastor_que_bautizo,
+            'sw_promesado': m.sw_promesado,
+            'serial_membresia': m.serial_membresia,
+            'fecha_promesado': m.fecha_promesado,
+            'lugar_promesado': m.lugar_promesado,
+            'congregacion_anterior': m.congregacion_anterior,
+            'salio_para': m.salio_para,
+            'fecha_llegada': m.fecha_llegada,
+            'fecha_salida': m.fecha_salida,
+            'comentarios_eclesiales': m.comentarios_eclesiales,
+            'comentario_familiar': m.comentario_familiar,
+            'comentarios': t.comentarios,
+            'folio_reg_civil': m.folio_reg_civil,
+            'fecha_fallecido': m.fecha_fallecido,
+            'oficina_reg_civil': m.oficina_reg_civil,
+            'lugar_fallecimiento': m.lugar_fallecimiento,
+        }
+        html = render_to_string('reports/ficha_membresia.html', context)
+        return HttpResponse(html, content_type='text/html; charset=utf-8')

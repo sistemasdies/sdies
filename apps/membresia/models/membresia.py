@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 
 from apps.core.models.base import BaseModel
@@ -23,6 +25,7 @@ class EstadoCivil(models.TextChoices):
     DIVORCIADO = '3', 'Divorciado'
     SEPARADO   = '4', 'Separado'
     VIUDO      = '5', 'Viudo'
+    UNION_LIBRE = '6', 'Unión Libre'
 
 
 class TipoMatrimonio(models.TextChoices):
@@ -30,6 +33,7 @@ class TipoMatrimonio(models.TextChoices):
     JUZGADO    = 'J', 'Juzgado'
     RELIGIOSO  = 'R', 'Religioso'
     ALCALDIA   = 'A', 'Alcaldía'
+    CIVIL_RELIGIOSO = 'B', 'Civil-Religioso'
 
 
 class Membresia(BaseModel):
@@ -43,7 +47,7 @@ class Membresia(BaseModel):
 
     # ── 2. Datos familiares ────────────────────────────────────────────────
     estado_civil          = models.CharField(max_length=1, choices=EstadoCivil.choices, blank=True)
-    fecha_matrimonio      = models.DateField(null=True, blank=True)
+    fecha_matrimonio      = models.DateField(null=True, blank=True, default=datetime.date(1900, 1, 1))
     tipo_matrimonio       = models.CharField(max_length=1, choices=TipoMatrimonio.choices, blank=True)
     lugar_matrimonio      = models.CharField(max_length=30, blank=True)
     nombre_oficiado_por   = models.CharField(max_length=30, blank=True)
@@ -55,7 +59,7 @@ class Membresia(BaseModel):
     folio_reg_civil       = models.CharField(max_length=12, blank=True)
     oficina_reg_civil     = models.CharField(max_length=30, blank=True)
     lugar_fallecimiento   = models.CharField(max_length=30, blank=True)
-    fecha_fallecido       = models.DateField(null=True, blank=True)
+    fecha_fallecido       = models.DateField(null=True, blank=True, default=datetime.date(1900, 1, 1))
 
     # ── 3. Datos académicos y laborales ───────────────────────────────────
     escolaridad             = models.CharField(max_length=30, blank=True)
@@ -86,19 +90,19 @@ class Membresia(BaseModel):
 
     sw_bautizado           = models.BooleanField(default=False)
     serial_bautismo        = models.IntegerField(null=True, blank=True)
-    fecha_bautismo         = models.DateField(null=True, blank=True)
+    fecha_bautismo         = models.DateField(null=True, blank=True, default=datetime.date(1900, 1, 1))
     lugar_bautismo         = models.CharField(max_length=30, blank=True)
     pastor_que_bautizo     = models.CharField(max_length=30, blank=True)
 
     sw_promesado           = models.BooleanField(default=False)
     serial_membresia       = models.IntegerField(null=True, blank=True)
-    fecha_promesado        = models.DateField(null=True, blank=True)
+    fecha_promesado        = models.DateField(null=True, blank=True, default=datetime.date(1900, 1, 1))
     lugar_promesado        = models.CharField(max_length=30, blank=True)
 
     congregacion_anterior  = models.CharField(max_length=30, blank=True)
     salio_para             = models.CharField(max_length=30, blank=True)
-    fecha_llegada          = models.DateField(null=True, blank=True)
-    fecha_salida           = models.DateField(null=True, blank=True)
+    fecha_llegada          = models.DateField(null=True, blank=True, default=datetime.date(1900, 1, 1))
+    fecha_salida           = models.DateField(null=True, blank=True, default=datetime.date(1900, 1, 1))
 
     class Meta:
         ordering            = ['tercero__apellido1', 'tercero__nombre1']

@@ -12,7 +12,7 @@ const FORM_VACIO = {
   nombre1:'', nombre2:'', apellido1:'', apellido2:'', razon_social:'',
   lugar_exp_cedula:'', fecha_nacimiento:'', lugar_nacimiento:'',
   sexo:'', direccion:'', barrio:'',
-  municipio:'', departamento:'', distrito:'',
+  codigo_postal:'', distrito:'',
   telefono1:'', telefono2:'', celular:'', fax:'', email:'',
   comentarios:'',
 };
@@ -89,8 +89,7 @@ export default function TercerosPage() {
       sexo:              t.sexo              || '',
       direccion:         t.direccion         || '',
       barrio:            t.barrio            || '',
-      municipio:         t.municipio         || '',
-      departamento:      t.departamento      || '',
+      codigo_postal:     t.codigo_postal     || '',
       distrito:          t.distrito          || '',
       telefono1:         t.telefono1         || '',
       telefono2:         t.telefono2         || '',
@@ -363,16 +362,10 @@ export default function TercerosPage() {
                   </h6>
                   <div className="row g-3 mb-4">
                     <div className="col-md-4">
-                      <label className="form-label small fw-semibold">Departamento (código)</label>
-                      <input className="form-control font-monospace" maxLength={2}
-                        value={sf('departamento')} placeholder="Ej: 05"
-                        onChange={e => setForm({...form, departamento: e.target.value})} />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label small fw-semibold">Municipio (código)</label>
-                      <input className="form-control font-monospace" maxLength={3}
-                        value={sf('municipio')} placeholder="Ej: 001"
-                        onChange={e => setForm({...form, municipio: e.target.value})} />
+                      <label className="form-label small fw-semibold">Código postal</label>
+                      <input className="form-control font-monospace" maxLength={6}
+                        value={sf('codigo_postal')} placeholder="Ej: 050001"
+                        onChange={e => setForm({...form, codigo_postal: e.target.value})} />
                     </div>
                     <div className="col-md-4">
                       <label className="form-label small fw-semibold">Distrito (código)</label>

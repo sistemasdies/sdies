@@ -3,7 +3,7 @@ from django.db import models
 
 class Categoria(models.Model):
     categoria = models.CharField(max_length=3, primary_key=True)
-    nombre_categoria = models.CharField(max_length=20)
+    nombre_categoria = models.CharField(max_length=30)
 
     class Meta:
         db_table = 'activos_categoria'

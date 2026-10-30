@@ -14,6 +14,7 @@ import SelectorTercero from '../../components/common/SelectorTercero';
 import SelectorCongregacion from '../../components/common/SelectorCongregacion';
 import { usePerm } from '../../hooks/usePerm';
 import { useAuth } from '../../context/AuthContext';
+import API from '../../api/client';
 import {
   getMembresias, createMembresia, updateMembresia, deleteMembresia,
   buscarTerceroPorCedula, getCedulasConMembresia,
@@ -30,10 +31,11 @@ const ESTADOS = [
 ];
 const ESTADOS_CIVIL = [
   ['1', 'Soltero'], ['2', 'Casado'], ['3', 'Divorciado'],
-  ['4', 'Separado'], ['5', 'Viudo'],
+  ['4', 'Separado'], ['5', 'Viudo'], ['6', 'Unión Libre'],
 ];
 const TIPOS_MATRIMONIO = [
   ['C', 'Civil'], ['J', 'Juzgado'], ['R', 'Religioso'], ['A', 'Alcaldía'],
+  ['B', 'Civil-Religioso'],
 ];
 const SEXOS = [['M', 'Masculino'], ['F', 'Femenino']];
 
@@ -55,25 +57,25 @@ const TERCERO_VACIO = {
   cedula: '', tipo_documento: '', tipo_persona: 'N',
   nombre1: '', nombre2: '', apellido1: '', apellido2: '',
   lugar_exp_cedula: '', fecha_nacimiento: '', lugar_nacimiento: '',
-  sexo: '', direccion: '', barrio: '', municipio: '', departamento: '', distrito: '',
-  telefono1: '', telefono2: '', celular: '', email: '', comentarios: '',
+  sexo: '', direccion: '', barrio: '', codigo_postal: '', distrito: '',
+  telefono1: '', celular: '', email: '', comentarios: '',
 };
 
 const FORM_VACIO = {
   tercero: { ...TERCERO_VACIO },
-  estado_civil: '', fecha_matrimonio: '', tipo_matrimonio: '',
+  estado_civil: '', fecha_matrimonio: '1900-01-01', tipo_matrimonio: '',
   lugar_matrimonio: '', nombre_oficiado_por: '', nombre_papa: '', nombre_mama: '',
   nombre_conyuge: '', personas_a_cargo: 0, comentario_familiar: '',
-  folio_reg_civil: '', oficina_reg_civil: '', lugar_fallecimiento: '', fecha_fallecido: '',
+  folio_reg_civil: '', oficina_reg_civil: '', lugar_fallecimiento: '', fecha_fallecido: '1900-01-01',
   escolaridad: '', profesion: '', ocupacion: '', lugar_de_trabajo: '',
   telefono_trabajo: '', comentarios_academico_laboral: '',
   estado: '1', comentarios_eclesiales: '',
   congregacion: '', congregacion_nombre: '',
   foto: '',
-  sw_bautizado: false, serial_bautismo: '', fecha_bautismo: '',
+  sw_bautizado: false, serial_bautismo: '', fecha_bautismo: '1900-01-01',
   lugar_bautismo: '', pastor_que_bautizo: '',
-  sw_promesado: false, serial_membresia: '', fecha_promesado: '', lugar_promesado: '',
-  congregacion_anterior: '', salio_para: '', fecha_llegada: '', fecha_salida: '',
+  sw_promesado: false, serial_membresia: '', fecha_promesado: '1900-01-01', lugar_promesado: '',
+  congregacion_anterior: '', salio_para: '', fecha_llegada: '1900-01-01', fecha_salida: '1900-01-01',
 };
 
 const COLUMNAS = [
@@ -236,17 +238,14 @@ function SeccionGenerales({ t, setT, cedulaEstado, terceroInfo, editando, consul
           <Texto value={t.direccion} onChange={v => setT('direccion', v)} maxLength={200} />
         </Campo>
         <Campo label="Barrio" ancho="col-md-3"><Texto value={t.barrio} onChange={v => setT('barrio', v)} /></Campo>
-        <Campo label="Departamento" ancho="col-md-2">
-          <Texto value={t.departamento} onChange={v => setT('departamento', v)} maxLength={2} />
-        </Campo>
-        <Campo label="Municipio" ancho="col-md-2">
-          <Texto value={t.municipio} onChange={v => setT('municipio', v)} maxLength={3} />
+        <Campo label="Código postal" ancho="col-md-2">
+          <Texto value={t.codigo_postal} onChange={v => setT('codigo_postal', v)} maxLength={6} />
         </Campo>
         <Campo label="Distrito" ancho="col-md-2">
           <Texto value={t.distrito} onChange={v => setT('distrito', v)} maxLength={2} />
         </Campo>
         <Campo label="Teléfono 1"><Texto value={t.telefono1} onChange={v => setT('telefono1', v)} maxLength={30} /></Campo>
-        <Campo label="Teléfono 2"><Texto value={t.telefono2} onChange={v => setT('telefono2', v)} maxLength={20} /></Campo>
+
         <Campo label="Celular"><Texto value={t.celular} onChange={v => setT('celular', v)} maxLength={20} /></Campo>
         <Campo label="Email"><Texto type="email" value={t.email} onChange={v => setT('email', v)} maxLength={80} /></Campo>
       </div>
@@ -691,19 +690,19 @@ export default function MembresiaPage() {
         fecha_nacimiento: m.tercero.fecha_nacimiento || '',
         lugar_nacimiento: m.tercero.lugar_nacimiento || '',
         sexo: m.tercero.sexo || '', direccion: m.tercero.direccion || '',
-        barrio: m.tercero.barrio || '', municipio: m.tercero.municipio || '',
-        departamento: m.tercero.departamento || '', distrito: m.tercero.distrito || '',
-        telefono1: m.tercero.telefono1 || '', telefono2: m.tercero.telefono2 || '',
+        barrio: m.tercero.barrio || '', codigo_postal: m.tercero.codigo_postal || '',
+        distrito: m.tercero.distrito || '',
+        telefono1: m.tercero.telefono1 || '',
         celular: m.tercero.celular || '', email: m.tercero.email || '',
         comentarios: m.tercero.comentarios || '',
       },
-      estado_civil: m.estado_civil || '', fecha_matrimonio: m.fecha_matrimonio || '',
+      estado_civil: m.estado_civil || '', fecha_matrimonio: m.fecha_matrimonio || '1900-01-01',
       tipo_matrimonio: m.tipo_matrimonio || '', lugar_matrimonio: m.lugar_matrimonio || '',
       nombre_oficiado_por: m.nombre_oficiado_por || '', nombre_papa: m.nombre_papa || '',
       nombre_mama: m.nombre_mama || '', nombre_conyuge: m.nombre_conyuge || '',
       personas_a_cargo: m.personas_a_cargo ?? 0, comentario_familiar: m.comentario_familiar || '',
       folio_reg_civil: m.folio_reg_civil || '', oficina_reg_civil: m.oficina_reg_civil || '',
-      lugar_fallecimiento: m.lugar_fallecimiento || '', fecha_fallecido: m.fecha_fallecido || '',
+      lugar_fallecimiento: m.lugar_fallecimiento || '', fecha_fallecido: m.fecha_fallecido || '1900-01-01',
       escolaridad: m.escolaridad || '', profesion: m.profesion || '',
       ocupacion: m.ocupacion || '', lugar_de_trabajo: m.lugar_de_trabajo || '',
       telefono_trabajo: m.telefono_trabajo || '',
@@ -713,12 +712,12 @@ export default function MembresiaPage() {
       congregacion_nombre: m.congregacion_nombre || '',
       foto: m.foto || '',
       sw_bautizado: !!m.sw_bautizado, serial_bautismo: m.serial_bautismo ?? '',
-      fecha_bautismo: m.fecha_bautismo || '', lugar_bautismo: m.lugar_bautismo || '',
+      fecha_bautismo: m.fecha_bautismo || '1900-01-01', lugar_bautismo: m.lugar_bautismo || '',
       pastor_que_bautizo: m.pastor_que_bautizo || '',
       sw_promesado: !!m.sw_promesado, serial_membresia: m.serial_membresia ?? '',
-      fecha_promesado: m.fecha_promesado || '', lugar_promesado: m.lugar_promesado || '',
+      fecha_promesado: m.fecha_promesado || '1900-01-01', lugar_promesado: m.lugar_promesado || '',
       congregacion_anterior: m.congregacion_anterior || '', salio_para: m.salio_para || '',
-      fecha_llegada: m.fecha_llegada || '', fecha_salida: m.fecha_salida || '',
+      fecha_llegada: m.fecha_llegada || '1900-01-01', fecha_salida: m.fecha_salida || '1900-01-01',
     });
     setTab('generales');
     limpiarCedula();
@@ -728,6 +727,23 @@ export default function MembresiaPage() {
 
   const abrirEditar = (m) => abrirModal(m, false);
   const verMembresia = (m) => abrirModal(m, true);
+
+  const generarFicha = async () => {
+    if (!editando?.id) return;
+    try {
+      const res = await API.get('/reports/ficha-membresia/', { params: { id: editando.id }, responseType: 'text' });
+      const html = res.data;
+      const w = window.open('', '_blank');
+      if (!w) { toast.error('El navegador bloqueó la ventana emergente.'); return; }
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+      w.document.title = '';
+      w.focus();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'No se pudo generar la ficha');
+    }
+  };
 
   // ── Consultar cédula en Terceros ────────────────────────────────────────
   const cargarTercero = async (cedula) => {
@@ -811,7 +827,7 @@ export default function MembresiaPage() {
     }
     const aNum = (v) => (v === '' || v === null || v === undefined ? null : parseInt(v, 10));
     const payload = { ...form };
-    CAMPOS_FECHA.forEach(k => { if (payload[k] === '') payload[k] = null; });
+    CAMPOS_FECHA.forEach(k => { if (payload[k] === '' || payload[k] === null) payload[k] = '1900-01-01'; });
     if (payload.tercero.fecha_nacimiento === '') payload.tercero.fecha_nacimiento = null;
     payload.tercero.cedula = form.tercero.cedula.trim();
     // congregacion_nombre es solo lectura: lo calcula el backend
@@ -1009,6 +1025,12 @@ export default function MembresiaPage() {
                     : (editando ? `Editar membresía — ${editando.nombre_completo || ''}` : 'Nueva membresía')}
                 </h5>
                 <div className="d-flex align-items-center gap-2">
+                  {soloLectura && (
+                    <button type="button" className="btn btn-sm btn-outline-light"
+                      onClick={generarFicha} title="Generar ficha">
+                      <i className="bi bi-file-earmark-text me-1"></i>Generar Ficha
+                    </button>
+                  )}
                   <button type="button" className="btn btn-sm btn-outline-light"
                     onClick={() => setMaximizado(m => !m)}
                     title={maximizado ? 'Restaurar' : 'Maximizar'}>

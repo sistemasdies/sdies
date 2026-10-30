@@ -122,7 +122,7 @@ export default function CategoriasPage() {
                     </div>
                     <div className="col-8">
                       <label className="form-label small fw-semibold">Nombre <span className="text-danger">*</span></label>
-                      <input className="form-control" maxLength={20} value={form.nombre_categoria} required placeholder="Nombre de la categoría"
+                      <input className="form-control" maxLength={30} value={form.nombre_categoria} required placeholder="Nombre de la categoría"
                         onChange={e => setForm({ ...form, nombre_categoria: e.target.value })} />
                     </div>
                   </div>
