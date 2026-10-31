@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                 ('direccion', models.CharField(blank=True, max_length=25)),
                 ('created_by', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(app_label)s_%(class)s_created', to=settings.AUTH_USER_MODEL)),
                 ('deleted_by', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(app_label)s_%(class)s_deleted', to=settings.AUTH_USER_MODEL)),
-                ('pastor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='congregaciones_pastor', to='accounting.tercero', to_field='cedula', verbose_name='Cédula del pastor')),
+                ('pastor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='congregaciones_pastor', to='accounting.tercero', to_field='cedula', verbose_name='Código del pastor')),
                 ('updated_by', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(app_label)s_%(class)s_updated', to=settings.AUTH_USER_MODEL)),
             ],
             options={

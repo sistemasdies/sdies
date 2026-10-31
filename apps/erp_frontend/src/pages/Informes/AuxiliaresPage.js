@@ -16,7 +16,7 @@ import { usePreferencias } from '../../hooks/usePreferencias';
 const ORDEN_CAMPOS = [
   { valor:'cuenta',       label:'Cuenta' },
   { valor:'fecha',        label:'Fecha' },
-  { valor:'cedula',       label:'Cédula' },
+  { valor:'cedula',       label:'Código' },
   { valor:'centro_costo', label:'Centro de costo' },
 ];
 
@@ -196,7 +196,7 @@ export default function AuxiliaresPage() {
           i,
           label: it.tipo === 'total'
             ? `Total cuenta ${it.codigo} — ${it.descripcion}`
-            : `Subtotal — Cuenta ${it.codigo} (${it.descripcion_corta}) y Cédula ${it.cedula || '—'}${it.nombre ? ` (${it.nombre})` : ''}`,
+            : `Subtotal — Cuenta ${it.codigo} (${it.descripcion_corta}) y Código ${it.cedula || '—'}${it.nombre ? ` (${it.nombre})` : ''}`,
         }
       : null
   ).filter(Boolean);
@@ -273,7 +273,7 @@ export default function AuxiliaresPage() {
             return <FilaSaldoIni key={i} text="Saldo inicial (anterior al período)" monto={it.monto} />;
           case 'saldo_inicial_bloque':
             return <FilaSaldoIni key={i}
-              text={`Saldo inicial — Cédula ${it.cedula || '—'}${it.nombre ? ` (${it.nombre})` : ''}`}
+              text={`Saldo inicial — Código ${it.cedula || '—'}${it.nombre ? ` (${it.nombre})` : ''}`}
               monto={it.monto} />;
           case 'linea':
             return <FilaLinea key={i} r={it} />;
@@ -281,7 +281,7 @@ export default function AuxiliaresPage() {
             return (
               <tr key={i} id={'sub-' + i} className="table-warning fw-bold"
                 style={{ outline: resaltado === i ? '3px solid #0d6efd' : undefined, outlineOffset:'-2px' }}>
-                <td colSpan={8} className="small ps-4">Subtotal — Cuenta {it.codigo} ({it.descripcion_corta}) y Cédula {it.cedula || '—'}{it.nombre ? ` (${it.nombre})` : ''}</td>
+                <td colSpan={8} className="small ps-4">Subtotal — Cuenta {it.codigo} ({it.descripcion_corta}) y Cedula {it.cedula || '—'}{it.nombre ? ` (${it.nombre})` : ''}</td>
                 <td className="small"></td>
                 <td className="text-end small">{celda(it.subtotal_debitos)}</td>
                 <td className="text-end small">{celda(it.subtotal_creditos)}</td>
@@ -343,13 +343,13 @@ export default function AuxiliaresPage() {
         </tr>`;
       if (it.tipo === 'saldo_inicial_bloque') return `
         <tr class="saldo-ini">
-          <td colspan="9">Saldo inicial — Cédula ${it.cedula || '—'}${it.nombre ? ` (${it.nombre})` : ''}</td>
+          <td colspan="9">Saldo inicial — Código ${it.cedula || '—'}${it.nombre ? ` (${it.nombre})` : ''}</td>
           <td class="der"></td><td class="der"></td><td class="der saldo">${money(it.monto)}</td>
         </tr>`;
       if (it.tipo === 'linea') return lineaHTML(it);
       if (it.tipo === 'subtotal') return `
         <tr class="subtotal">
-          <td colspan="8">Subtotal — Cuenta ${it.codigo} (${it.descripcion_corta}) y Cédula ${it.cedula || '—'}${it.nombre ? ` (${it.nombre})` : ''}</td>
+          <td colspan="8">Subtotal — Cuenta ${it.codigo} (${it.descripcion_corta}) y Código ${it.cedula || '—'}${it.nombre ? ` (${it.nombre})` : ''}</td>
           <td class="der"></td>
           <td class="der">${celda(it.subtotal_debitos)}</td>
           <td class="der">${celda(it.subtotal_creditos)}</td>
@@ -372,7 +372,7 @@ export default function AuxiliaresPage() {
     if (filtros.cuenta.length)       filtrosTxt.push(`Cuentas: ${filtros.cuenta.join(', ')}`);
     if (filtros.centro_costo.length) filtrosTxt.push(`Centros: ${filtros.centro_costo.join(', ')}`);
     if (filtros.comprobante.length)  filtrosTxt.push(`Comprobantes: ${filtros.comprobante.join(', ')}`);
-    if (filtros.tercero.length)      filtrosTxt.push(`Cédulas: ${filtros.tercero.join(', ')}`);
+    if (filtros.tercero.length)      filtrosTxt.push(`Códigos: ${filtros.tercero.join(', ')}`);
     filtrosTxt.push(`Orden: ${[filtros.orden1, filtros.orden2, filtros.orden3].map(o => ORDEN_CAMPOS.find(x => x.valor === o)?.label || o).join(', ')}`);
     if (iniOn) filtrosTxt.push('Con saldos iniciales');
     if (ccOn)  filtrosTxt.push('Subtotales por cédula');
@@ -424,7 +424,7 @@ export default function AuxiliaresPage() {
     <thead>
       <tr>
         <th>Comp</th><th class="cen">Nº</th><th class="cen">Item</th><th>Fecha</th>
-        <th>Cédula</th><th>Apellido Nombre</th><th>Centro</th><th>Observación</th><th>DocRef</th>
+        <th>Código</th><th>Apellido Nombre</th><th>Centro</th><th>Observación</th><th>DocRef</th>
         <th class="der">Débito</th><th class="der">Crédito</th><th class="der">Saldo</th>
       </tr>
     </thead>
@@ -582,7 +582,7 @@ export default function AuxiliaresPage() {
                 <thead className="table-dark" style={{ position:'sticky', top:0, zIndex:1 }}>
                   <tr>
                     <th>Comp</th><th className="text-center">Nº</th><th className="text-center">Item</th>
-                    <th>Fecha</th><th>Cédula</th><th>Apellido Nombre</th><th>Centro</th><th>Observación</th><th>DocRef</th>
+                    <th>Fecha</th><th>Cedula</th><th>Apellido Nombre</th><th>Centro</th><th>Observación</th><th>DocRef</th>
                     <th className="text-end">Débito</th><th className="text-end">Crédito</th><th className="text-end">Saldo</th>
                   </tr>
                 </thead>

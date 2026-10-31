@@ -25,6 +25,7 @@ const MODULE_MAP = {
   '/activos/ubicaciones':      'activos',
   '/activos/estados':          'activos',
   '/activos/activos':          'activos',
+  '/vista-rapida':            'vista_rapida',
 };
 
 export function usePerm(pathname) {

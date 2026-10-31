@@ -240,7 +240,7 @@ export default function CorreccionDatosPage() {
                       getKey={c => c.codigo} getLabel={c => `${c.codigo} - ${c.descripcion}`} />
                   </div>
                   <div className="col-md-3">
-                    <label className="form-label small mb-0">Cédula</label>
+                    <label className="form-label small mb-0">Cedula</label>
                     <MultiSelect options={opciones.terceros} value={filtros.cedula}
                       onChange={v => setFiltro('cedula', v)}
                       getKey={c => c.cedula} getLabel={c => `${c.cedula} - ${c.nombre_completo}`} />
@@ -298,7 +298,7 @@ export default function CorreccionDatosPage() {
             {tabla === 'plantillas' && (
               <div className="row g-2">
                 <div className="col-md-3">
-                  <label className="form-label small mb-0">Código contiene</label>
+                  <label className="form-label small mb-0">Cedula contiene</label>
                   <input className="form-control form-control-sm" value={filtros.cod_plantilla}
                     onChange={e => setFiltro('cod_plantilla', e.target.value)} />
                 </div>
@@ -351,7 +351,7 @@ export default function CorreccionDatosPage() {
                     </select>
                   </div>
                   <div className="col-md-2">
-                    <label className="form-label small mb-0">Cédula</label>
+                    <label className="form-label small mb-0">Cedula</label>
                     <MultiSelect options={opciones.terceros} value={filtros.cedula}
                       onChange={v => setFiltro('cedula', v)}
                       getKey={c => c.cedula} getLabel={c => `${c.cedula} - ${c.nombre_completo}`} />
@@ -536,7 +536,7 @@ export default function CorreccionDatosPage() {
                   {campoDef?.tipo === 'select_cedula' && (
                     <>
                       <input className="form-control form-control-sm" list="cedulas-datalist" value={valor}
-                        onChange={e => setValor(e.target.value)} placeholder="Cédula" />
+                        onChange={e => setValor(e.target.value)} placeholder="Código" />
                       <datalist id="cedulas-datalist">
                         {opciones.terceros.map(t => (
                           <option key={t.cedula} value={t.cedula}>{t.nombre_completo}</option>

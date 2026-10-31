@@ -7,13 +7,13 @@ class AnotacionPastor(BaseModel):
     """Anotaciones del pastor para una membresía (por cédula de Tercero)."""
     cedula = models.ForeignKey(
         'accounting.Tercero', on_delete=models.PROTECT, to_field='cedula',
-        related_name='anotaciones_pastor', verbose_name='Cédula',
+        related_name='anotaciones_pastor', verbose_name='Código',
     )
     fecha = models.DateField(verbose_name='Fecha')
     anotacion = models.TextField(verbose_name='Anotación')
     cedula_firma = models.ForeignKey(
         'accounting.Tercero', on_delete=models.PROTECT, to_field='cedula',
-        related_name='anotaciones_pastor_firma', verbose_name='Cédula firma',
+        related_name='anotaciones_pastor_firma', verbose_name='Código firma',
     )
 
     class Meta:
@@ -29,13 +29,13 @@ class AnotacionMisionero(BaseModel):
     """Anotaciones del misionero para una membresía (por cédula de Tercero)."""
     cedula = models.ForeignKey(
         'accounting.Tercero', on_delete=models.PROTECT, to_field='cedula',
-        related_name='anotaciones_misionero', verbose_name='Cédula',
+        related_name='anotaciones_misionero', verbose_name='Código',
     )
     fecha = models.DateField(verbose_name='Fecha')
     anotacion = models.TextField(verbose_name='Anotación')
     cedula_firma = models.ForeignKey(
         'accounting.Tercero', on_delete=models.PROTECT, to_field='cedula',
-        related_name='anotaciones_misionero_firma', verbose_name='Cédula firma',
+        related_name='anotaciones_misionero_firma', verbose_name='Código firma',
     )
 
     class Meta:

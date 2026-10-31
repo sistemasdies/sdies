@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 // acepta tanto formato exportado (TipoDocumento, RazonSocial...) como snake_case.
 const MAPEO_HEADERS = {
   cedula: 'cedula',
-  tipodocumento: 'tipo_documento',
   lugarexpcedula: 'lugar_exp_cedula',
   tipopersona: 'tipo_persona',
   nombre1: 'nombre1',
@@ -35,7 +34,7 @@ const MODOS = [
   { id: 'ambos',       label: 'Ambos',                 desc: 'Actualiza los existentes y adiciona los nuevos' },
 ];
 
-const PLANTILLA_CSV = `Cedula,TipoDocumento,LugarExpCedula,TipoPersona,Nombre1,Nombre2,Apellido1,Apellido2,RazonSocial,Direccion,Telefono1,Telefono2,Celular,eMail,Fax,Barrio,LugarNacimiento,Sexo,Comentarios,Distrito,Departamento,Municipio,FechaNacimiento
+const PLANTILLA_CSV = `Código,TipoDocumento,LugarExpCódigo,TipoPersona,Nombre1,Nombre2,Apellido1,Apellido2,RazonSocial,Direccion,Telefono1,Telefono2,Celular,eMail,Fax,Barrio,LugarNacimiento,Sexo,Comentarios,Distrito,Departamento,Municipio,FechaNacimiento
 1234567890,CC,Bogotá,N,Juan,Carlos,Pérez,García,,Calle 10 #5-20,3001234567,6012345678,3101234567,juan@email.com,,La Candelaria,Bogotá,M,Cliente frecuente,01,11,001,1990-05-15
 900123456,NI,Medellín,J,,,,,Empresas SA,Av Principal 1,6041234567,,3121234567,info@empresa.com,6047654321,Centro,Medellín,F,Proveedor oficial,02,05,001,1999-01-01`;
 
@@ -250,7 +249,7 @@ export default function ImportadorTerceros() {
             <div className="table-responsive" style={{maxHeight:380}}>
               <table className="table table-sm table-hover">
                 <thead className="table-dark sticky-top">
-                  <tr><th>#</th><th>Est</th><th>Cédula</th><th>Doc</th>
+                  <tr><th>#</th><th>Est</th><th>Código</th><th>Doc</th>
                       <th>Nombre / Razón social</th><th>Teléfono</th><th>Celular</th><th>Email</th></tr>
                 </thead>
                 <tbody>

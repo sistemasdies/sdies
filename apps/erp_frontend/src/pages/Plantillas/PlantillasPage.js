@@ -265,7 +265,7 @@ export default function PlantillasPage() {
               <table className="table table-hover table-sm mb-0 align-middle">
                 <thead className="table-dark">
                   <tr>
-                    <th style={{width:100}}>Código</th>
+                    <th style={{width:100}}>Cedula</th>
                     <th>Nombre</th>
                     <th>Descripción</th>
                     <th className="text-center" style={{width:110}}>Comprobante</th>
@@ -342,7 +342,7 @@ export default function PlantillasPage() {
                   <div className="row g-3">
                     <div className="col-4">
                       <label className="form-label small fw-semibold">
-                        Código <span className="text-danger">*</span>
+                        Cedula <span className="text-danger">*</span>
                       </label>
                       <input className="form-control text-uppercase font-monospace"
                         maxLength={7} value={formCab.cod_plantilla}
@@ -434,7 +434,7 @@ export default function PlantillasPage() {
                           <th style={{width:100}} className="text-center">Tipo mov.</th>
                           <th style={{width:130}} className="text-end">Valor</th>
                           <th style={{width:120}}>Base</th>
-                          <th style={{width:130}}>Cédula</th>
+                          <th style={{width:130}}>Cedula</th>
                           <th style={{width:100}}>C. Costo</th>
                           <th style={{width:140}} className="text-center">Acciones</th>
                         </tr>
@@ -521,7 +521,7 @@ export default function PlantillasPage() {
                               <td>
                                 <div className="input-group input-group-sm">
                                   <input className="form-control form-control-sm"
-                                    value={det.cedula} placeholder="Cédula / DIGITE"
+                                    value={det.cedula} placeholder="Código / DIGITE"
                                     list={`plt-det-terceros-${det.item}`}
                                     title={terceros.find(t=>t.cedula===det.cedula)?.nombre_completo || ''}
                                     onChange={e=>upd(det.item,'cedula',e.target.value)}

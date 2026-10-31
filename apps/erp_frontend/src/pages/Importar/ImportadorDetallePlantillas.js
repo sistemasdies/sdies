@@ -228,7 +228,7 @@ export default function ImportadorDetallePlantillas() {
                       ['tipo_mov','No','1','D=Débito, C=Crédito'],
                       ['valor','No','10','Valor o palabra clave (DIGITE)'],
                       ['base','No','10','Valor base'],
-                      ['cedula','No','12','Cédula del tercero'],
+                      ['cedula','No','12','Código del tercero'],
                       ['centro_costo','No','7','Código centro de costo'],
                       ['comentarios','No','200','Comentarios adicionales'],
                       ['doc_soporte','No','8','Documento soporte'],
@@ -318,7 +318,7 @@ export default function ImportadorDetallePlantillas() {
                     <th style={{width:60}}>Tipo</th>
                     <th style={{width:90}}>Valor</th>
                     <th style={{width:90}}>Base</th>
-                    <th style={{width:110}}>Cédula</th>
+                    <th style={{width:110}}>Cedula</th>
                     <th style={{width:90}}>C.Costo</th>
                     <th style={{width:160}}>Comentarios</th>
                     <th style={{width:90}}>Doc.Soporte</th>

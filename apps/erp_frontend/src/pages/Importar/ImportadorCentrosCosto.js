@@ -181,7 +181,7 @@ export default function ImportadorCentrosCosto() {
                 <tbody>
                   <tr><td><code>codigo</code></td><td><span className="badge bg-danger">Sí</span></td><td>Código único, máx 7 caracteres</td></tr>
                   <tr><td><code>descripcion</code></td><td><span className="badge bg-danger">Sí</span></td><td>Nombre del centro de costo</td></tr>
-                  <tr><td><code>responsable</code></td><td><span className="badge bg-secondary">No</span></td><td>Cédula del responsable</td></tr>
+                  <tr><td><code>responsable</code></td><td><span className="badge bg-secondary">No</span></td><td>Código del responsable</td></tr>
                 </tbody>
               </table>
             </div>

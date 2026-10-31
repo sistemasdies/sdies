@@ -7,6 +7,7 @@ import LoginPage         from './pages/Login/LoginPage';
 import RecuperarContrasena from './pages/RecuperarContrasena/RecuperarContrasena';
 import ConfigurarVerificacion from './pages/ConfigurarVerificacion/ConfigurarVerificacion';
 import DashboardPage     from './pages/Dashboard/DashboardPage';
+import VistaRapidaPage  from './pages/Dashboard/VistaRapidaPage';
 import CuentasPage       from './pages/Cuentas/CuentasPage';
 import AsientosPage      from './pages/Asientos/AsientosPage';
 import NuevoAsientoPage  from './pages/Asientos/NuevoAsientoPage';
@@ -60,6 +61,7 @@ function AppRoutes() {
       <Route path="/configurar-verificacion"
         element={<PrivateRoute><ConfigurarVerificacion /></PrivateRoute>} />
       <Route path="/dashboard"      element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+<Route path="/vista-rapida"   element={<PrivateRoute><VistaRapidaPage /></PrivateRoute>} />
       <Route path="/cuentas"        element={<PrivateRoute><CuentasPage /></PrivateRoute>} />
       <Route path="/asientos"       element={<PrivateRoute><AsientosPage /></PrivateRoute>} />
       <Route path="/asientos/nuevo" element={<PrivateRoute><NuevoAsientoPage /></PrivateRoute>} />

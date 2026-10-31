@@ -2,48 +2,30 @@ import { useEffect, useState } from 'react';
 import MainLayout from '../../components/layout/MainLayout';
 import TopBar from '../../components/layout/TopBar';
 import Spinner from '../../components/common/Spinner';
-import { getEstadoResultados } from '../../api/reportes';
-import { getAsientos } from '../../api/asientos';
 import { getCumpleanos } from '../../api/terceros';
 import { updateMe } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
-import { usePreferencias } from '../../hooks/usePreferencias';
-import { formatMoney, formatDate } from '../../utils/formato';
+import { formatDate } from '../../utils/formato';
 import toast from 'react-hot-toast';
-
-const hoyISO = () => new Date().toISOString().split('T')[0];
-
-const etiquetaDias = (d) =>
-  d === 0 ? 'Hoy' : d === 1 ? 'Mañana' : `En ${d} días`;
 
 export default function DashboardPage() {
   const { user, refrescar, marca } = useAuth();
-  const anio = new Date().getFullYear();
-  const [desde, setDesde] = useState(`${anio}-01-01`);
-  const [hasta, setHasta] = useState(hoyISO());
-  const [resumen, setResumen] = useState(null);
-  const [cargandoResumen, setCargandoResumen] = useState(true);
   const [cumpleanos, setCumpleanos] = useState([]);
-  const [asientos,  setAsientos]  = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const { data: prefs, estaListo: prefsListo, guardar: guardarPrefs } = usePreferencias();
+  const [loading, setLoading] = useState(true);
+  const [showCumple, setShowCumple] = useState(false);
 
-  // Perfil propio
   const [modalPerfil, setModalPerfil] = useState(false);
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
   const [perfil, setPerfil] = useState({
-    NameUser:'', email:'', caja_user:'', centro_costo_user:'',
-    fecha_nacimiento:'', frase_verificacion:'',
+    NameUser: '', email: '', caja_user: '', centro_costo_user: '',
+    fecha_nacimiento: '', frase_verificacion: '',
   });
 
   const abrirPerfil = () => {
     setPerfil({
-      NameUser:          user?.NameUser || '',
-      email:             user?.email || '',
-      caja_user:         user?.caja_user || '',
-      centro_costo_user: user?.centro_costo_user || '',
-      fecha_nacimiento:  user?.fecha_nacimiento || '',
-      frase_verificacion:user?.frase_verificacion || '',
+      NameUser: user?.NameUser || '', email: user?.email || '',
+      caja_user: user?.caja_user || '', centro_costo_user: user?.centro_costo_user || '',
+      fecha_nacimiento: user?.fecha_nacimiento || '', frase_verificacion: user?.frase_verificacion || '',
     });
     setModalPerfil(true);
   };
@@ -53,77 +35,27 @@ export default function DashboardPage() {
     setGuardandoPerfil(true);
     try {
       await updateMe({
-        NameUser:           perfil.NameUser.trim(),
-        email:              perfil.email.trim(),
-        caja_user:          perfil.caja_user.trim(),
-        centro_costo_user:  perfil.centro_costo_user.trim(),
-        fecha_nacimiento:   perfil.fecha_nacimiento || null,
-        frase_verificacion: perfil.frase_verificacion.trim(),
+        NameUser: perfil.NameUser.trim(), email: perfil.email.trim(),
+        caja_user: perfil.caja_user.trim(), centro_costo_user: perfil.centro_costo_user.trim(),
+        fecha_nacimiento: perfil.fecha_nacimiento || null, frase_verificacion: perfil.frase_verificacion.trim(),
       });
       await refrescar();
       toast.success('Datos actualizados');
       setModalPerfil(false);
     } catch (err) {
       const d = err.response?.data?.detail || err.response?.data;
-      if (d?.email)                    toast.error(`Email "${perfil.email}" ya está registrado`);
-      else if (typeof d === 'string')  toast.error(d);
-      else if (Array.isArray(Object.values(d||{})[0])) toast.error(Object.values(d)[0][0]);
-      else                             toast.error('Error al guardar — verifique los datos');
+      if (d?.email) toast.error(`Email "${perfil.email}" ya está registrado`);
+      else if (typeof d === 'string') toast.error(d);
+      else toast.error('Error al guardar — verifique los datos');
     } finally { setGuardandoPerfil(false); }
   };
 
   useEffect(() => {
-    Promise.allSettled([
-      getCumpleanos({ dias: 10 }),
-      getAsientos({ page_size: 5 }),
-    ]).then(([c, a]) => {
-      if (c.status === 'fulfilled') setCumpleanos(c.value.data.resultados || []);
-      if (a.status === 'fulfilled') setAsientos(a.value.data.results || []);
-    }).finally(() => setLoading(false));
-  }, []);
-
-  // Rehidratar rango de fechas guardado por el usuario
-  useEffect(() => {
-    if (!prefsListo || !prefs) return;
-    const g = prefs['dashboard'];
-    if (g) {
-      if (g.desde) setDesde(g.desde);
-      if (g.hasta) setHasta(g.hasta);
-    }
-  }, [prefsListo]);
-
-  // Persistir el rango de fechas en las preferencias del usuario (con debounce)
-  useEffect(() => {
-    if (!prefsListo || !guardarPrefs) return;
-    const t = setTimeout(() => {
-      guardarPrefs({ dashboard: { desde, hasta } });
-    }, 600);
-    return () => clearTimeout(t);
-  }, [desde, hasta, prefsListo]);
-
-  useEffect(() => {
-    let activo = true;
-    setCargandoResumen(true);
-    getEstadoResultados({ fecha_desde: desde, fecha_hasta: hasta, excluir_cierre: '1' })
-      .then(r => { if (activo) setResumen(r.data); })
+    getCumpleanos({ dias: 10 })
+      .then(r => setCumpleanos(r.data.resultados || []))
       .catch(() => {})
-      .finally(() => { if (activo) setCargandoResumen(false); });
-    return () => { activo = false; };
-  }, [desde, hasta]);
-
-  const ingresos  = parseFloat(resumen?.ingresos || 0);
-  const gastos    = parseFloat(resumen?.gastos   || 0);
-  const superavit = ingresos - gastos;
-
-  const kpis = [
-    { label: 'Bienvenido', texto: user?.NameUser || user?.login || '',
-      icon: 'bi-person-circle', color: 'success' },
-    { label: 'Ingresos', value: ingresos, icon: 'bi-graph-up-arrow', color: 'success' },
-    { label: 'Gastos',   value: gastos,   icon: 'bi-graph-down-arrow', color: 'danger' },
-    { label: superavit >= 0 ? 'Superávit' : 'Déficit', value: Math.abs(superavit),
-      icon: superavit >= 0 ? 'bi-emoji-smile' : 'bi-emoji-frown',
-      color: superavit >= 0 ? 'success' : 'danger' },
-  ];
+      .finally(() => setLoading(false));
+  }, []);
 
   if (loading) return (
     <MainLayout><TopBar title="Dashboard" /><div className="p-4"><Spinner /></div></MainLayout>
@@ -131,148 +63,26 @@ export default function DashboardPage() {
 
   return (
     <MainLayout>
-      <TopBar title="Dashboard">
+      <TopBar title="Dashboard" LabelVersion="v 1.11">
         <div className="d-flex align-items-center gap-2">
-          <span className="text-muted small">Del</span>
-          <input type="date" className="form-control form-control-sm"
-            style={{ width: 150 }} value={desde} max={hasta}
-            onChange={e => setDesde(e.target.value)} />
-          <span className="text-muted small">al</span>
-          <input type="date" className="form-control form-control-sm"
-            style={{ width: 150 }} value={hasta} min={desde}
-            onChange={e => setHasta(e.target.value)} />
+          <button type="button" className="btn btn-sm btn-outline-success"
+            onClick={abrirPerfil} title="Mis datos">
+            <i className="bi bi-person-gear me-1"></i>Mis Datos
+          </button>
+          <button type="button" className="btn btn-sm btn-outline-success"
+            onClick={() => setShowCumple(true)} title="Cumpleaños">
+            <i className="bi bi-cake2 me-1"></i>Cumpleaños
+          </button>
         </div>
       </TopBar>
       <div className="p-4">
-
-        {/* KPIs */}
-        <div className="row g-3 mb-4">
-          {kpis.map(({ label, value, texto, icon, color }) => (
-            <div key={label} className="col-md-3">
-              <div className="card border-0 shadow-sm h-100"
-                style={label==='Bienvenido' ? { cursor: 'pointer' } : undefined}
-                onClick={label==='Bienvenido' ? abrirPerfil : undefined}>
-                <div className="card-body py-2 px-3">
-                  <div className="d-flex align-items-center justify-content-between">
-                    <span className="text-muted" style={{ fontSize: 12 }}>
-                      {label}{label==='Bienvenido'&&<i className="bi bi-pencil-square ms-1" style={{fontSize:10}}></i>}
-                    </span>
-                    <i className={`bi ${icon} text-${color}`}></i>
-                  </div>
-                  <div className={`fw-bold text-${color} text-truncate`} style={{ fontSize: 15 }}
-                    title={texto !== undefined ? 'Editar mis datos' : undefined}>
-                    {texto !== undefined ? texto : (cargandoResumen ? '…' : formatMoney(value))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="row g-3">
-          {/* Cuadro central: se ajusta a la proporción del fondo configurado */}
-          <div className="col-md-6">
-            <div className="card border-0 shadow-sm">
-              {marca?.FondoDeLaApp ? (
-                <img src={marca.FondoDeLaApp} alt="Fondo"
-                  className="card-img"
-                  style={{ display: 'block', width: '100%', height: 'auto' }} />
-              ) : (
-                <div className="card-body" style={{ minHeight: 400 }}></div>
-              )}
-            </div>
-          </div>
-
-          {/* Columna derecha (cols 7-12): cumpleaños + últimos asientos */}
-          <div className="col-md-6">
-            <div className="d-flex flex-column gap-3">
-
-              {/* Cumpleaños */}
-              <div className="card border-0 shadow-sm">
-                <div className="card-header bg-white border-0 fw-semibold">
-                  <i className="bi bi-cake2 me-2 text-success"></i>
-                  Cumpleaños
-                </div>
-                <div className="card-body p-0">
-                  {cumpleanos.length === 0 ? (
-                    <div className="text-muted small text-center py-4">
-                      Sin cumpleaños en los próximos 10 días.
-                    </div>
-                  ) : (
-                    <div className="list-group list-group-flush">
-                      {cumpleanos.map(c => (
-                        <div key={c.cedula} className="list-group-item py-2 px-3">
-                          <div className="small fw-semibold text-truncate">{c.nombre}</div>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <span className="text-muted" style={{ fontSize: 11 }}>CC {c.cedula}</span>
-                            <span className="text-end text-nowrap">
-                              <span className="badge bg-success">{formatDate(c.fecha_cumple)}</span>
-                              <span className="text-muted ms-1" style={{ fontSize: 11 }}>
-                                {etiquetaDias(c.dias)}
-                              </span>
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Últimos asientos */}
-              <div className="card border-0 shadow-sm">
-                <div className="card-header bg-white border-0 fw-semibold">
-                  <i className="bi bi-journal-text me-2 text-success"></i>
-                  Últimos asientos
-                </div>
-                <div className="table-responsive">
-                  <table className="table table-hover table-sm mb-0">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Referencia</th>
-                        <th>Fecha</th>
-                        <th className="text-end">Débitos</th>
-                        <th className="text-end">Créditos</th>
-                        <th className="text-end">Diferencia</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {asientos.length === 0 && (
-                        <tr><td colSpan={5} className="text-center text-muted py-3">Sin asientos</td></tr>
-                      )}
-                      {asientos.map(a => {
-                        const dif = Math.abs((parseFloat(a.total_debitos)||0) - (parseFloat(a.total_creditos)||0));
-                        const descuadrado = dif >= 0.01;
-                        return (
-                        <tr key={`${a.cod_comprob}-${a.num_comprob}`}
-                            className={descuadrado ? 'table-danger fw-bold' : ''}>
-                          <td><code className="small">{a.referencia}</code></td>
-                          <td className="small">{a.fecha}</td>
-                          <td className="text-end small">{formatMoney(a.total_debitos)}</td>
-                          <td className="text-end small">{formatMoney(a.total_creditos)}</td>
-                          <td className="text-end small">
-                            {descuadrado ? (
-                              <span className="text-danger fw-bold">
-                                <i className="bi bi-exclamation-triangle-fill me-1"></i>
-                                {formatMoney(dif)}
-                              </span>
-                            ) : (
-                              <span className="text-success">
-                                <i className="bi bi-check-circle-fill me-1"></i>
-                                {formatMoney(0)}
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-            </div>
-          </div>
+        {/* Imagen de fondo */}
+        <div className="card border-0 shadow-sm mb-3">
+          {marca?.FondoDeLaApp ? (
+            <img src={marca.FondoDeLaApp} alt="Fondo" className="card-img" style={{ display: 'block', width: '100%', height: 'auto' }} />
+          ) : (
+            <div className="card-body" style={{ minHeight: 200 }}></div>
+          )}
         </div>
       </div>
 
@@ -348,6 +158,40 @@ export default function DashboardPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Popup Cumpleaños */}
+      {showCumple && (
+        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ width: '50%', maxWidth: '50%' }}>
+            <div className="modal-content shadow">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title"><i className="bi bi-cake2 me-2"></i>Cumpleaños</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowCumple(false)}></button>
+              </div>
+              <div className="modal-body p-0">
+                {cumpleanos.length === 0 ? (
+                  <div className="text-muted small text-center py-4">Sin cumpleaños en los próximos 10 días.</div>
+                ) : (
+                  <div className="list-group list-group-flush">
+                    {cumpleanos.map(c => (
+                      <div key={c.cedula} className="list-group-item py-2 px-3">
+                        <div className="small fw-semibold text-truncate">{c.nombre}</div>
+                        <div className="d-flex justify-content-between align-items-center">
+                          <span className="text-muted" style={{ fontSize: 11 }}>CC {c.cedula}</span>
+                          <span className="text-end text-nowrap">
+                            <span className="badge bg-success">{formatDate(c.fecha_cumple)}</span>
+                            <span className="text-muted ms-1" style={{ fontSize: 11 }}>{c.dias === 0 ? 'Hoy' : c.dias === 1 ? 'Mañana' : `En ${c.dias} días`}</span>
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

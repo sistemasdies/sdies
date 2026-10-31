@@ -20,7 +20,7 @@ const NIVELES = [
   { valor:'3', label:'3 Mayor' },
   { valor:'4', label:'4 Detalle' },
   { valor:'5', label:'5 Centro de Costos' },
-  { valor:'6', label:'6 Cédula' },
+  { valor:'6', label:'6 Código' },
 ];
 
 const NIVEL_ESTILO = {
@@ -458,7 +458,7 @@ export default function ReportesPage() {
               <table className="table table-sm table-hover mb-0">
                 <thead>
                   <tr>
-                    <th style={{ backgroundColor:'#006064', color:'#fff', fontSize:'0.95rem' }}>Código</th>
+                    <th style={{ backgroundColor:'#006064', color:'#fff', fontSize:'0.95rem' }}>Cedula</th>
                     <th style={{ backgroundColor:'#006064', color:'#fff', fontSize:'0.95rem' }}>Descripción</th>
                     <th className="text-center" style={{ backgroundColor:'#006064', color:'#fff', fontSize:'0.95rem' }}>Niv.</th>
                     <th className="text-center" style={{ backgroundColor:'#006064', color:'#fff', fontSize:'0.95rem' }}>Clase</th>

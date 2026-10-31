@@ -6,8 +6,8 @@ from apps.membresia.models import Membresia
 
 
 CAMPOS_TERCERO = [
-    'cedula', 'tipo_documento', 'tipo_persona', 'nombre1', 'nombre2',
-    'apellido1', 'apellido2', 'lugar_exp_cedula', 'fecha_nacimiento',
+    'cedula', 'tipo_persona', 'nombre1', 'nombre2',
+    'apellido1', 'apellido2', 'fecha_nacimiento',
     'lugar_nacimiento', 'sexo', 'direccion', 'barrio', 'codigo_postal',
     'distrito', 'telefono1', 'celular', 'email',
     'comentarios',

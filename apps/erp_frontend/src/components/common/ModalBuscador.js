@@ -39,7 +39,7 @@ const CONFIGS = {
     icon:    'bi-people',
     color:   'primary',
     campos:  [
-      { key: 'cedula',          label: 'Cédula/NIT',   ancho: '130px' },
+      { key: 'cedula',          label: 'Código',   ancho: '130px' },
       { key: 'nombre_completo', label: 'Nombre / Razón social', ancho: 'auto' },
       { key: 'tipo_documento',  label: 'Tipo',          ancho: '70px'  },
     ],

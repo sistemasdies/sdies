@@ -52,7 +52,7 @@ const construirWizard = (lineas) => {
                    descripcionOriginal: l.descripcionOriginal || '' };
     if (esDig(l.cuenta))       pasos.push({ ...base, campo:'cuenta',       tipo:'cuenta',   label:'Cuenta contable'  });
     if (esDig(l.observacion))  pasos.push({ ...base, campo:'observacion',  tipo:'texto',    label:'Observación'      });
-    if (esDig(l.cedula))       pasos.push({ ...base, campo:'cedula',       tipo:'tercero',  label:'Cédula / Tercero' });
+    if (esDig(l.cedula))       pasos.push({ ...base, campo:'cedula',       tipo:'tercero',  label:'Código / Tercero' });
     if (esDig(l.centro_costo)) pasos.push({ ...base, campo:'centro_costo', tipo:'cc',       label:'Centro de costo'  });
     if (esDig(l.vr_debitos))   pasos.push({ ...base, campo:'vr_debitos',   tipo:'monto',    label:'Valor débito'     });
     if (esDig(l.vr_creditos))  pasos.push({ ...base, campo:'vr_creditos',  tipo:'monto',    label:'Valor crédito'    });
@@ -579,7 +579,7 @@ export default function AsientoConPlantilla() {
                               ${plantillaId===p.id?'active':''}`}
                             onClick={() => setPlantillaId(p.id)}
                             onDoubleClick={() => { setPlantillaId(p.id); aplicarPlantilla(p); }}>
-                            {/* Código */}
+                            {/* Cedula */}
                             <code className="fw-bold text-nowrap" style={{
                               minWidth:70,
                               color: plantillaId===p.id?'#fff':'inherit'
@@ -941,7 +941,7 @@ export default function AsientoConPlantilla() {
                       <th style={{width:140}}>Cuenta</th>
                       <th style={{width:'8%'}}>Descripción</th>
                       <th style={{width:475}}>Observación</th>
-                      <th style={{width:140}}>Cédula</th>
+                      <th style={{width:140}}>Cedula</th>
                       <th style={{width:260}}>Tercero</th>
                       <th style={{width:110}}>C.Costo</th>
                       <th style={{width:120}} className="text-end">Débito</th>
@@ -1003,7 +1003,7 @@ export default function AsientoConPlantilla() {
                               <input
                                 className={`form-control form-control-sm ${isDig(l.cedula)?'border-danger':''}`}
                                 value={isDig(l.cedula)?'':l.cedula}
-                                placeholder="Cédula"
+                                placeholder="Código"
                                 list={`f3-terceros-${i}`}
                                 onChange={e=>updateLinea(i,'cedula',e.target.value)}
                                 onKeyDown={e=>{

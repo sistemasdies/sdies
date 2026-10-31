@@ -89,7 +89,7 @@ def _comprobantes():
 
 def _movicont():
     headers = ['CodComprob', 'NumComprob', 'ItemComprob', 'Cuenta', 'DocRef',
-               'Observacion', 'Cedula', 'CentroCosto', 'DocSoporte',
+               'Observacion', 'Código', 'CentroCosto', 'DocSoporte',
                'VrDebitos', 'VrCreditos', 'Fecha']
     qs = (MoviCont.objects
           .select_related('cod_comprob', 'cuenta', 'cedula', 'centro_costo')

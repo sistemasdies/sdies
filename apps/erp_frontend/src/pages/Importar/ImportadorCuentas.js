@@ -331,7 +331,7 @@ export default function ImportadorCuentas() {
                   <tr>
                     <th style={{width:45}}>#</th>
                     <th style={{width:36}}></th>
-                    <th>Código</th>
+                    <th>Cedula</th>
                     <th>Descripción</th>
                     <th className="text-center">Niv.</th>
                     <th className="text-center">Nat.</th>
@@ -435,7 +435,7 @@ export default function ImportadorCuentas() {
                 <div className="table-responsive mt-2">
                   <table className="table table-sm mb-0 bg-white">
                     <thead className="table-light">
-                      <tr><th>Fila</th><th>Código</th><th>Padre</th><th>Error</th></tr>
+                      <tr><th>Fila</th><th>Cedula</th><th>Padre</th><th>Error</th></tr>
                     </thead>
                     <tbody>
                       {resultado.erroresImport.map((e,i)=>(

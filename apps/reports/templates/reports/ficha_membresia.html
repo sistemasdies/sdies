@@ -40,39 +40,38 @@
 
   <div class="section">Datos Generales</div>
   <table>
-    <tr><td class="label">Nombre completo</td><td class="val" colspan="3">{{ nombre_completo }}</td></tr>
     <tr>
-      <td class="label">Documento</td><td class="val">{{ tipo_documento }} {{ cedula }}</td>
-      <td class="label">Fecha de Nacimiento</td><td class="val">{{ fecha_nacimiento }}</td>
-    </tr>
-    <tr>
-      <td class="label">Lugar de Nacimiento</td><td class="val">{{ lugar_nacimiento }}</td>
-      <td class="label">Sexo</td><td class="val">{{ sexo }} — {{ sexo_label }}</td>
-    </tr>
-    <tr>
-      <td class="label">Dirección</td><td class="val" colspan="3">{{ direccion }}</td>
-    </tr>
-    <tr>
-      <td class="label">Barrio</td><td class="val">{{ barrio }}</td>
-      <td class="label">Código postal</td><td class="val">{{ codigo_postal }}</td>
-    </tr>
-    <tr>
-      <td class="label">Distrito</td><td class="val">{{ distrito }}</td>
-      <td class="label">Teléfono Fijo</td><td class="val">{{ telefono1 }}</td>
-    </tr>
-    <tr>
-      <td class="label">Celular</td><td class="val">{{ celular }}</td>
-      <td class="label">e-Mail</td><td class="val">{{ email }}</td>
+      <td class="label">Nombre completo</td><td class="val">{{ nombre_completo }}</td>
+      <td class="label">Código</td><td class="val">{{ cedula }}</td>
     </tr>
     <tr>
       <td class="label">Estado</td><td class="val">{{ estado }} — {{ estado_label }}</td>
+      <td class="label">Sexo</td><td class="val">{{ sexo }} — {{ sexo_label }}</td>
+    </tr>
+    <tr>
+      <td class="label">Lugar de Nacimiento</td><td class="val">{{ lugar_nacimiento }}</td>
+      <td class="label">Fecha de Nacimiento</td><td class="val">{{ fecha_nacimiento }}</td>
+    </tr>
+    <tr>
+      <td class="label">Dirección</td><td class="val">{{ direccion }}</td>
+      <td class="label">Código Postal</td><td class="val">{{ codigo_postal }}</td>
+    </tr>
+    <tr>
+      <td class="label">Barrio</td><td class="val">{{ barrio }}</td>
+      <td class="label">Distrito</td><td class="val">{{ distrito }}</td>
+    </tr>
+    <tr>
+      <td class="label">Celular (GSM)</td><td class="val">{{ celular }}</td>
+      <td class="label">Teléfono Fijo</td><td class="val">{{ telefono1 }}</td>
+    </tr>
+    <tr>
+      <td class="label">e-Mail</td><td class="val">{{ email }}</td>
       <td class="label">Congregación</td><td class="val">{{ congregacion }} {{ congregacion_nombre }}</td>
     </tr>
     <tr>
       <td class="label">Comentarios generales</td><td class="val" colspan="3">{{ comentarios }}</td>
     </tr>
   </table>
-
   <div class="section">Datos Familiares</div>
   <table>
     <tr>
@@ -130,38 +129,37 @@
   <div class="section">Datos Eclesiásticos</div>
   <table>
     <tr>
-      <td class="label">Congregación anterior</td><td class="val">{{ congregacion_anterior }}</td>
-      <td class="label">Salió para</td><td class="val">{{ salio_para }}</td>
-    </tr>
-    <tr>
+      <td class="label">Congregación</td><td class="val">{{ congregacion }} {{ congregacion_nombre }}</td>
       <td class="label">Fecha llegada</td><td class="val">{{ fecha_llegada }}</td>
-      <td class="label">Fecha salida</td><td class="val">{{ fecha_salida }}</td>
     </tr>
     <tr>
-      <td class="label">Bautizado</td><td class="val">{% if sw_bautizado %}Sí{% else %}No{% endif %}</td>
+      <td class="label">Serial membresía</td><td class="val">{{ serial_membresia }}</td>
       <td class="label">Serial bautismo</td><td class="val">{{ serial_bautismo }}</td>
+    </tr>
+    <tr>
+      <td class="label">Bautizado (s/n)</td><td class="val">{% if sw_bautizado %}Sí{% else %}No{% endif %}</td>
+      <td class="label">Promesado (s/n)</td><td class="val">{% if sw_promesado %}Sí{% else %}No{% endif %}</td>
     </tr>
     <tr>
       <td class="label">Fecha bautismo</td><td class="val">{{ fecha_bautismo }}</td>
       <td class="label">Lugar bautismo</td><td class="val">{{ lugar_bautismo }}</td>
     </tr>
     <tr>
-      <td class="label">Pastor que bautizó</td><td class="val" colspan="3">{{ pastor_que_bautizo }}</td>
-    </tr>
-    <tr>
-      <td class="label">Promesado</td><td class="val">{% if sw_promesado %}Sí{% else %}No{% endif %}</td>
-      <td class="label">Serial membresía</td><td class="val">{{ serial_membresia }}</td>
-    </tr>
-    <tr>
       <td class="label">Fecha promesado</td><td class="val">{{ fecha_promesado }}</td>
       <td class="label">Lugar promesado</td><td class="val">{{ lugar_promesado }}</td>
+    </tr>
+    <tr>
+      <td class="label">Congregación anterior</td><td class="val">{{ congregacion_anterior }}</td>
+      <td class="label">Pastor que bautizó</td><td class="val">{{ pastor_que_bautizo }}</td>
+    </tr>
+    <tr>
+      <td class="label">Salió para</td><td class="val">{{ salio_para }}</td>
+      <td class="label">Fecha salida</td><td class="val">{{ fecha_salida }}</td>
     </tr>
     <tr>
       <td class="label">Comentarios eclesiales</td><td class="val" colspan="3">{{ comentarios_eclesiales }}</td>
     </tr>
   </table>
-
-  <div class="no-print" style="margin-top:12px; text-align:center;">
     <button onclick="window.print()">Imprimir</button>
   </div>
 </body>

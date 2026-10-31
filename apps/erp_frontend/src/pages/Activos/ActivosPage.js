@@ -255,7 +255,7 @@ export default function ActivosPage() {
               <table className="table table-hover table-sm mb-0 align-middle">
                 <thead className="table-dark">
                   <tr>
-                    <th>Código</th><th>Nombre</th><th>Cant.</th><th>Categoría</th><th>Ubicación</th><th>Estado</th><th className="text-center">Acciones</th>
+                    <th>Cedula</th><th>Nombre</th><th>Cant.</th><th>Categoría</th><th>Ubicación</th><th>Estado</th><th className="text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -303,7 +303,7 @@ export default function ActivosPage() {
                 <div className="modal-body" style={{ maxHeight: '68vh', overflowY: 'auto' }}>
                   <div className="row g-3">
                     <div className="col-md-3">
-                      <label className="form-label small fw-semibold">Código <span className="text-danger">*</span></label>
+                      <label className="form-label small fw-semibold">Cedula <span className="text-danger">*</span></label>
                       <div className="input-group">
                         <input className="form-control font-monospace text-uppercase" maxLength={5} required value={form.id_activo_f}
                           disabled={!!editando} onChange={e => setForm(f => ({ ...f, id_activo_f: e.target.value }))} />

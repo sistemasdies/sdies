@@ -96,7 +96,7 @@ export default function SelectorCongregacion({
                   <table className="table table-hover table-sm mb-0">
                     <thead className="table-light">
                       <tr>
-                        <th style={{ width: '110px' }}>Código</th>
+                        <th style={{ width: '110px' }}>Cedula</th>
                         <th>Nombre</th>
                         <th>Dirección</th>
                         <th>Pastor</th>

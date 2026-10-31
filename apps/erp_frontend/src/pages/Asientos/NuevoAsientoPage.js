@@ -245,7 +245,7 @@ export default function NuevoAsientoPage() {
                   <th style={{width:'8%'}}>Descripción cuenta</th>
                   <th style={{width:475}}>Observación</th>
                   <th style={{width:130}}>
-                    Cédula {F3_HINT}
+                    Cedula {F3_HINT}
                   </th>
                   <th style={{width:260}}>Tercero</th>
                   <th style={{width:100}}>
@@ -293,13 +293,13 @@ export default function NuevoAsientoPage() {
                         value={l.observacion}
                         onChange={e => updateLinea(i,'observacion',e.target.value)}/>
                     </td>
-                    {/* Cédula / Tercero */}
+                    {/* Cedula / Tercero */}
                     <td>
                       <div className="input-group input-group-sm">
                         <input
                           className="form-control form-control-sm"
                           value={l.cedula}
-                          placeholder="Cédula"
+                          placeholder="Código"
                           list={`terceros-${i}`}
                           onChange={e => updateLinea(i,'cedula',e.target.value)}
                           onKeyDown={e => f3Tercero(e, i)}

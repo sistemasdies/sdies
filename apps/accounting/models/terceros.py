@@ -9,7 +9,6 @@ class TipoPersona(models.TextChoices):
 class Tercero(BaseModel):
     """Personas naturales y jurídicas: clientes, proveedores, empleados."""
     cedula         = models.CharField(max_length=12, unique=True)
-    tipo_documento = models.CharField(max_length=2, blank=True)
     tipo_persona   = models.CharField(max_length=1, choices=TipoPersona.choices, blank=True)
     nombre1        = models.CharField(max_length=50, blank=True)
     nombre2        = models.CharField(max_length=50, blank=True)
@@ -25,7 +24,7 @@ class Tercero(BaseModel):
     celular        = models.CharField(max_length=20, blank=True)
     fax            = models.CharField(max_length=20, blank=True)
     email          = models.EmailField(max_length=80, blank=True)
-    lugar_exp_cedula = models.CharField(max_length=60, blank=True)
+
     fecha_nacimiento = models.DateField(null=True, blank=True)
     lugar_nacimiento = models.CharField(max_length=100, blank=True)
     sexo           = models.CharField(max_length=1, blank=True)

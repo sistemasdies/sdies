@@ -56,7 +56,7 @@ const SECCIONES = [
 const TERCERO_VACIO = {
   cedula: '', tipo_documento: '', tipo_persona: 'N',
   nombre1: '', nombre2: '', apellido1: '', apellido2: '',
-  lugar_exp_cedula: '', fecha_nacimiento: '', lugar_nacimiento: '',
+  fecha_nacimiento: '', lugar_nacimiento: '',
   sexo: '', direccion: '', barrio: '', codigo_postal: '', distrito: '',
   telefono1: '', celular: '', email: '', comentarios: '',
 };
@@ -80,7 +80,7 @@ const FORM_VACIO = {
 
 const COLUMNAS = [
   { label: 'Foto',        campo: 'foto',            orden: null },
-  { label: 'Cédula',      campo: 'cedula',          orden: 'tercero__cedula' },
+  { label: 'Código',      campo: 'cedula',          orden: 'tercero__cedula' },
   { label: 'Nombre',      campo: 'nombre_completo',   orden: 'tercero__apellido1' },
   { label: 'Estado',      campo: 'estado',            orden: 'estado' },
   { label: 'Congregación', campo: 'congregacion_nombre', orden: null },
@@ -165,8 +165,8 @@ function SeccionGenerales({ t, setT, cedulaEstado, terceroInfo, editando, consul
   return (
     <>
       {avisoCedula && (
-        <div className={`alert ${avisoCedula.clase} d-flex align-items-center gap-2 py-2 small`}>
-          <i className={`bi ${avisoCedula.icono}`}></i>
+        <div className={`alert ${avisoCódigo.clase} d-flex align-items-center gap-2 py-2 small`}>
+          <i className={`bi ${avisoCódigo.icono}`}></i>
           <span className="flex-grow-1">{avisoCedula.texto}</span>
           {cedulaEstado === 'ya_existe_membresia' && (
             <button type="button" className="btn btn-sm btn-outline-dark" onClick={abrirMembresiaExistente}>
@@ -180,7 +180,7 @@ function SeccionGenerales({ t, setT, cedulaEstado, terceroInfo, editando, consul
         <i className="bi bi-shield-check me-2"></i>Identificación
       </h6>
       <div className="row g-3 mb-4">
-        <Campo label={editando ? 'Cédula' : 'Cédula *'} ancho="col-md-3">
+        <Campo label={editando ? 'Código' : 'Código *'} ancho="col-md-3">
           <div className="input-group">
             <input className="form-control" value={t.cedula} maxLength={12} required
               disabled={!!editando}
@@ -197,9 +197,6 @@ function SeccionGenerales({ t, setT, cedulaEstado, terceroInfo, editando, consul
         </Campo>
         <Campo label="Tipo documento" ancho="col-md-2">
           <Texto value={t.tipo_documento} onChange={v => setT('tipo_documento', v)} maxLength={2} />
-        </Campo>
-        <Campo label="Lugar expedición" ancho="col-md-3">
-          <Texto value={t.lugar_exp_cedula} onChange={v => setT('lugar_exp_cedula', v)} />
         </Campo>
         <Campo label="Tipo persona" ancho="col-md-2">
           <Lista value={t.tipo_persona} onChange={v => setT('tipo_persona', v)}
@@ -682,11 +679,10 @@ export default function MembresiaPage() {
     setMaximizado(false);
     setForm({
       tercero: {
-        cedula: m.tercero.cedula, tipo_documento: m.tercero.tipo_documento || '',
+        cedula: m.tercero.cedula,
         tipo_persona: m.tercero.tipo_persona || 'N',
         nombre1: m.tercero.nombre1 || '', nombre2: m.tercero.nombre2 || '',
         apellido1: m.tercero.apellido1 || '', apellido2: m.tercero.apellido2 || '',
-        lugar_exp_cedula: m.tercero.lugar_exp_cedula || '',
         fecha_nacimiento: m.tercero.fecha_nacimiento || '',
         lugar_nacimiento: m.tercero.lugar_nacimiento || '',
         sexo: m.tercero.sexo || '', direccion: m.tercero.direccion || '',

@@ -87,7 +87,7 @@ export default function SelectorTercero({
             <div className="input-group mb-3">
               <span className="input-group-text"><i className="bi bi-search"></i></span>
               <input ref={inputRef} className="form-control"
-                placeholder="Cédula, nombre, apellido o celular..."
+                placeholder="Código, nombre, apellido o celular..."
                 value={q} onChange={e => { setQ(e.target.value); setPagina(1); }} />
               {q && (
                 <button className="btn btn-outline-secondary" onClick={() => { setQ(''); setPagina(1); }}>
@@ -107,7 +107,7 @@ export default function SelectorTercero({
                   <table className="table table-hover table-sm mb-0">
                     <thead className="table-light">
                       <tr>
-                        <th>Cédula</th><th>Nombre</th><th>Celular</th>
+                        <th>Cedula</th><th>Nombre</th><th>Celular</th>
                         {cargarReservados && <th className="text-center">Estado</th>}
                       </tr>
                     </thead>

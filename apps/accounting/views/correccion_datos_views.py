@@ -72,7 +72,7 @@ CAMPOS_EDITABLES = {
     'movicont': [
         {'campo': 'cuenta',       'label': 'Cuenta',          'tipo': 'select_cuenta',      'update_key': 'cuenta_id'},
         {'campo': 'centro_costo', 'label': 'Centro de costo', 'tipo': 'select_centro',      'update_key': 'centro_costo_id'},
-        {'campo': 'cedula',       'label': 'Cédula (tercero)','tipo': 'select_cedula',      'update_key': 'cedula_id'},
+        {'campo': 'cedula',       'label': 'Código (tercero)','tipo': 'select_cedula',      'update_key': 'cedula_id'},
         {'campo': 'observacion',  'label': 'Observación',     'tipo': 'texto', 'max': 200,   'update_key': 'observacion'},
         {'campo': 'doc_ref',      'label': 'Doc. referencia', 'tipo': 'texto', 'max': 14,    'update_key': 'doc_ref'},
         {'campo': 'doc_soporte',  'label': 'Doc. soporte',    'tipo': 'texto', 'max': 15,    'update_key': 'doc_soporte'},
@@ -92,7 +92,7 @@ CAMPOS_EDITABLES = {
         {'campo': 'tipo_mov',     'label': 'Tipo movimiento',  'tipo': 'select_tipo_mov', 'update_key': 'tipo_mov'},
         {'campo': 'valor',        'label': 'Valor',            'tipo': 'texto', 'max': 32,  'update_key': 'valor'},
         {'campo': 'base',         'label': 'Base',             'tipo': 'texto', 'max': 32,  'update_key': 'base'},
-        {'campo': 'cedula',       'label': 'Cédula',           'tipo': 'select_cedula',   'update_key': 'cedula'},
+        {'campo': 'cedula',       'label': 'Código',           'tipo': 'select_cedula',   'update_key': 'cedula'},
         {'campo': 'centro_costo', 'label': 'Centro de costo',  'tipo': 'select_centro',   'update_key': 'centro_costo'},
         {'campo': 'comentarios',  'label': 'Comentarios',      'tipo': 'texto', 'max': 200, 'update_key': 'comentarios'},
         {'campo': 'doc_soporte',  'label': 'Doc. soporte',     'tipo': 'texto', 'max': 15,  'update_key': 'doc_soporte'},
@@ -103,7 +103,7 @@ COLUMNAS_MUESTRA = {
     'movicont': [
         {'key': 'cod_comprob', 'label': 'Comprob.'}, {'key': 'num_comprob', 'label': 'Número'},
         {'key': 'item_comprob', 'label': 'Ítem'}, {'key': 'fecha', 'label': 'Fecha'},
-        {'key': 'cuenta', 'label': 'Cuenta'}, {'key': 'cedula', 'label': 'Cédula'},
+        {'key': 'cuenta', 'label': 'Cuenta'}, {'key': 'cedula', 'label': 'Código'},
         {'key': 'centro_costo', 'label': 'C. Costo'}, {'key': 'doc_ref', 'label': 'Doc. Ref.'},
         {'key': 'observacion', 'label': 'Observación'}, {'key': 'vr_debitos', 'label': 'Débitos'},
         {'key': 'vr_creditos', 'label': 'Créditos'},
@@ -117,7 +117,7 @@ COLUMNAS_MUESTRA = {
         {'key': 'cuenta', 'label': 'Cuenta'}, {'key': 'doc_ref', 'label': 'Doc. Ref.'},
         {'key': 'observacion', 'label': 'Observación'}, {'key': 'tipo_mov', 'label': 'Tipo'},
         {'key': 'valor', 'label': 'Valor'}, {'key': 'base', 'label': 'Base'},
-        {'key': 'cedula', 'label': 'Cédula'}, {'key': 'centro_costo', 'label': 'C. Costo'},
+        {'key': 'cedula', 'label': 'Código'}, {'key': 'centro_costo', 'label': 'C. Costo'},
         {'key': 'comentarios', 'label': 'Comentarios'},
     ],
 }

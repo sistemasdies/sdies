@@ -204,7 +204,7 @@ export default function CongregacionesPage() {
               <table className="table table-hover table-sm mb-0 align-middle">
                 <thead className="table-dark">
                   <tr>
-                    <th>Código</th>
+                    <th>Cedula</th>
                     <th>Nombre</th>
                     <th>Dirección</th>
                     <th>Pastor</th>
@@ -283,7 +283,7 @@ export default function CongregacionesPage() {
                   <div className="row g-3">
                     <div className="col-4">
                       <label className="form-label small fw-semibold">
-                        Código <span className="text-danger">*</span>
+                        Cedula <span className="text-danger">*</span>
                       </label>
                       <input className="form-control font-monospace text-uppercase"
                         maxLength={4} value={form.codigo} required
@@ -376,7 +376,7 @@ export default function CongregacionesPage() {
                     <table className="table table-hover table-sm mb-0 align-middle">
                       <thead className="table-dark" style={{ position: 'sticky', top: 0 }}>
                         <tr>
-                          <th>Cédula</th>
+                          <th>Cedula</th>
                           <th>Nombre</th>
                           <th>Tipo licencia</th>
                         </tr>

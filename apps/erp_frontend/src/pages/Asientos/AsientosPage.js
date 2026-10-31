@@ -680,7 +680,7 @@ export default function AsientosPage() {
                           <th className="text-center" style={{width:60}}>Item</th>
                           <th>Cuenta</th>
                           <th style={{width:200}}>Descripción</th>
-                          <th>Cédula</th>
+                          <th>Cedula</th>
                           <th style={{width:200}}>Tercero</th>
                           <th style={{width:200}}>Observación</th>
                           <th>Doc ref.</th>
@@ -724,7 +724,7 @@ export default function AsientosPage() {
                                 {ed ? (
                                   <div className="input-group input-group-sm">
                                     <input className="form-control form-control-sm"
-                                      value={e.cedula} placeholder="Cédula"
+                                      value={e.cedula} placeholder="Código"
                                       onChange={ev => setEdit(l.id, 'cedula', ev.target.value)}
                                       onKeyDown={ev => f3Tercero(ev, l.id)}
                                       title="F3 para buscar" />

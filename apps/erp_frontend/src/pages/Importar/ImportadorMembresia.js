@@ -394,7 +394,7 @@ export default function ImportadorMembresia() {
               <table className="table table-sm table-hover mb-0">
                 <thead className="table-dark sticky-top">
                   <tr>
-                    <th>#</th><th>Est</th><th>Cédula</th><th>Estado</th>
+                    <th>#</th><th>Est</th><th>Código</th><th>Estado</th>
                     <th>Congregación</th><th>Est. civil</th><th>Bautizado</th><th>Promesado</th>
                   </tr>
                 </thead>

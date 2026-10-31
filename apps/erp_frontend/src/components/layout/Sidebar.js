@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const MENU = [
   { to: '/dashboard',           icon: 'bi-speedometer2',        label: 'Dashboard',               mod: null },
+  { to: '/vista-rapida',        icon: 'bi-lightning-charge',    label: 'Vista Rápida',            mod: 'vista_rapida' },
   { to: '/asientos',            icon: 'bi-journal-text',        label: 'Asientos',                mod: 'asientos' },
   { to: '/asientos/plantilla',  icon: 'bi-layout-text-window',  label: 'Asiento con plantilla',   mod: 'asientos_plantilla' },
 ];

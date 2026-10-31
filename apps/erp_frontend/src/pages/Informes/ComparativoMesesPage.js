@@ -299,7 +299,7 @@ export default function ComparativoMesesPage() {
               <table className="table table-sm table-bordered align-middle mb-0">
                 <thead className="table-dark">
                   <tr>
-                    <th style={{ ...COL_COD_HEAD, minWidth:96 }}>Código</th>
+                    <th style={{ ...COL_COD_HEAD, minWidth:96 }}>Cedula</th>
                     <th style={{ ...COL_DESC_HEAD, minWidth:240 }}>Descripción</th>
                     {etiquetas.map((m, i) => (
                       <th key={i} className="text-end" style={{ ...STICKY, minWidth:110 }}>

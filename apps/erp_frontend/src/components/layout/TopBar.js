@@ -1,4 +1,4 @@
-export default function TopBar({ title, children }) {
+export default function TopBar({ title, children, LabelVersion }) {
   return (
     <div className="d-flex align-items-center justify-content-between px-4 py-3
                     bg-white border-bottom shadow-sm">
@@ -6,11 +6,14 @@ export default function TopBar({ title, children }) {
         <h5 className="mb-0 fw-semibold text-dark">{title}</h5>
         {children}
       </div>
-      <span className="text-muted small">
-        {new Date().toLocaleDateString('es-CO', {
-          weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
-        })}
-      </span>
+      <div className="d-flex align-items-center gap-2">
+        {LabelVersion && <span className="text-muted small">{LabelVersion}</span>}
+        <span className="text-muted small">
+          {new Date().toLocaleDateString('es-CO', {
+            weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+          })}
+        </span>
+      </div>
     </div>
   );
 }

@@ -212,7 +212,7 @@ export default function PastoresPage() {
               <table className="table table-hover table-sm mb-0 align-middle">
                 <thead className="table-dark">
                   <tr>
-                    <th>Código</th>
+                    <th>Cedula</th>
                     <th>Nombre</th>
                     <th>F. lic. general</th>
                     <th>Comentarios</th>
@@ -274,7 +274,7 @@ export default function PastoresPage() {
                 <div className="modal-body">
                   <div className="row g-3 mb-3">
                     <div className="col-md-4">
-                      <label className="form-label small fw-semibold">Código pastor (cédula) <span className="text-danger">*</span></label>
+                      <label className="form-label small fw-semibold">Cedula pastor (cédula) <span className="text-danger">*</span></label>
                       <div className="input-group">
                         <input className="form-control font-monospace" maxLength={12} required
                           value={form.codigo_pastor}
@@ -394,7 +394,7 @@ export default function PastoresPage() {
                     <table className="table table-hover table-sm mb-0 align-middle">
                       <thead className="table-dark" style={{ position: 'sticky', top: 0 }}>
                         <tr>
-                          <th>Cédula</th>
+                          <th>Cedula</th>
                           <th>Nombre</th>
                           <th>Estado</th>
                         </tr>

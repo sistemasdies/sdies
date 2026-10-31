@@ -8,9 +8,9 @@ import toast from 'react-hot-toast';
 import { usePerm } from '../../hooks/usePerm';
 
 const FORM_VACIO = {
-  cedula:'', tipo_documento:'', tipo_persona:'N',
+  cedula:'', tipo_persona:'N',
   nombre1:'', nombre2:'', apellido1:'', apellido2:'', razon_social:'',
-  lugar_exp_cedula:'', fecha_nacimiento:'', lugar_nacimiento:'',
+  fecha_nacimiento:'', lugar_nacimiento:'',
   sexo:'', direccion:'', barrio:'',
   codigo_postal:'', distrito:'',
   telefono1:'', telefono2:'', celular:'', fax:'', email:'',
@@ -20,9 +20,8 @@ const FORM_VACIO = {
 const PAGE_SIZE = 50;
 
 const COLUMNAS = [
-  { key:'cedula',         label:'Identificación' },
-  { key:'tipo_documento', label:'Tipo Doc' },
-  { key:'apellido1',      label:'Nombre / Razón Social' },
+  { key:'cedula',         label:'Código' },
+  { key:'apellido1',      label:'Nombre(s) - Apellido(s) / Razón Social' },
   { key:'telefono1',      label:'Teléfono' },
   { key:'email',          label:'Email' },
   { key:'celular',        label:'Celular' },
@@ -76,14 +75,13 @@ export default function TercerosPage() {
     setEditando(t);
     setForm({
       cedula:            t.cedula            || '',
-      tipo_documento:    t.tipo_documento    || '',
       tipo_persona:      t.tipo_persona      || 'N',
       nombre1:           t.nombre1           || '',
       nombre2:           t.nombre2           || '',
       apellido1:         t.apellido1         || '',
       apellido2:         t.apellido2         || '',
       razon_social:      t.razon_social      || '',
-      lugar_exp_cedula:  t.lugar_exp_cedula  || '',
+
       fecha_nacimiento:  t.fecha_nacimiento  || '',
       lugar_nacimiento:  t.lugar_nacimiento  || '',
       sexo:              t.sexo              || '',
@@ -166,15 +164,36 @@ export default function TercerosPage() {
               <table className="table table-hover table-sm mb-0">
                 <thead className="table-dark" style={{position:'sticky', top:0, zIndex:1}}>
                   <tr>
-                    {COLUMNAS.map(c => (
-                      <th key={c.key} onClick={() => sortOn(c.key)}
-                        style={{cursor:'pointer', userSelect:'none', whiteSpace:'nowrap'}}>
-                        {c.label}
-                        {orden?.campo === c.key && (
-                          <span className="ms-1">{orden.dir === 'asc' ? '\u25B2' : '\u25BC'}</span>
-                        )}
-                      </th>
-                    ))}
+                    {COLUMNAS.map(c => {
+                      if (c.key === 'apellido1') {
+                        return (
+                          <th key={c.key} style={{ whiteSpace:'nowrap' }}>
+                            <span style={{ cursor:'pointer', userSelect:'none' }}
+                              onClick={() => sortOn('sort_nombre')}
+                              title="Ordenar por nombre (razón social en jurídicas)">
+                              Nombre(s)
+                              {orden?.campo === 'sort_nombre' && <span className="ms-1">{orden.dir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                            </span>
+                            <span className="mx-1">-</span>
+                            <span style={{ cursor:'pointer', userSelect:'none' }}
+                              onClick={() => sortOn('sort_apellido')}
+                              title="Ordenar por apellido (razón social en jurídicas)">
+                              Apellido(s)
+                              {orden?.campo === 'sort_apellido' && <span className="ms-1">{orden.dir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                            </span>
+                          </th>
+                        );
+                      }
+                      return (
+                        <th key={c.key} onClick={() => sortOn(c.key)}
+                          style={{cursor:'pointer', userSelect:'none', whiteSpace:'nowrap'}}>
+                          {c.label}
+                          {orden?.campo === c.key && (
+                            <span className="ms-1">{orden.dir === 'asc' ? '\u25B2' : '\u25BC'}</span>
+                          )}
+                        </th>
+                      );
+                    })}
                     <th className="text-center">Acciones</th>
                   </tr>
                 </thead>
@@ -185,7 +204,6 @@ export default function TercerosPage() {
                   {terceros.map(t => (
                     <tr key={t.id}>
                       <td><code className="small">{t.cedula}</code></td>
-                      <td><span className="badge bg-secondary">{t.tipo_documento}</span></td>
                       <td className="small">{t.nombre_completo}</td>
                       <td className="small">{t.telefono1 || '—'}</td>
                       <td className="small">{t.email || '—'}</td>
@@ -238,7 +256,7 @@ export default function TercerosPage() {
                   <div className="row g-3 mb-4">
                     <div className="col-md-3">
                       <label className="form-label small fw-semibold">
-                        Cédula / NIT *
+                        Cedula *
                         {!editando && (
                           <button type="button" className="btn btn-outline-success btn-sm ms-2" onClick={generarCodigo}>
                             <i className="bi bi-magic me-1"></i>Generar nuevo código
@@ -362,7 +380,7 @@ export default function TercerosPage() {
                   </h6>
                   <div className="row g-3 mb-4">
                     <div className="col-md-4">
-                      <label className="form-label small fw-semibold">Código postal</label>
+                      <label className="form-label small fw-semibold">Cedula postal</label>
                       <input className="form-control font-monospace" maxLength={6}
                         value={sf('codigo_postal')} placeholder="Ej: 050001"
                         onChange={e => setForm({...form, codigo_postal: e.target.value})} />

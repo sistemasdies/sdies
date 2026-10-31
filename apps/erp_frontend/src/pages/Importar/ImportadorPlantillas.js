@@ -221,7 +221,7 @@ export default function ImportadorPlantillas() {
                       <td><code>cod_plantilla</code></td>
                       <td><span className="badge bg-danger">Sí</span></td>
                       <td>7</td>
-                      <td className="small">Código único</td>
+                      <td className="small">Cedula único</td>
                     </tr>
                     <tr>
                       <td><code>nombre</code></td>
@@ -239,7 +239,7 @@ export default function ImportadorPlantillas() {
                       <td><code>comprobante</code></td>
                       <td><span className="badge bg-secondary">No</span></td>
                       <td>7</td>
-                      <td className="small">Código del comprobante (debe existir)</td>
+                      <td className="small">Cedula del comprobante (debe existir)</td>
                     </tr>
                   </tbody>
                 </table>
@@ -320,7 +320,7 @@ export default function ImportadorPlantillas() {
                   <tr>
                     <th style={{width:45}}>#</th>
                     <th style={{width:36}}></th>
-                    <th style={{width:100}}>Código</th>
+                    <th style={{width:100}}>Cedula</th>
                     <th style={{width:200}}>Nombre</th>
                     <th>Descripción</th>
                     <th style={{width:110}}>Comprobante</th>
@@ -405,7 +405,7 @@ export default function ImportadorPlantillas() {
                 <div className="table-responsive mt-2">
                   <table className="table table-sm mb-0 bg-white">
                     <thead className="table-light">
-                      <tr><th>Fila</th><th>Código</th><th>Error</th></tr>
+                      <tr><th>Fila</th><th>Cedula</th><th>Error</th></tr>
                     </thead>
                     <tbody>
                       {resultado.erroresImport.map((e,i) => (

@@ -42,7 +42,7 @@ class Membresia(BaseModel):
     # ── 1. Datos generales (verificados contra Tercero) ───────────────────
     tercero = models.OneToOneField(
         'accounting.Tercero', on_delete=models.PROTECT, to_field='cedula',
-        related_name='membresia', verbose_name='Cédula',
+        related_name='membresia', verbose_name='Código',
     )
 
     # ── 2. Datos familiares ────────────────────────────────────────────────

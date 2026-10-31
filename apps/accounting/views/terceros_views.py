@@ -2,6 +2,8 @@ import csv
 import datetime
 
 from django.http import HttpResponse
+from django.db.models import F, Case, When, Value, CharField
+from django.db.models.functions import Coalesce, NullIf
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -14,9 +16,9 @@ from apps.core.views import HardDeleteMixin
 
 
 EXPORT_COLUMNAS = [
-    ('Cedula',            'cedula'),
-    ('TipoDocumento',     'tipo_documento'),
-    ('LugarExpCedula',    'lugar_exp_cedula'),
+    ('Código',            'cedula'),
+
+
     ('TipoPersona',       'tipo_persona'),
     ('Nombre1',           'nombre1'),
     ('Nombre2',           'nombre2'),
@@ -47,11 +49,23 @@ class TerceroViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     filter_backends    = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields      = ['cedula','razon_social','apellido1','apellido2',
                           'nombre1','nombre2','celular','telefono1']
-    filterset_fields   = ['tipo_documento', 'tipo_persona', 'is_active']
-    ordering_fields    = ['cedula', 'tipo_documento', 'apellido1', 'nombre1',
-                          'razon_social', 'telefono1', 'email', 'celular']
+    filterset_fields   = ['tipo_persona', 'is_active']
+    ordering_fields    = ['cedula', 'apellido1', 'nombre1',
+                          'razon_social', 'sort_nombre', 'sort_apellido',
+                          'telefono1', 'email', 'celular']
     ordering           = ['apellido1', 'nombre1', 'razon_social']
-    queryset           = Tercero.objects.filter(deleted=False)
+    queryset           = Tercero.objects.filter(deleted=False).annotate(
+        sort_nombre=Case(
+            When(tipo_persona='J', then=F('razon_social')),
+            default=F('nombre1'),
+            output_field=CharField(),
+        ),
+        sort_apellido=Case(
+            When(tipo_persona='J', then=F('razon_social')),
+            default=F('apellido1'),
+            output_field=CharField(),
+        ),
+    )
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 

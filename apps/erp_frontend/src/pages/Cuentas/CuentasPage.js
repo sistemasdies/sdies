@@ -610,7 +610,7 @@ export default function CuentasPage() {
               <table className="table table-hover table-sm mb-0">
                 <thead className="table-dark">
                   <tr>
-                    <th>Código</th>
+                    <th>Cedula</th>
                     <th>Descripción</th>
                     <th className="text-center">Nivel</th>
                     <th className="text-center">Naturaleza</th>
@@ -652,10 +652,10 @@ export default function CuentasPage() {
                 <div className="modal-body">
                   <div className="row g-3">
 
-                    {/* Código */}
+                    {/* Cedula */}
                     <div className="col-5">
                       <label className="form-label small fw-semibold">
-                        Código <span className="text-danger">*</span>
+                        Cedula <span className="text-danger">*</span>
                       </label>
                       <input
                         className={`form-control font-monospace ${

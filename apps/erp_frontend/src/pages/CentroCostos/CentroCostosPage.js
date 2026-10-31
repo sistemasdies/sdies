@@ -136,7 +136,7 @@ export default function CentroCostosPage() {
               <table className="table table-hover table-sm mb-0 align-middle">
                 <thead className="table-dark">
                   <tr>
-                    <th>Código</th>
+                    <th>Cedula</th>
                     <th>Descripción</th>
                     <th>Responsable</th>
                     <th className="text-center">Estado</th>
@@ -201,7 +201,7 @@ export default function CentroCostosPage() {
                   <div className="row g-3">
                     <div className="col-4">
                       <label className="form-label small fw-semibold">
-                        Código <span className="text-danger">*</span>
+                        Cedula <span className="text-danger">*</span>
                       </label>
                       <input className="form-control font-monospace text-uppercase"
                         maxLength={7} value={form.codigo} required

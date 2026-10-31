@@ -67,7 +67,7 @@ class MembresiaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='cedulas-con-membresia')
     def cedulas_con_membresia(self, request):
-        """Cédulas que ya tienen membresía, para marcarlas en el buscador de terceros."""
+        """Códigos que ya tienen membresía, para marcarlas en el buscador de terceros."""
         return Response(sorted(Membresia.objects.values_list('tercero_id', flat=True)))
 
     @action(detail=False, methods=['get'], url_path='tercero-por-cedula')

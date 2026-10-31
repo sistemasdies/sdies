@@ -13,7 +13,7 @@ class Congregacion(BaseModel):
         'accounting.Tercero', null=True, blank=True,
         on_delete=models.SET_NULL, to_field='cedula',
         related_name='congregaciones_pastor',
-        verbose_name='Cédula del pastor',
+        verbose_name='Código del pastor',
     )
 
     class Meta:
