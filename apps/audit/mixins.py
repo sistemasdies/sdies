@@ -38,7 +38,7 @@ class AuditMixin:
             AuditLog.objects.create(
                 user=user,
                 action=action,
-                resource=self.audit_resource or (instance._meta.model_name if instance else ''),
+                resource=self.audit_resource or (instance._meta.model.__name__ if instance else ''),
                 resource_id=str(getattr(instance, 'pk', '')),
                 before_data=before,
                 after_data=after,

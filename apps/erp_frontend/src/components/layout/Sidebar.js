@@ -41,6 +41,7 @@ const GRUPOS = [
       { to: '/procesos/copia-seguridad',   icon: 'bi-database-down',  label: 'Copia de Seguridad',  soloStaff: true },
       { to: '/importar',                   icon: 'bi-cloud-upload',   label: 'Importar datos',     mod: 'importar' },
       { to: '/procesos/exportar-datos',    icon: 'bi-cloud-download', label: 'Exportar datos',     mod: 'exportar' },
+      { to: '/auditoria',                  icon: 'bi-shield-check',   label: 'Logs de Auditoría', soloStaff: true },
     ],
   },
   {

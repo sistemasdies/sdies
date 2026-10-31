@@ -7,6 +7,7 @@ import LoginPage         from './pages/Login/LoginPage';
 import RecuperarContrasena from './pages/RecuperarContrasena/RecuperarContrasena';
 import ConfigurarVerificacion from './pages/ConfigurarVerificacion/ConfigurarVerificacion';
 import DashboardPage     from './pages/Dashboard/DashboardPage';
+import AuditoriaPage     from './pages/Auditoria/AuditoriaPage';
 import VistaRapidaPage  from './pages/Dashboard/VistaRapidaPage';
 import CuentasPage       from './pages/Cuentas/CuentasPage';
 import AsientosPage      from './pages/Asientos/AsientosPage';
@@ -82,6 +83,7 @@ function AppRoutes() {
       <Route path="/procesos/correccion-datos"    element={<PrivateRoute><CorreccionDatosPage /></PrivateRoute>} />
       <Route path="/procesos/copia-seguridad"     element={<PrivateRoute><CopiaSeguridadPage /></PrivateRoute>} />
       <Route path="/procesos/exportar-datos"      element={<PrivateRoute><ExportarDatosPage /></PrivateRoute>} />
+<Route path="/auditoria"                    element={<PrivateRoute><AuditoriaPage /></PrivateRoute>} />
       <Route path="/configuracion/datos-generales" element={<PrivateRoute><DatosGeneralesPage /></PrivateRoute>} />
       <Route path="/secretaria/membresia"        element={<PrivateRoute><MembresiaPage /></PrivateRoute>} />
       <Route path="/secretaria/congregaciones"   element={<PrivateRoute><CongregacionesPage /></PrivateRoute>} />

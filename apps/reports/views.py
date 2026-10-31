@@ -273,7 +273,6 @@ class FichaMembresiaView(APIView):
             'foto': m.foto or '',
             'org_logo': org.LogoDeLaOrganizacion,
             'org_nombre': org.NombreOrganizacion,
-            'tipo_documento': t.tipo_documento,
             'cedula': t.cedula,
             'fecha_nacimiento': t.fecha_nacimiento,
             'lugar_nacimiento': t.lugar_nacimiento,

@@ -322,6 +322,11 @@ export default function TercerosPage() {
                         <input className="form-control" value={sf('apellido2')}
                           onChange={e => setForm({...form, apellido2: e.target.value})} />
                       </div>
+                      <div className="col-12">
+                        <label className="form-label small fw-semibold">Razón social</label>
+                        <input className="form-control" value={sf('razon_social')}
+                          onChange={e => setForm({...form, razon_social: e.target.value})} />
+                      </div>
                     </> : (
                       <div className="col-12">
                         <label className="form-label small fw-semibold">Razón social *</label>
