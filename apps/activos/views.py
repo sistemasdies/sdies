@@ -9,6 +9,7 @@ from apps.activos.serializers import (
 )
 from apps.core.utils.pagination import StandardPagination
 from apps.core.views import HardDeleteMixin
+from apps.audit.mixins import AuditMixin
 from apps.core.services import cloudinary_service
 from apps.core.utils.exceptions import ServiceNotConfigured
 from rest_framework.decorators import action
@@ -50,7 +51,7 @@ class EstadoActivoFViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     queryset = EstadoActivoF.objects.all()
 
 
-class ActivoFViewSet(HardDeleteMixin, viewsets.ModelViewSet):
+class ActivoFViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
     pagination_class = StandardPagination
     serializer_class = ActivoFSerializer
     module = 'activos'
@@ -64,9 +65,12 @@ class ActivoFViewSet(HardDeleteMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
+        self._log('create', serializer.instance, before=None, after=self._snapshot(serializer.instance))
 
     def perform_update(self, serializer):
+        before = self._snapshot(serializer.instance)
         serializer.save()
+        self._log('update', serializer.instance, before=before, after=self._snapshot(serializer.instance))
 
     @action(detail=True, methods=['post', 'delete'], url_path='foto',
             parser_classes=[MultiPartParser, FormParser])

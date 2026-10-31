@@ -408,8 +408,8 @@ class Migration(migrations.Migration):
                     models.CharField(
                         blank=True,
                         choices=[
-                            ("CC", "Código de Ciudadanía"),
-                            ("CE", "Código de Extranjería"),
+                            ("CC", "Cédula de Ciudadanía"),
+                            ("CE", "Cédula de Extranjería"),
                             ("NI", "NIT"),
                             ("TI", "Tarjeta de Identidad"),
                             ("PP", "Pasaporte"),

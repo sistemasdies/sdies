@@ -17,12 +17,13 @@ from apps.membresia.serializers.membresia import (
 from apps.core.services import cloudinary_service
 from apps.core.utils.pagination import StandardPagination
 from apps.core.views import HardDeleteMixin
+from apps.audit.mixins import AuditMixin
 
 MAX_FOTO_BYTES = 5 * 1024 * 1024  # 5 MB
 TIPOS_IMAGEN  = {'image/jpeg', 'image/png', 'image/webp'}
 
 
-class MembresiaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
+class MembresiaViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
     pagination_class   = StandardPagination
     serializer_class   = MembresiaSerializer
     module             = 'membresias'
@@ -60,10 +61,15 @@ class MembresiaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
+        before_instance = None
         serializer.save(created_by=self.request.user)
+        self._log('create', serializer.instance, before=None, after=self._snapshot(serializer.instance))
 
     def perform_update(self, serializer):
+        instance = serializer.instance if hasattr(serializer, 'instance') else self.get_object()
+        before = self._snapshot(instance)
         serializer.save(updated_by=self.request.user)
+        self._log('update', serializer.instance, before=before, after=self._snapshot(serializer.instance))
 
     @action(detail=False, methods=['get'], url_path='cedulas-con-membresia')
     def cedulas_con_membresia(self, request):

@@ -13,6 +13,7 @@ from apps.accounting.models import Tercero
 from apps.accounting.serializers.terceros import TerceroSerializer
 from apps.core.utils.pagination import StandardPagination
 from apps.core.views import HardDeleteMixin
+from apps.audit.mixins import AuditMixin
 
 
 EXPORT_COLUMNAS = [
@@ -41,7 +42,7 @@ EXPORT_COLUMNAS = [
 ]
 
 
-class TerceroViewSet(HardDeleteMixin, viewsets.ModelViewSet):
+class TerceroViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
     pagination_class   = StandardPagination
     serializer_class   = TerceroSerializer
     module             = 'terceros'
@@ -68,7 +69,7 @@ class TerceroViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     )
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
-
+        self._log('create', serializer.instance, before=None, after=self._snapshot(serializer.instance))
     @action(detail=False, methods=['get'], url_path='siguiente-cedula')
     def siguiente_cedula(self, request):
         max_num = 0

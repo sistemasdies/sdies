@@ -16,6 +16,7 @@ from apps.accounting.serializers.movicont import (
 )
 from apps.users.services.scopes import user_scope, validar_fecha_cierre
 from apps.core.utils.pagination import StandardPagination
+from apps.audit.models import AuditLog
 
 
 COLUMNAS_IMPORT = [
@@ -132,6 +133,20 @@ class MoviContViewSet(viewsets.GenericViewSet):
         serializer = MoviContCreateSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         filas = serializer.save()
+        try:
+            AuditLog.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                action='create',
+                resource='MoviCont',
+                resource_id=f'{filas[0].cod_comprob_id}-{filas[0].num_comprob}' if filas else '',
+                after_data={'filas': len(filas)},
+                ip_address=request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR')),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
+                endpoint=request.path,
+                http_method=request.method,
+            )
+        except Exception:
+            pass
         return Response(MoviContSerializer(filas, many=True).data,
                         status=status.HTTP_201_CREATED)
 
@@ -206,6 +221,20 @@ class MoviContViewSet(viewsets.GenericViewSet):
             campos = (list(campos_linea.keys())
                       if f is fila else []) + (['fecha'] if 'fecha' in v else [])
             f.save(update_fields=campos + ['updated_by', 'updated_at'])
+        try:
+            AuditLog.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                action='update',
+                resource='MoviCont',
+                resource_id=f'{v["cod_comprob"]}-{v["num_comprob"]}',
+                after_data={'campos': list(campos_linea.keys()) + (['fecha'] if 'fecha' in v else [])},
+                ip_address=request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR')),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
+                endpoint=request.path,
+                http_method=request.method,
+            )
+        except Exception:
+            pass
         return Response(MoviContSerializer(fila).data)
 
     @action(detail=False, methods=['post'], url_path='editar-lineas')
