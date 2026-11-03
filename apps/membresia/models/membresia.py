@@ -75,6 +75,12 @@ class Membresia(BaseModel):
         on_delete=models.PROTECT, default='1',
         verbose_name='Estado',
     )
+
+    # ── 6. Tratamiento de datos ───────────────────────────────────────────────
+    politica_datos_chk1 = models.BooleanField(default=False)
+    politica_datos_chk2 = models.BooleanField(default=False)
+    politica_datos_chk3 = models.BooleanField(default=False)
+    politica_datos_chk4 = models.BooleanField(default=False)
     comentarios_eclesiales = models.TextField(blank=True)
 
     # ── 5. Foto del miembro (almacenada en Cloudinary) ────────────────────

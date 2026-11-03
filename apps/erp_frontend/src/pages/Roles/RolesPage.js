@@ -60,6 +60,29 @@ export default function RolesPage() {
   const { user, asumirRol, retomarRol } = useAuth();
   const { canAdd, canEdit, canDel } = usePerm('/roles');
   const [roles,     setRoles]     = useState([]);
+  const [ordenRoles, setOrdenRoles] = useState(null);
+
+  const sortRoles = (campo) => {
+    setOrdenRoles(prev => {
+      if (!prev || prev.campo !== campo) return { campo, dir: 'asc' };
+      if (prev.dir === 'asc') return { campo, dir: 'desc' };
+      return null;
+    });
+  };
+
+  const rolesOrdenados = [...roles].sort((a, b) => {
+    if (!ordenRoles) return 0;
+    const { campo, dir } = ordenRoles;
+    const mul = dir === 'asc' ? 1 : -1;
+    let va, vb;
+    if (campo === 'modulos') { va = new Set((a.permissions||[]).map(p=>p.module)).size; vb = new Set((b.permissions||[]).map(p=>p.module)).size; }
+    else if (campo === 'permisos') { va = (a.permissions||[]).length; vb = (b.permissions||[]).length; }
+    else if (campo === 'usuarios') { va = a.users_count || 0; vb = b.users_count || 0; }
+    else if (campo === 'tipo') { va = a.is_system ? 1 : 0; vb = b.is_system ? 1 : 0; }
+    else { va = a[campo] || ''; vb = b[campo] || ''; }
+    if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * mul;
+    return String(va).localeCompare(String(vb)) * mul;
+  });
   const [permisos,  setPermisos]  = useState({});
   const [catOpciones, setCatOpciones] = useState({ centros: [], cuentas: [], comprobantes: [] });
   const [tab,       setTab]       = useState('areas');
@@ -276,19 +299,31 @@ export default function RolesPage() {
                 <table className="table table-hover table-sm mb-0 align-middle">
                   <thead className="table-dark">
                     <tr>
-                      <th>Rol</th>
-                      <th>Descripción</th>
-                      <th className="text-center">Módulos</th>
-                      <th className="text-center">Permisos</th>
-                      <th className="text-center">Usuarios</th>
-                      <th className="text-center">Tipo</th>
+                      <th style={{ cursor:'pointer', userSelect:'none' }} onClick={() => sortRoles('NameRole')}>
+                        Rol {ordenRoles?.campo === 'NameRole' && (ordenRoles.dir === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th style={{ cursor:'pointer', userSelect:'none' }} onClick={() => sortRoles('description')}>
+                        Descripción {ordenRoles?.campo === 'description' && (ordenRoles.dir === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th className="text-center" style={{ cursor:'pointer', userSelect:'none' }} onClick={() => sortRoles('modulos')}>
+                        Módulos {ordenRoles?.campo === 'modulos' && (ordenRoles.dir === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th className="text-center" style={{ cursor:'pointer', userSelect:'none' }} onClick={() => sortRoles('permisos')}>
+                        Permisos {ordenRoles?.campo === 'permisos' && (ordenRoles.dir === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th className="text-center" style={{ cursor:'pointer', userSelect:'none' }} onClick={() => sortRoles('usuarios')}>
+                        Usuarios {ordenRoles?.campo === 'usuarios' && (ordenRoles.dir === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th className="text-center" style={{ cursor:'pointer', userSelect:'none' }} onClick={() => sortRoles('tipo')}>
+                        Tipo {ordenRoles?.campo === 'tipo' && (ordenRoles.dir === 'asc' ? '▲' : '▼')}
+                      </th>
                       <th className="text-center">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {roles.length === 0
+                    {rolesOrdenados.length === 0
                       ? <tr><td colSpan={7} className="text-center text-muted py-4">Sin registros</td></tr>
-                      : roles.map(r => (
+                      : rolesOrdenados.map(r => (
                         <tr key={r.id}>
                           <td>
                             <span className="fw-bold">

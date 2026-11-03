@@ -48,6 +48,7 @@ CAMPOS_MEMBRESIA = [
     'telefono_trabajo', 'comentarios_academico_laboral',
     # Datos eclesiásticos
     'estado', 'comentarios_eclesiales', 'congregacion',
+    'politica_datos_chk1', 'politica_datos_chk2', 'politica_datos_chk3', 'politica_datos_chk4',
     'sw_bautizado', 'serial_bautismo', 'fecha_bautismo', 'lugar_bautismo',
     'pastor_que_bautizo',
     'sw_promesado', 'serial_membresia', 'fecha_promesado', 'lugar_promesado',
@@ -61,7 +62,7 @@ CAMPOS_FECHA = frozenset({
     'fecha_promesado', 'fecha_llegada', 'fecha_salida',
 })
 
-CAMPOS_BOOLEANOS = frozenset({'sw_bautizado', 'sw_promesado'})
+CAMPOS_BOOLEANOS = frozenset({'sw_bautizado', 'sw_promesado', 'politica_datos_chk1', 'politica_datos_chk2', 'politica_datos_chk3', 'politica_datos_chk4'})
 
 CAMPOS_ENTEROS = frozenset({
     'personas_a_cargo', 'serial_bautismo', 'serial_membresia',

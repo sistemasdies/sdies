@@ -47,6 +47,7 @@ class MembresiaSerializer(serializers.ModelSerializer):
             'telefono_trabajo', 'comentarios_academico_laboral',
             'estado', 'comentarios_eclesiales',
             'congregacion', 'congregacion_nombre',
+            'politica_datos_chk1', 'politica_datos_chk2', 'politica_datos_chk3', 'politica_datos_chk4',
             'tiene_notas_pastor', 'tiene_notas_misionero',
             'foto',
             'sw_bautizado', 'serial_bautismo', 'fecha_bautismo',
@@ -85,11 +86,15 @@ class MembresiaSerializer(serializers.ModelSerializer):
     def _resolver_tercero(self, tercero_data, user):
         """Crea el tercero si no existe; si existe, actualiza los datos generales."""
         tercero_data = dict(tercero_data)
+        if 'fecha_nacimiento' in tercero_data and not tercero_data.get('fecha_nacimiento'):
+            tercero_data['fecha_nacimiento'] = '1900-01-01'
         cedula       = (tercero_data.pop('cedula') or '').strip()
         tercero      = Tercero.all_objects.filter(cedula=cedula).first()
 
         if tercero is None:
             tercero_data.setdefault('tipo_persona', 'N')
+            if not tercero_data.get('fecha_nacimiento'):
+                tercero_data['fecha_nacimiento'] = '1900-01-01'
             tercero = Tercero(**tercero_data, cedula=cedula, created_by=user)
             tercero.save()
             return tercero

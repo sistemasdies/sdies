@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 from apps.core.models.base import BaseModel
 
@@ -25,7 +27,7 @@ class Tercero(BaseModel):
     fax            = models.CharField(max_length=20, blank=True)
     email          = models.EmailField(max_length=80, blank=True)
 
-    fecha_nacimiento = models.DateField(null=True, blank=True)
+    fecha_nacimiento = models.DateField(null=True, blank=True, default=datetime.date(1900, 1, 1))
     lugar_nacimiento = models.CharField(max_length=100, blank=True)
     sexo           = models.CharField(max_length=1, blank=True)
     tipo_sangre    = models.CharField(max_length=3, blank=True)

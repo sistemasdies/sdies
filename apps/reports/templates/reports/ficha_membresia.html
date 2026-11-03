@@ -160,6 +160,39 @@
       <td class="label">Comentarios eclesiales</td><td class="val" colspan="3">{{ comentarios_eclesiales }}</td>
     </tr>
   </table>
+  <div class="section">Tratamiento de datos</div>
+  <table>
+    <tr>
+      <td class="label" style="width:85%;">Ha diligenciado el formulario de autorización para tratamiento de datos:</td>
+      <td class="val" style="width:15%; text-align:center;">
+        <span style="display:inline-block; width:14px; height:14px; border:2px solid #000; background:#fff; position:relative; vertical-align:middle;">
+          {% if politica_datos_chk1 %}<span style="position:absolute; top:-4px; left:1px; font-size:14px; font-weight:bold; color:#000;">&#10003;</span>{% endif %}
+        </span>
+      </td>
+    </tr>
+    <tr>
+      <td class="label">  - Autoriza la captación de imágenes y videos:</td>
+      <td class="val" style="text-align:center;">
+        <span style="display:inline-block; width:14px; height:14px; border:2px solid #000; background:#fff; position:relative; vertical-align:middle;">
+          {% if politica_datos_chk2 %}<span style="position:absolute; top:-4px; left:1px; font-size:14px; font-weight:bold; color:#000;">&#10003;</span>{% endif %}
+        </span></td>
+    </tr>
+    <tr>
+      <td class="label">  - Autoriza la publicación de imágenes y videos en redes:</td>
+      <td class="val" style="text-align:center;">
+        <span style="display:inline-block; width:14px; height:14px; border:2px solid #000; background:#fff; position:relative; vertical-align:middle;">
+          {% if politica_datos_chk3 %}<span style="position:absolute; top:-4px; left:1px; font-size:14px; font-weight:bold; color:#000;">&#10003;</span>{% endif %}
+        </span></td>
+    </tr>
+    <tr>
+      <td class="label">  - Si alguno de los anteriores es No. Se compromete a retirarse al momento de la foto a grabar:</td>
+      <td class="val" style="text-align:center;">
+        <span style="display:inline-block; width:14px; height:14px; border:2px solid #000; background:#fff; position:relative; vertical-align:middle;">
+          {% if politica_datos_chk4 %}<span style="position:absolute; top:-4px; left:1px; font-size:14px; font-weight:bold; color:#000;">&#10003;</span>{% endif %}
+        </span></td>
+    </tr>
+  </table>
+
   <div class="no-print" style="margin-top:12px; text-align:center;">
     <button onclick="window.print()">Imprimir</button>
   </div>

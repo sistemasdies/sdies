@@ -125,7 +125,7 @@ export default function ImportadorTerceros() {
         apellido1:         f.apellido1         || '',
         apellido2:         f.apellido2         || '',
         razon_social:      f.razon_social      || '',
-        fecha_nacimiento:  f.fecha_nacimiento  || null,
+        fecha_nacimiento:  f.fecha_nacimiento  || '1900-01-01',
         lugar_nacimiento:  f.lugar_nacimiento  || '',
         sexo:              f.sexo              || '',
         direccion:         f.direccion         || '',

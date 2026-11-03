@@ -10,7 +10,7 @@ import { usePerm } from '../../hooks/usePerm';
 const FORM_VACIO = {
   cedula:'', tipo_persona:'N',
   nombre1:'', nombre2:'', apellido1:'', apellido2:'', razon_social:'',
-  fecha_nacimiento:'', lugar_nacimiento:'',
+  fecha_nacimiento:'1900-01-01', lugar_nacimiento:'',
   sexo:'', direccion:'', barrio:'',
   codigo_postal:'', distrito:'',
   telefono1:'', telefono2:'', celular:'', fax:'', email:'',
@@ -82,7 +82,7 @@ export default function TercerosPage() {
       apellido2:         t.apellido2         || '',
       razon_social:      t.razon_social      || '',
 
-      fecha_nacimiento:  t.fecha_nacimiento  || '',
+      fecha_nacimiento:  t.fecha_nacimiento  || '1900-01-01',
       lugar_nacimiento:  t.lugar_nacimiento  || '',
       sexo:              t.sexo              || '',
       direccion:         t.direccion         || '',
@@ -101,13 +101,16 @@ export default function TercerosPage() {
 
   const guardar = async (e) => {
     e.preventDefault();
+    const payload = { ...form };
+    if (!payload.fecha_nacimiento) payload.fecha_nacimiento = '1900-01-01';
     try {
-      if (editando) { await updateTercero(editando.id, form); toast.success('Tercero actualizado'); }
-      else          { await createTercero(form);               toast.success('Tercero creado');      }
+      if (editando) { await updateTercero(editando.id, payload); toast.success('Tercero actualizado'); }
+      else          { await createTercero(payload);               toast.success('Tercero creado');      }
       setModal(false); cargar();
     } catch (err) {
       toast.error(err.response?.data?.cedula?.[0] || 'Error al guardar');
     }
+    return;
   };
 
   const eliminar = async (t) => {
@@ -256,7 +259,7 @@ export default function TercerosPage() {
                   <div className="row g-3 mb-4">
                     <div className="col-md-3">
                       <label className="form-label small fw-semibold">
-                        Cedula *
+                        Código *
                         {!editando && (
                           <button type="button" className="btn btn-outline-success btn-sm ms-2" onClick={generarCodigo}>
                             <i className="bi bi-magic me-1"></i>Generar nuevo código
@@ -266,16 +269,6 @@ export default function TercerosPage() {
                       <input className="form-control" value={sf('cedula')} required
                         disabled={!!editando}
                         onChange={e => setForm({...form, cedula: e.target.value})} />
-                    </div>
-                    <div className="col-md-2">
-                      <label className="form-label small fw-semibold">Tipo documento</label>
-                      <input className="form-control" value={sf('tipo_documento')}
-                        onChange={e => setForm({...form, tipo_documento: e.target.value})} />
-                    </div>
-                    <div className="col-md-3">
-                      <label className="form-label small fw-semibold">Lugar expedición</label>
-                      <input className="form-control" value={sf('lugar_exp_cedula')}
-                        onChange={e => setForm({...form, lugar_exp_cedula: e.target.value})} />
                     </div>
                     <div className="col-md-2">
                       <label className="form-label small fw-semibold">Tipo persona</label>

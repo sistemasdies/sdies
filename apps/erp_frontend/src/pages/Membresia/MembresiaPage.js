@@ -48,13 +48,14 @@ const SECCIONES = [
   { key: 'familiares', label: 'Datos Familiares',    icon: 'bi-people'      },
   { key: 'laboral',    label: 'Académico Laboral',   icon: 'bi-briefcase'   },
   { key: 'eclesiastico', label: 'Datos Eclesiásticos', icon: 'bi-cross'       },
+  { key: 'tratamiento_datos', label: 'Tratamiento de datos', icon: 'bi-shield-check' },
   { key: 'anotaciones_pastor', label: 'Notas Pastor', icon: 'bi-chat-left-text' },
   { key: 'anotaciones_misionero', label: 'Notas Misionero', icon: 'bi-chat-left-dots' },
 ];
 
 // ── Estado vacío del formulario ─────────────────────────────────────────────
 const TERCERO_VACIO = {
-  cedula: '', tipo_documento: '', tipo_persona: 'N',
+  cedula: '', tipo_persona: 'N',
   nombre1: '', nombre2: '', apellido1: '', apellido2: '',
   fecha_nacimiento: '', lugar_nacimiento: '',
   sexo: '', direccion: '', barrio: '', codigo_postal: '', distrito: '',
@@ -76,6 +77,7 @@ const FORM_VACIO = {
   lugar_bautismo: '', pastor_que_bautizo: '',
   sw_promesado: false, serial_membresia: '', fecha_promesado: '1900-01-01', lugar_promesado: '',
   congregacion_anterior: '', salio_para: '', fecha_llegada: '1900-01-01', fecha_salida: '1900-01-01',
+  politica_datos_chk1: false, politica_datos_chk2: false, politica_datos_chk3: false, politica_datos_chk4: false,
 };
 
 const COLUMNAS = [
@@ -195,9 +197,7 @@ function SeccionGenerales({ t, setT, cedulaEstado, terceroInfo, editando, consul
             )}
           </div>
         </Campo>
-        <Campo label="Tipo documento" ancho="col-md-2">
-          <Texto value={t.tipo_documento} onChange={v => setT('tipo_documento', v)} maxLength={2} />
-        </Campo>
+
         <Campo label="Tipo persona" ancho="col-md-2">
           <Lista value={t.tipo_persona} onChange={v => setT('tipo_persona', v)}
             opciones={[['N', 'Natural'], ['J', 'Jurídica']]} />
@@ -475,6 +475,32 @@ function SeccionEclesiastica({ f, set, setLupaCongregacion }) {
   );
 }
 
+function SeccionTratamientoDatos({ f, set }) {
+  const chk = (label, key) => (
+    <div className="col-md-6">
+      <div className="form-check">
+        <input className="form-check-input" type="checkbox" id={key}
+          checked={!!f[key]} onChange={e => set(key, e.target.checked)}
+          style={{ accentColor: '#000', opacity: 1 }} />
+        <label className="form-check-label small" htmlFor={key}>{label}</label>
+      </div>
+    </div>
+  );
+  return (
+    <>
+      <h6 className="fw-bold text-success border-bottom pb-2 mb-3">
+        <i className="bi bi-shield-check me-2"></i>Tratamiento de datos
+      </h6>
+      <div className="row g-3 mb-4">
+        {chk('Ha diligenciado el formulario de autorización para tratamiento de datos:', 'politica_datos_chk1')}
+        {chk('  - Autoriza la captación de imágenes y videos:', 'politica_datos_chk2')}
+        {chk('  - Autoriza la publicación de imágenes y videos en redes:', 'politica_datos_chk3')}
+        {chk('  - Si alguno de los anteriores es No. Se compromete a retirarse al momento de la foto a grabar:', 'politica_datos_chk4')}
+      </div>
+    </>
+  );
+}
+
 // ── Página principal ────────────────────────────────────────────────────────
 export default function MembresiaPage() {
   const location = useLocation();
@@ -704,6 +730,8 @@ export default function MembresiaPage() {
       telefono_trabajo: m.telefono_trabajo || '',
       comentarios_academico_laboral: m.comentarios_academico_laboral || '',
       estado: m.estado || '1', comentarios_eclesiales: m.comentarios_eclesiales || '',
+      politica_datos_chk1: !!m.politica_datos_chk1, politica_datos_chk2: !!m.politica_datos_chk2,
+      politica_datos_chk3: !!m.politica_datos_chk3, politica_datos_chk4: !!m.politica_datos_chk4,
       congregacion: m.congregacion || '',
       congregacion_nombre: m.congregacion_nombre || '',
       foto: m.foto || '',
@@ -824,7 +852,7 @@ export default function MembresiaPage() {
     const aNum = (v) => (v === '' || v === null || v === undefined ? null : parseInt(v, 10));
     const payload = { ...form };
     CAMPOS_FECHA.forEach(k => { if (payload[k] === '' || payload[k] === null) payload[k] = '1900-01-01'; });
-    if (payload.tercero.fecha_nacimiento === '') payload.tercero.fecha_nacimiento = null;
+    if (payload.tercero.fecha_nacimiento === '' || payload.tercero.fecha_nacimiento === null) payload.tercero.fecha_nacimiento = '1900-01-01';
     payload.tercero.cedula = form.tercero.cedula.trim();
     // congregacion_nombre es solo lectura: lo calcula el backend
     delete payload.congregacion_nombre;
@@ -1104,6 +1132,7 @@ export default function MembresiaPage() {
                     {tab === 'familiares'   && <SeccionFamiliares   f={form} set={set} />}
                     {tab === 'laboral'      && <SeccionLaboral      f={form} set={set} />}
                     {tab === 'eclesiastico' && <SeccionEclesiastica f={form} set={set} setLupaCongregacion={setLupaCongregacion} />}
+{tab === 'tratamiento_datos' && <SeccionTratamientoDatos f={form} set={set} />}
 {tab === 'anotaciones_pastor' && <AnotacionesTab cedula={form.tercero?.cedula} nombre={editando?.nombre_completo || form.tercero?.nombre_completo} tipo="pastor" />}
 {tab === 'anotaciones_misionero' && <AnotacionesTab cedula={form.tercero?.cedula} nombre={editando?.nombre_completo || form.tercero?.nombre_completo} tipo="misionero" />}
                   </div>
