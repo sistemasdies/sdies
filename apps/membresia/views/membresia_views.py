@@ -36,7 +36,8 @@ class MembresiaViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
     filterset_fields   = ['estado', 'sw_bautizado', 'sw_promesado', 'estado_civil',
                           'congregacion']
     ordering_fields    = ['tercero__cedula', 'tercero__apellido1', 'tercero__nombre1',
-                          'created_at', 'estado', 'fecha_bautismo', 'fecha_llegada']
+                          'congregacion__nombre', 'created_at', 'estado',
+                          'fecha_bautismo', 'fecha_llegada']
     ordering           = ['tercero__apellido1', 'tercero__nombre1']
     queryset           = Membresia.objects.filter(deleted=False).select_related(
                              'tercero', 'congregacion', 'estado').annotate(

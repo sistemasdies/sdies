@@ -73,6 +73,7 @@ const FORM_VACIO = {
   estado: '1', comentarios_eclesiales: '',
   congregacion: '', congregacion_nombre: '',
   foto: '',
+  tipo_sangre: '',
   sw_bautizado: false, serial_bautismo: '', fecha_bautismo: '1900-01-01',
   lugar_bautismo: '', pastor_que_bautizo: '',
   sw_promesado: false, serial_membresia: '', fecha_promesado: '1900-01-01', lugar_promesado: '',
@@ -83,9 +84,9 @@ const FORM_VACIO = {
 const COLUMNAS = [
   { label: 'Foto',        campo: 'foto',            orden: null },
   { label: 'Código',      campo: 'cedula',          orden: 'tercero__cedula' },
-  { label: 'Nombre',      campo: 'nombre_completo',   orden: 'tercero__apellido1' },
+  { label: 'Nombre(s) / Apellido(s)', campo: 'nombre_completo', orden: null, doble: true },
   { label: 'Estado',      campo: 'estado',            orden: 'estado' },
-  { label: 'Congregación', campo: 'congregacion_nombre', orden: null },
+  { label: 'Congregación', campo: 'congregacion_nombre', orden: 'congregacion__nombre' },
   { label: 'Est. civil',  campo: 'estado_civil',      orden: 'estado_civil' },
   { label: 'F. bautismo', campo: 'fecha_bautismo',    orden: 'fecha_bautismo' },
   { label: 'Celular',     campo: 'celular',           orden: null },
@@ -142,7 +143,7 @@ function Interruptor({ checked, onChange, label }) {
 }
 
 // ── Sección 1 · Datos generales (alimentan accounting.Tercero) ──────────────
-function SeccionGenerales({ t, setT, cedulaEstado, terceroInfo, editando, consultarCedula, abrirSelector, abrirMembresiaExistente }) {
+function SeccionGenerales({ t, setT, tipo_sangre, setTipoSangre, cedulaEstado, terceroInfo, editando, consultarCedula, abrirSelector, abrirMembresiaExistente }) {
   const avisoCedula = {
     encontrado: {
       clase: 'alert-success', icono: 'bi-check-circle',
@@ -204,6 +205,9 @@ function SeccionGenerales({ t, setT, cedulaEstado, terceroInfo, editando, consul
         </Campo>
         <Campo label="Sexo" ancho="col-md-2">
           <Lista value={t.sexo} onChange={v => setT('sexo', v)} opciones={SEXOS} />
+        </Campo>
+        <Campo label="Tipo de sangre" ancho="col-md-2">
+          <Texto value={tipo_sangre} onChange={setTipoSangre} maxLength={3} />
         </Campo>
       </div>
 
@@ -735,6 +739,7 @@ export default function MembresiaPage() {
       congregacion: m.congregacion || '',
       congregacion_nombre: m.congregacion_nombre || '',
       foto: m.foto || '',
+      tipo_sangre: m.tipo_sangre || '',
       sw_bautizado: !!m.sw_bautizado, serial_bautismo: m.serial_bautismo ?? '',
       fecha_bautismo: m.fecha_bautismo || '1900-01-01', lugar_bautismo: m.lugar_bautismo || '',
       pastor_que_bautizo: m.pastor_que_bautizo || '',
@@ -951,15 +956,38 @@ export default function MembresiaPage() {
               <table className="table table-hover table-sm mb-0">
                 <thead className="table-dark" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                   <tr>
-                    {COLUMNAS.map(c => (
-                      <th key={c.campo} onClick={() => sortOn(c.orden)}
-                        style={{ cursor: c.orden ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap' }}>
-                        {c.label}
-                        {orden?.campo === c.orden && (
-                          <span className="ms-1">{orden.dir === 'asc' ? '\u25B2' : '\u25BC'}</span>
-                        )}
-                      </th>
-                    ))}
+                    {COLUMNAS.map(c => {
+                      if (c.doble) {
+                        const sortLink = (label, campo) => {
+                          const activo = orden?.campo === campo;
+                          return (
+                            <span
+                              style={{ cursor: 'pointer', userSelect: 'none' }}
+                              onClick={() => sortOn(campo)}
+                              title={`Ordenar por ${label.toLowerCase()}`}>
+                              {label}
+                              {activo && <span className="ms-1">{orden.dir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                            </span>
+                          );
+                        };
+                        return (
+                          <th key={c.campo} style={{ userSelect: 'none', whiteSpace: 'nowrap' }}>
+                            {sortLink('Nombre(s)', 'tercero__nombre1')}
+                            <span className="mx-1">/</span>
+                            {sortLink('Apellido(s)', 'tercero__apellido1')}
+                          </th>
+                        );
+                      }
+                      return (
+                        <th key={c.campo} onClick={() => sortOn(c.orden)}
+                          style={{ cursor: c.orden ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap' }}>
+                          {c.label}
+                          {orden?.campo === c.orden && (
+                            <span className="ms-1">{orden.dir === 'asc' ? '\u25B2' : '\u25BC'}</span>
+                          )}
+                        </th>
+                      );
+                    })}
                     <th className="text-center">Notas</th>
                     <th className="text-center">Acciones</th>
                   </tr>
@@ -1123,6 +1151,8 @@ export default function MembresiaPage() {
                     {tab === 'generales' && (
                       <SeccionGenerales
                         t={form.tercero} setT={setT}
+                        tipo_sangre={form.tipo_sangre}
+                        setTipoSangre={v => set('tipo_sangre', v)}
                         cedulaEstado={cedulaEstado} terceroInfo={terceroInfo}
                         editando={editando}
                         consultarCedula={consultarCedula}

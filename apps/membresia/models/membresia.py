@@ -46,6 +46,7 @@ class Membresia(BaseModel):
     )
 
     # ── 2. Datos familiares ────────────────────────────────────────────────
+    tipo_sangre           = models.CharField(max_length=3, blank=True, verbose_name='Tipo de sangre')
     estado_civil          = models.CharField(max_length=1, choices=EstadoCivil.choices, blank=True)
     fecha_matrimonio      = models.DateField(null=True, blank=True, default=datetime.date(1900, 1, 1))
     tipo_matrimonio       = models.CharField(max_length=1, choices=TipoMatrimonio.choices, blank=True)

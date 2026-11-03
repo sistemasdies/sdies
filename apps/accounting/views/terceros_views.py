@@ -54,7 +54,7 @@ class TerceroViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
     ordering_fields    = ['cedula', 'apellido1', 'nombre1',
                           'razon_social', 'sort_nombre', 'sort_apellido',
                           'telefono1', 'email', 'celular']
-    ordering           = ['apellido1', 'nombre1', 'razon_social']
+    ordering           = ['sort_apellido']
     queryset           = Tercero.objects.filter(deleted=False).annotate(
         sort_nombre=Case(
             When(tipo_persona='J', then=F('razon_social')),
@@ -67,6 +67,16 @@ class TerceroViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
             output_field=CharField(),
         ),
     )
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        ordering = (self.request.query_params.get('ordering') or '').lstrip('-')
+        if ordering in ('sort_nombre', 'sort_apellido'):
+            # Limpiar el ordering por defecto del modelo para que el ordenamiento
+            # mixto (naturales + jurídicas) funcione correctamente.
+            queryset = queryset.order_by()
+        return queryset
+
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
         self._log('create', serializer.instance, before=None, after=self._snapshot(serializer.instance))

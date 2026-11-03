@@ -39,7 +39,7 @@ CAMPOS_MEMBRESIA = [
     # Datos generales
     'cedula',
     # Datos familiares
-    'estado_civil', 'fecha_matrimonio', 'tipo_matrimonio', 'lugar_matrimonio',
+    'tipo_sangre', 'estado_civil', 'fecha_matrimonio', 'tipo_matrimonio', 'lugar_matrimonio',
     'nombre_oficiado_por', 'nombre_papa', 'nombre_mama', 'nombre_conyuge',
     'personas_a_cargo', 'comentario_familiar', 'folio_reg_civil',
     'oficina_reg_civil', 'lugar_fallecimiento', 'fecha_fallecido',

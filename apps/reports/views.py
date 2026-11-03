@@ -278,6 +278,7 @@ class FichaMembresiaView(APIView):
             'lugar_nacimiento': t.lugar_nacimiento,
             'sexo': t.sexo,
             'sexo_label': 'Masculino' if t.sexo == 'M' else ('Femenino' if t.sexo == 'F' else t.sexo),
+            'tipo_sangre': m.tipo_sangre or '',
             'estado_civil': m.estado_civil,
             'estado_civil_label': dict(EstadoCivil.choices).get(m.estado_civil, m.estado_civil),
             'tipo_matrimonio': m.tipo_matrimonio,

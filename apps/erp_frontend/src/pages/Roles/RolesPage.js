@@ -37,6 +37,7 @@ const MODULE_LABELS = {
   exportar:          'Exportar Datos',
   correccion_datos:  'Corrección de Datos',
   datos_generales:   'Datos Generales',
+  estados:           'Estados Membresia',
   usuarios:          'Usuarios',
   roles:             'Roles',
 };
