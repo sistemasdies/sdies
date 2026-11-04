@@ -9,6 +9,9 @@ import API from '../../api/client';
 import toast from 'react-hot-toast';
 import { usePerm } from '../../hooks/usePerm';
 import { useAuth } from '../../context/AuthContext';
+import ModalPermisosMasivos from './ModalPermisosMasivos';
+import ModalControlesMasivos from './ModalControlesMasivos';
+import { CONTROLS_CATALOGO } from './controlesCatalogo';
 import { getCentrosCosto } from '../../api/centrosCosto';
 import { getCuentas } from '../../api/cuentas';
 import { getComprobantes } from '../../api/comprobantes';
@@ -51,15 +54,6 @@ const FORM_VACIO = {
   centros_costo: [], cuentas: [], comprobantes: [], congregaciones: [], controles: {},
 };
 
-const CONTROLS_CATALOGO = [
-  { code: 'editar_movimiento', label: 'Botón Editar Movimiento', desc: 'Ventana ver documento (Asientos Contables)' },
-  { code: 'guardar_fecha',     label: 'Botón Guardar Fecha',     desc: 'Chulito ✓ de guardar fecha del documento' },
-  { code: 'guardar_renglon',   label: 'Botón Guardar Renglón',   desc: 'Chulito ✓ de guardar cada renglón' },
-  { code: 'guardar_todo',      label: 'Botón Guardar Todo',      desc: 'Chulito doble ✓ de guardar todos los renglones de un click' },
-  { code: 'ver_notas_pastor',   label: 'Tab Notas Pastor',        desc: 'Pestaña de notas del pastor en Membresía' },
-  { code: 'ver_notas_misionero', label: 'Tab Notas Misionero',     desc: 'Pestaña de notas del misionero en Membresía' },
-];
-
 export default function RolesPage() {
   const navigate = useNavigate();
   const { user, asumirRol, retomarRol } = useAuth();
@@ -99,6 +93,8 @@ export default function RolesPage() {
   const [saving,   setSaving]     = useState(false);
   const [modalDel, setModalDel]   = useState(null);
   const [modalRol, setModalRol]   = useState(false);
+  const [modalPermisos, setModalPermisos] = useState(false);
+  const [modalControles, setModalControles] = useState(false);
   const [asumiendo, setAsumiendo] = useState(false);
 
   const rolActivo      = user?.rol_activo || null;
@@ -267,6 +263,18 @@ export default function RolesPage() {
     }
   };
 
+  const guardarPermisosMasivos = async (payload) => {
+    const r = await API.post('/users/roles/actualizar-permisos-masivos/', { permisos: payload });
+    cargar();
+    return r;
+  };
+
+  const guardarControlesMasivos = async (payload) => {
+    const r = await API.post('/users/roles/actualizar-controles-masivos/', { controles: payload });
+    cargar();
+    return r;
+  };
+
   const getModCount = (r) => {
     const modules = new Set(r.permissions.map(p => p.module));
     return modules.size;
@@ -282,6 +290,18 @@ export default function RolesPage() {
             <button className="btn btn-outline-primary" onClick={() => setModalRol(true)}
               disabled={bloqueadoPorRol || roles.length === 0}>
               <i className="bi bi-person-badge me-1"></i>Usar Rol
+            </button>
+          )}
+          {canEdit && (
+            <button className="btn btn-outline-success" onClick={() => setModalPermisos(true)}
+              disabled={bloqueadoPorRol || roles.length === 0}>
+              <i className="bi bi-key me-1"></i>Áreas Permitidas
+            </button>
+          )}
+          {canEdit && (
+            <button className="btn btn-outline-primary" onClick={() => setModalControles(true)}
+              disabled={bloqueadoPorRol || roles.length === 0}>
+              <i className="bi bi-toggle2-on me-1"></i>Controles Permitidos
             </button>
           )}
           <button className="btn btn-success" onClick={abrirNuevo}
@@ -692,6 +712,28 @@ export default function RolesPage() {
         </div>
       )}
       {/* Modal usar rol */}
+      {modalPermisos && (
+        <ModalPermisosMasivos
+          abierto
+          roles={roles}
+          permisos={Object.values(permisos).flat()}
+          cargando={loading}
+          onCerrar={() => setModalPermisos(false)}
+          onGuardar={guardarPermisosMasivos}
+        />
+      )}
+
+      {modalControles && (
+        <ModalControlesMasivos
+          abierto
+          roles={roles}
+          catalogo={CONTROLS_CATALOGO}
+          cargando={loading}
+          onCerrar={() => setModalControles(false)}
+          onGuardar={guardarControlesMasivos}
+        />
+      )}
+
       {modalRol && (
         <div className="modal d-block" style={{background:'rgba(0,0,0,0.5)'}}>
           <div className="modal-dialog modal-dialog-centered" style={{maxWidth:520}}>

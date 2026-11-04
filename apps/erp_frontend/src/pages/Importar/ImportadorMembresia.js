@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 // ── Columnas de la tabla Membresia ──────────────────────────────────────────
 const CAMPOS = [
   { key: 'cedula',                   req: true,  ejemplo: '1234567890' },
+  { key: 'tipo_sangre',              ejemplo: 'O+, A-' },
   { key: 'estado_civil',             ejemplo: '1=Soltero … 5=Viudo' },
   { key: 'fecha_matrimonio',         ejemplo: 'AAAA-MM-DD' },
   { key: 'tipo_matrimonio',          ejemplo: 'C, J, R o A' },
@@ -28,6 +29,10 @@ const CAMPOS = [
   { key: 'estado',                   ejemplo: '1=Activo … 7=Desconocido' },
   { key: 'comentarios_eclesiales',   ejemplo: 'Texto libre' },
   { key: 'congregacion',             ejemplo: 'Código de congregación' },
+  { key: 'politica_datos_chk1',      ejemplo: 'true / false' },
+  { key: 'politica_datos_chk2',      ejemplo: 'true / false' },
+  { key: 'politica_datos_chk3',      ejemplo: 'true / false' },
+  { key: 'politica_datos_chk4',      ejemplo: 'true / false' },
   { key: 'sw_bautizado',             ejemplo: 'true / false' },
   { key: 'serial_bautismo',          ejemplo: 'Número entero' },
   { key: 'fecha_bautismo',           ejemplo: 'AAAA-MM-DD' },
@@ -137,6 +142,7 @@ const escaparCSV = (valor) => {
 
 const EJEMPLO = {
   cedula: '1234567890',
+  tipo_sangre: 'O+',
   estado_civil: '2',
   fecha_matrimonio: '2015-06-20',
   tipo_matrimonio: 'R',
@@ -160,6 +166,10 @@ const EJEMPLO = {
   estado: '1',
   comentarios_eclesiales: 'Miembro activo',
   congregacion: 'C001',
+  politica_datos_chk1: 'true',
+  politica_datos_chk2: 'true',
+  politica_datos_chk3: 'false',
+  politica_datos_chk4: 'false',
   sw_bautizado: 'true',
   serial_bautismo: '100',
   fecha_bautismo: '2010-04-10',

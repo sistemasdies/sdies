@@ -10,6 +10,9 @@ import ImportadorPlantillas        from './ImportadorPlantillas';
 import ImportadorDetallePlantillas from './ImportadorDetallePlantillas';
 import ImportadorMoviCont          from './ImportadorMoviCont';
 import ImportadorMembresia        from './ImportadorMembresia';
+import ImportadorCargos           from './ImportadorCargos';
+import ImportadorAreasTrabajo     from './ImportadorAreasTrabajo';
+import ImportadorEquiposTrabajo   from './ImportadorEquiposTrabajo';
 import ImportadorCategorias       from './ImportadorCategorias';
 import ImportadorUbicaciones     from './ImportadorUbicaciones';
 import ImportadorEstadosActivos  from './ImportadorEstadosActivos';
@@ -19,6 +22,9 @@ const MODULOS = [
   { id: 'cuentas',          label: 'Plan de Cuentas',       icon: 'bi-diagram-3',    color: 'success' },
   { id: 'terceros',         label: 'Terceros',               icon: 'bi-people',       color: 'primary' },
   { id: 'membresias',       label: 'Membresía',              icon: 'bi-person-vcard', color: 'success' },
+  { id: 'cargos',           label: 'Cargos',                 icon: 'bi-briefcase',    color: 'primary' },
+  { id: 'areas_trabajo',    label: 'Áreas de Trabajo',       icon: 'bi-grid',         color: 'success' },
+  { id: 'equipos_trabajo',  label: 'Equipos de Trabajo',     icon: 'bi-people-fill',  color: 'info'    },
   { id: 'categorias_activos', label: 'Categorías Activos',   icon: 'bi-tags', color: 'warning' },
   { id: 'ubicaciones_activos', label: 'Ubicaciones Activos', icon: 'bi-geo-alt', color: 'info' },
   { id: 'estados_activos', label: 'Estados Activos',         icon: 'bi-check2-circle', color: 'success' },
@@ -58,6 +64,9 @@ export default function ImportarPage() {
         {activo === 'cuentas'        && <ImportadorCuentas />}
         {activo === 'terceros'       && <ImportadorTerceros />}
         {activo === 'membresias'     && <ImportadorMembresia />}
+        {activo === 'cargos'         && <ImportadorCargos />}
+        {activo === 'areas_trabajo'  && <ImportadorAreasTrabajo />}
+        {activo === 'equipos_trabajo'&& <ImportadorEquiposTrabajo />}
         {activo === 'categorias_activos' && <ImportadorCategorias />}
         {activo === 'ubicaciones_activos' && <ImportadorUbicaciones />}
         {activo === 'estados_activos' && <ImportadorEstadosActivos />}

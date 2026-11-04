@@ -8,6 +8,7 @@ from apps.core.permissions import ModulePermission
 
 from .services import password_recovery
 from .services.role_context import es_administrador
+from .services.controls import CONTROLES_CATALOGO
 from .models import User, Role, Permission, UserPreference
 from .serializers.auth import (UserSerializer, UserCreateSerializer, ProfileSerializer,
                                 RoleSerializer, PermissionSerializer,
@@ -226,6 +227,77 @@ class RoleViewSet(viewsets.ModelViewSet):
             return Response({'detail': f'Rol asignado a {instance.users.count()} usuario(s).'},
                             status=status.HTTP_400_BAD_REQUEST)
         return super().destroy(request, *args, **kwargs)
+
+    @action(detail=False, methods=['post'], url_path='actualizar-permisos-masivos')
+    def actualizar_permisos_masivos(self, request):
+        """Actualiza la lista completa de permisos de varios roles en una sola petición.
+
+        Recibe: { permisos: { role_id: [permission_id, ...], ... } }
+        """
+        bloqueo = self._bloqueado_por_rol(request)
+        if bloqueo:
+            return bloqueo
+
+        data = request.data.get('permisos', {})
+        if not isinstance(data, dict):
+            return Response(
+                {'detail': 'Se esperaba un objeto "permisos".'},
+                status=status.HTTP_400_BAD_REQUEST)
+
+        roles = {str(r.id): r for r in Role.objects.all()}
+        actualizados = 0
+        errores = []
+
+        for role_id, pids in data.items():
+            rol = roles.get(str(role_id))
+            if not rol:
+                continue
+            try:
+                permisos_ids = [int(p) for p in (pids or [])]
+                rol.permissions.set(permisos_ids)
+                actualizados += 1
+            except Exception as exc:
+                errores.append({'rol': rol.NameRole, 'error': str(exc)})
+
+        return Response({'actualizados': actualizados, 'errores': errores})
+
+    @action(detail=False, methods=['post'], url_path='actualizar-controles-masivos')
+    def actualizar_controles_masivos(self, request):
+        """Actualiza el dict de controles de varios roles en una sola petición.
+
+        Recibe: { controles: { role_id: { control_code: 'P'|'D', ... }, ... } }
+        """
+        bloqueo = self._bloqueado_por_rol(request)
+        if bloqueo:
+            return bloqueo
+
+        data = request.data.get('controles', {})
+        if not isinstance(data, dict):
+            return Response(
+                {'detail': 'Se esperaba un objeto "controles".'},
+                status=status.HTTP_400_BAD_REQUEST)
+
+        valid_codes = {c['code'] for c in CONTROLES_CATALOGO}
+        roles = {str(r.id): r for r in Role.objects.all()}
+        actualizados = 0
+        errores = []
+
+        for role_id, controles in data.items():
+            rol = roles.get(str(role_id))
+            if not rol:
+                continue
+            try:
+                limpio = {}
+                for k, v in (controles or {}).items():
+                    if k in valid_codes and v in ('P', 'D'):
+                        limpio[k] = v
+                rol.controles = limpio
+                rol.save(update_fields=['controles'])
+                actualizados += 1
+            except Exception as exc:
+                errores.append({'rol': rol.NameRole, 'error': str(exc)})
+
+        return Response({'actualizados': actualizados, 'errores': errores})
 
 
 class PermissionViewSet(viewsets.ReadOnlyModelViewSet):

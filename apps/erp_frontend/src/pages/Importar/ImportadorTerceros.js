@@ -22,6 +22,9 @@ const MAPEO_HEADERS = {
   barrio: 'barrio',
   lugarnacimiento: 'lugar_nacimiento',
   sexo: 'sexo',
+  tiposangre: 'tipo_sangre',
+  tipodesangre: 'tipo_sangre',
+  parametros: 'parametros',
   comentarios: 'comentarios',
   distrito: 'distrito',
   codigopostal: 'codigo_postal',
@@ -34,9 +37,9 @@ const MODOS = [
   { id: 'ambos',       label: 'Ambos',                 desc: 'Actualiza los existentes y adiciona los nuevos' },
 ];
 
-const PLANTILLA_CSV = `Código,TipoDocumento,LugarExpCódigo,TipoPersona,Nombre1,Nombre2,Apellido1,Apellido2,RazonSocial,Direccion,Telefono1,Telefono2,Celular,eMail,Fax,Barrio,LugarNacimiento,Sexo,Comentarios,Distrito,Departamento,Municipio,FechaNacimiento
-1234567890,CC,Bogotá,N,Juan,Carlos,Pérez,García,,Calle 10 #5-20,3001234567,6012345678,3101234567,juan@email.com,,La Candelaria,Bogotá,M,Cliente frecuente,01,11,001,1990-05-15
-900123456,NI,Medellín,J,,,,,Empresas SA,Av Principal 1,6041234567,,3121234567,info@empresa.com,6047654321,Centro,Medellín,F,Proveedor oficial,02,05,001,1999-01-01`;
+const PLANTILLA_CSV = `Código,TipoDocumento,LugarExpCódigo,TipoPersona,Nombre1,Nombre2,Apellido1,Apellido2,RazonSocial,Direccion,Telefono1,Telefono2,Celular,eMail,Fax,Barrio,LugarNacimiento,Sexo,TipoSangre,Parametros,Comentarios,Distrito,Departamento,Municipio,FechaNacimiento
+1234567890,CC,Bogotá,N,Juan,Carlos,Pérez,García,,Calle 10 #5-20,3001234567,6012345678,3101234567,juan@email.com,,La Candelaria,Bogotá,M,O+,Activo,Cliente frecuente,01,11,001,1990-05-15
+900123456,NI,Medellín,J,,,,,Empresas SA,Av Principal 1,6041234567,,3121234567,info@empresa.com,6047654321,Centro,Medellín,F,,,Proveedor oficial,02,05,001,1999-01-01`;
 
 const COLUMNAS = [
   { key: 'cedula',            label: 'cedula',           req: true  },
@@ -57,6 +60,8 @@ const COLUMNAS = [
   { key: 'barrio',            label: 'barrio',           req: false },
   { key: 'lugar_nacimiento',  label: 'lugar_nacimiento', req: false, ejemplo: 'Ciudad de nacimiento' },
   { key: 'sexo',              label: 'sexo',             req: false, ejemplo: 'M o F' },
+  { key: 'tipo_sangre',       label: 'tipo_sangre',      req: false, ejemplo: 'O+, A-, etc.' },
+  { key: 'parametros',        label: 'parametros',       req: false, ejemplo: 'Código interno' },
   { key: 'comentarios',       label: 'comentarios',      req: false },
   { key: 'distrito',          label: 'distrito',         req: false, ejemplo: 'Código 2 dígitos' },
   { key: 'codigo_postal',     label: 'codigo_postal',    req: false, ejemplo: '6 dígitos' },
@@ -135,6 +140,8 @@ export default function ImportadorTerceros() {
         celular:           f.celular           || '',
         fax:               f.fax               || '',
         email:             f.email             || '',
+        tipo_sangre:       f.tipo_sangre       || '',
+        parametros:        f.parametros        || '',
         codigo_postal:     f.codigo_postal     || '',
         distrito:          f.distrito          || '',
         comentarios:       f.comentarios       || '',

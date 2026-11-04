@@ -24,7 +24,7 @@ from apps.accounting.views.terceros_views import EXPORT_COLUMNAS
 from apps.membresia.import_export import (
     CAMPOS_MEMBRESIA, valor_exportacion,
 )
-from apps.membresia.models import Membresia
+from apps.membresia.models import Membresia, Cargo, AreaTrabajo, EquipoTrabajo
 from apps.activos.models import Categoria, Ubicacion, EstadoActivoF, ActivoF
 
 MODULE = 'exportar'
@@ -189,6 +189,39 @@ def _activos_fijos():
     return headers, rows
 
 
+def _cargos():
+    headers = ['codigo_cargo', 'nombre_cargo']
+    rows = ([c.codigo_cargo, _clean(c.nombre_cargo)]
+            for c in Cargo.objects.order_by('codigo_cargo'))
+    return headers, rows
+
+
+def _areas_trabajo():
+    headers = ['codigo_area', 'nombre_area', 'descripcion_area', 'comentarios_area']
+    rows = ([a.codigo_area, _clean(a.nombre_area), _clean(a.descripcion_area), _clean(a.comentarios_area)]
+            for a in AreaTrabajo.objects.order_by('codigo_area'))
+    return headers, rows
+
+
+def _equipos_trabajo():
+    headers = ['id', 'area_trabajo', 'cargo', 'congregacion', 'responsable',
+               'vigencia_desde', 'vigencia_hasta', 'comentarios']
+    qs = (EquipoTrabajo.objects.filter(deleted=False)
+          .select_related('area_trabajo', 'cargo', 'congregacion', 'responsable')
+          .order_by('area_trabajo__codigo_area', 'cargo__codigo_cargo'))
+    rows = ([
+        e.id,
+        e.area_trabajo_id or '',
+        e.cargo_id or '',
+        e.congregacion_id or '',
+        e.responsable_id or '',
+        e.vigencia_desde.strftime('%Y-%m-%d') if e.vigencia_desde else '',
+        e.vigencia_hasta.strftime('%Y-%m-%d') if e.vigencia_hasta else '',
+        _clean(e.comentarios),
+    ] for e in qs.iterator())
+    return headers, rows
+
+
 # Orden idéntico a las pestañas de "Importar Datos".
 ENTIDADES = {
     'cuentas':        ('plan_de_cuentas.csv',    _cuentas),
@@ -203,6 +236,9 @@ ENTIDADES = {
     'ubicaciones_activos': ('ubicaciones_activos.csv', _ubicaciones_activos),
     'estados_activos': ('estados_activos.csv', _estados_activos),
     'activos_fijos': ('activos_fijos.csv', _activos_fijos),
+    'cargos': ('cargos.csv', _cargos),
+    'areas_trabajo': ('areas_trabajo.csv', _areas_trabajo),
+    'equipos_trabajo': ('equipos_trabajo.csv', _equipos_trabajo),
 }
 
 

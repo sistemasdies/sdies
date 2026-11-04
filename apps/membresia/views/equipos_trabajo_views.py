@@ -1,7 +1,9 @@
 from django_filters.filters import BaseInFilter
 from django_filters import rest_framework as filters
-from rest_framework import viewsets, filters as drf_filters
+from rest_framework import viewsets, filters as drf_filters, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from apps.membresia.models import EquipoTrabajo
 from apps.membresia.serializers.equipos_trabajo import EquipoTrabajoSerializer
@@ -62,6 +64,84 @@ class EquipoTrabajoViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
         if scope['congregaciones'] is not None:
             qs = qs.filter(congregacion__codigo__in=scope['congregaciones'])
         return qs
+
+    @action(detail=False, methods=['post'], url_path='importar')
+    def importar(self, request):
+        modo = request.data.get('modo')
+        registros = request.data.get('registros')
+        if modo not in ('solo_nuevos', 'reemplazar', 'ambos'):
+            return Response(
+                {'detail': "Modo inválido. Use: 'solo_nuevos', 'reemplazar' o 'ambos'."},
+                status=status.HTTP_400_BAD_REQUEST)
+        if not isinstance(registros, list) or not registros:
+            return Response({'detail': 'No se recibieron registros.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        ids = []
+        for r in registros:
+            try:
+                ids.append(int(r.get('id')))
+            except (TypeError, ValueError):
+                pass
+        existentes = {
+            e.id: e
+            for e in EquipoTrabajo.objects.filter(id__in=ids)
+        }
+
+        creados = actualizados = omitidos = 0
+        errores = []
+        for i, dato in enumerate(registros, start=1):
+            try:
+                fila = int(dato.get('_fila') or i)
+            except (TypeError, ValueError):
+                fila = i
+
+            try:
+                pk = int(dato.get('id') or '')
+            except (TypeError, ValueError):
+                pk = None
+
+            payload = {
+                'area_trabajo': str(dato.get('area_trabajo') or '').strip() or None,
+                'cargo': str(dato.get('cargo') or '').strip() or None,
+                'congregacion': str(dato.get('congregacion') or '').strip() or None,
+                'responsable': str(dato.get('responsable') or '').strip() or None,
+                'vigencia_desde': str(dato.get('vigencia_desde') or '').strip() or None,
+                'vigencia_hasta': str(dato.get('vigencia_hasta') or '').strip() or None,
+                'comentarios': str(dato.get('comentarios') or '').strip(),
+            }
+
+            existente = existentes.get(pk) if pk else None
+            if existente and modo == 'solo_nuevos':
+                omitidos += 1
+                continue
+            if not existente and pk and modo == 'reemplazar':
+                omitidos += 1
+                continue
+            if not existente and modo == 'reemplazar' and not pk:
+                omitidos += 1
+                continue
+
+            serializer = EquipoTrabajoSerializer(instance=existente, data=payload, partial=True)
+            if serializer.is_valid():
+                save_kwargs = {'updated_by': request.user}
+                if not existente:
+                    save_kwargs['created_by'] = request.user
+                serializer.save(**save_kwargs)
+                if existente:
+                    actualizados += 1
+                else:
+                    creados += 1
+            else:
+                msgs = '; '.join(f'{k}: {v[0]}' for k, v in serializer.errors.items())
+                errores.append({'fila': fila, 'error': msgs})
+
+        return Response({
+            'creados': creados,
+            'actualizados': actualizados,
+            'omitidos': omitidos,
+            'errores': errores,
+        })
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)

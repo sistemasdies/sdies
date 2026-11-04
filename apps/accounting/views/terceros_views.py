@@ -18,8 +18,6 @@ from apps.audit.mixins import AuditMixin
 
 EXPORT_COLUMNAS = [
     ('Código',            'cedula'),
-
-
     ('TipoPersona',       'tipo_persona'),
     ('Nombre1',           'nombre1'),
     ('Nombre2',           'nombre2'),
@@ -28,13 +26,14 @@ EXPORT_COLUMNAS = [
     ('RazonSocial',       'razon_social'),
     ('Direccion',         'direccion'),
     ('Telefono1',         'telefono1'),
-
     ('Celular',           'celular'),
     ('eMail',             'email'),
     ('Fax',               'fax'),
     ('Barrio',            'barrio'),
     ('LugarNacimiento',   'lugar_nacimiento'),
     ('Sexo',              'sexo'),
+    ('TipoSangre',        'tipo_sangre'),
+    ('Parametros',        'parametros'),
     ('Comentarios',       'comentarios'),
     ('Distrito',          'distrito'),
     ('CodigoPostal',      'codigo_postal'),
