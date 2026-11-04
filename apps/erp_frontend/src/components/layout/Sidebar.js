@@ -56,6 +56,9 @@ const GRUPOS = [
       { to: '/secretaria/estados-pastor', icon: 'bi-tags', label: 'Estados Pastor', mod: 'estadospastor' },
       { to: '/secretaria/pastores', icon: 'bi-person-badge', label: 'Pastores', mod: 'pastores' },
       { to: '/secretaria/congregaciones', icon: 'bi-house-door', label: 'Congregaciones', mod: 'congregaciones' },
+      { to: '/secretaria/cargos', icon: 'bi-briefcase', label: 'Cargos', mod: 'cargos' },
+      { to: '/secretaria/areas-trabajo', icon: 'bi-grid', label: 'Áreas de Trabajo', mod: 'areas_trabajo' },
+      { to: '/secretaria/equipos-trabajo', icon: 'bi-people-fill', label: 'Equipos de Trabajo', mod: 'equipos_trabajo' },
     ],
   },
   {

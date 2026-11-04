@@ -18,6 +18,7 @@ from apps.core.services import cloudinary_service
 from apps.core.utils.pagination import StandardPagination
 from apps.core.views import HardDeleteMixin
 from apps.audit.mixins import AuditMixin
+from apps.users.services.scopes import user_scope
 
 MAX_FOTO_BYTES = 5 * 1024 * 1024  # 5 MB
 TIPOS_IMAGEN  = {'image/jpeg', 'image/png', 'image/webp'}
@@ -49,6 +50,9 @@ class MembresiaViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
+        scope = user_scope(self.request.user)
+        if scope['congregaciones'] is not None:
+            qs = qs.filter(congregacion__codigo__in=scope['congregaciones'])
         p  = self.request.query_params
         if p.get('solo_bautizados') == '1': qs = qs.filter(sw_bautizado=True)
         if p.get('solo_promesados') == '1': qs = qs.filter(sw_promesado=True)

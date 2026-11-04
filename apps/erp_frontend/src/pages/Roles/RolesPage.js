@@ -12,6 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getCentrosCosto } from '../../api/centrosCosto';
 import { getCuentas } from '../../api/cuentas';
 import { getComprobantes } from '../../api/comprobantes';
+import { getCongregaciones } from '../../api/congregaciones';
 
 const getRoles       = ()            => API.get('/users/roles/');
 const crearRol       = (data)        => API.post('/users/roles/', data);
@@ -38,13 +39,16 @@ const MODULE_LABELS = {
   correccion_datos:  'Corrección de Datos',
   datos_generales:   'Datos Generales',
   estados:           'Estados Membresia',
+  cargos:            'Cargos',
+  areas_trabajo:     'Áreas de Trabajo',
+  equipos_trabajo:   'Equipos de Trabajo',
   usuarios:          'Usuarios',
   roles:             'Roles',
 };
 
 const FORM_VACIO = {
   NameRole: '', description: '', permission_ids: [],
-  centros_costo: [], cuentas: [], comprobantes: [], controles: {},
+  centros_costo: [], cuentas: [], comprobantes: [], congregaciones: [], controles: {},
 };
 
 const CONTROLS_CATALOGO = [
@@ -85,7 +89,7 @@ export default function RolesPage() {
     return String(va).localeCompare(String(vb)) * mul;
   });
   const [permisos,  setPermisos]  = useState({});
-  const [catOpciones, setCatOpciones] = useState({ centros: [], cuentas: [], comprobantes: [] });
+  const [catOpciones, setCatOpciones] = useState({ centros: [], cuentas: [], comprobantes: [], congregaciones: [] });
   const [tab,       setTab]       = useState('areas');
   const [rolFuente, setRolFuente] = useState('');
   const [loading,  setLoading]    = useState(true);
@@ -128,6 +132,7 @@ export default function RolesPage() {
       getCentrosCosto().then(r => setCatOpciones(o => ({ ...o, centros: r.data.results || r.data }))).catch(()=>{});
       getCuentas({ page_size: 10000 }).then(r => setCatOpciones(o => ({ ...o, cuentas: r.data.results || r.data }))).catch(()=>{});
       getComprobantes().then(r => setCatOpciones(o => ({ ...o, comprobantes: r.data.results || r.data }))).catch(()=>{});
+      getCongregaciones({ page_size: 10000 }).then(r => setCatOpciones(o => ({ ...o, congregaciones: r.data.results || r.data }))).catch(()=>{});
     }
   }, [puedeListar, canAdd, canEdit]);
 
@@ -142,6 +147,7 @@ export default function RolesPage() {
       centros_costo: r.centros_costo || [],
       cuentas:       r.cuentas || [],
       comprobantes:  r.comprobantes || [],
+      congregaciones: r.congregaciones || [],
       controles:     r.controles || {},
     });
     setTab('areas');
@@ -207,6 +213,7 @@ export default function RolesPage() {
         centros_costo_ids: form.centros_costo,
         cuentas_ids:   form.cuentas,
         comprobantes_ids: form.comprobantes,
+        congregaciones_ids: form.congregaciones,
         controles:     form.controles,
       };
       if (editando) {
@@ -554,7 +561,7 @@ export default function RolesPage() {
                         ningún informe ni operación de este rol. Vacío = acceso a todos.
                       </div>
                       <div className="row g-3">
-                        <div className="col-md-4">
+                        <div className="col-md-6 col-lg-3">
                           <label className="form-label small fw-semibold">Centros de Costo</label>
                           <MultiSelect options={catOpciones.centros} value={form.centros_costo}
                             getKey={c => c.codigo} getLabel={c => `${c.codigo} — ${c.descripcion}`}
@@ -563,7 +570,7 @@ export default function RolesPage() {
                             ? 'Acceso a todos los centros de costo.'
                             : `${form.centros_costo.length} centro(s) permitido(s).`}</div>
                         </div>
-                        <div className="col-md-4">
+                        <div className="col-md-6 col-lg-3">
                           <label className="form-label small fw-semibold">Cuentas</label>
                           <MultiSelect options={catOpciones.cuentas} value={form.cuentas}
                             getKey={c => c.codigo} getLabel={c => `${c.codigo} — ${c.descripcion}`}
@@ -572,7 +579,7 @@ export default function RolesPage() {
                             ? 'Acceso a todas las cuentas.'
                             : `${form.cuentas.length} cuenta(s) · al elegir un nivel se incluyen sus hijas.`}</div>
                         </div>
-                        <div className="col-md-4">
+                        <div className="col-md-6 col-lg-3">
                           <label className="form-label small fw-semibold">Comprobantes</label>
                           <MultiSelect options={catOpciones.comprobantes} value={form.comprobantes}
                             getKey={c => c.codigo} getLabel={c => `${c.codigo} — ${c.descripcion || ''}`}
@@ -580,6 +587,15 @@ export default function RolesPage() {
                           <div className="form-text">{form.comprobantes.length === 0
                             ? 'Acceso a todos los comprobantes.'
                             : `${form.comprobantes.length} comprobante(s) permitido(s).`}</div>
+                        </div>
+                        <div className="col-md-6 col-lg-3">
+                          <label className="form-label small fw-semibold">Congregaciones</label>
+                          <MultiSelect options={catOpciones.congregaciones} value={form.congregaciones}
+                            getKey={c => c.codigo} getLabel={c => `${c.codigo} — ${c.nombre || ''}`}
+                            onChange={v => setForm(f => ({ ...f, congregaciones: v }))} />
+                          <div className="form-text">{form.congregaciones.length === 0
+                            ? 'Acceso a todas las congregaciones.'
+                            : `${form.congregaciones.length} congregación(es) permitida(s).`}</div>
                         </div>
                       </div>
                     </>

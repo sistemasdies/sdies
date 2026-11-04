@@ -13,22 +13,23 @@ from apps.users.services.role_context import (
 def user_scope(user):
     """Devuelve los códigos permitidos según el rol efectivo de `user`.
 
-    Retorna un dict con las claves 'centros_costo', 'cuentas' y 'comprobantes'.
+    Retorna un dict con las claves 'centros_costo', 'cuentas', 'comprobantes' y 'congregaciones'.
     Valor None = sin restricción (todos).
     """
     if not user:
-        return {'centros_costo': None, 'cuentas': None, 'comprobantes': None}
+        return {'centros_costo': None, 'cuentas': None, 'comprobantes': None, 'congregaciones': None}
 
     role = rol_efectivo(user)
     if role is None:
         if user.is_superuser or not getattr(user, 'role', None):
-            return {'centros_costo': None, 'cuentas': None, 'comprobantes': None}
+            return {'centros_costo': None, 'cuentas': None, 'comprobantes': None, 'congregaciones': None}
         role = user.role
 
     return {
         'centros_costo': _codigos_o_none(role.centros_costo),
         'comprobantes':  _codigos_o_none(role.comprobantes),
         'cuentas':       _cuentas_con_hijas(role),
+        'congregaciones': _codigos_o_none(role.congregaciones),
     }
 
 

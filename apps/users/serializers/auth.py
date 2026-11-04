@@ -10,6 +10,7 @@ from apps.users.services.role_context import (
     rol_efectivo,
 )
 from apps.accounting.models import CentroCosto, Cuenta, Comprobante
+from apps.congregacion.models import Congregacion
 
 
 class CustomTokenObtainSerializer(TokenObtainPairSerializer):
@@ -57,6 +58,7 @@ class RoleSerializer(serializers.ModelSerializer):
     centros_costo      = serializers.SerializerMethodField()
     cuentas            = serializers.SerializerMethodField()
     comprobantes       = serializers.SerializerMethodField()
+    congregaciones     = serializers.SerializerMethodField()
     centros_costo_ids  = serializers.SlugRelatedField(
         many=True, slug_field='codigo', queryset=CentroCosto.objects.all(),
         source='centros_costo', write_only=True, required=False)
@@ -66,6 +68,9 @@ class RoleSerializer(serializers.ModelSerializer):
     comprobantes_ids   = serializers.SlugRelatedField(
         many=True, slug_field='codigo', queryset=Comprobante.objects.all(),
         source='comprobantes', write_only=True, required=False)
+    congregaciones_ids = serializers.SlugRelatedField(
+        many=True, slug_field='codigo', queryset=Congregacion.objects.all(),
+        source='congregaciones', write_only=True, required=False)
     users_count        = serializers.IntegerField(source='users.count', read_only=True)
     controles          = serializers.JSONField(required=False)
 
@@ -73,8 +78,8 @@ class RoleSerializer(serializers.ModelSerializer):
         model  = Role
         fields = ['id', 'NameRole', 'description', 'is_system',
                   'permissions', 'permission_ids',
-                  'centros_costo', 'cuentas', 'comprobantes',
-                  'centros_costo_ids', 'cuentas_ids', 'comprobantes_ids',
+                  'centros_costo', 'cuentas', 'comprobantes', 'congregaciones',
+                  'centros_costo_ids', 'cuentas_ids', 'comprobantes_ids', 'congregaciones_ids',
                   'controles', 'users_count', 'created_at']
         read_only_fields = ['id', 'created_at']
 
@@ -98,6 +103,9 @@ class RoleSerializer(serializers.ModelSerializer):
 
     def get_comprobantes(self, obj):
         return list(obj.comprobantes.values_list('codigo', flat=True))
+
+    def get_congregaciones(self, obj):
+        return list(obj.congregaciones.values_list('codigo', flat=True))
 
 
 class UserSerializer(serializers.ModelSerializer):

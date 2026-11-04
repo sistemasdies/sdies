@@ -184,7 +184,7 @@ class RetomarRolView(APIView):
 
 
 class RoleViewSet(viewsets.ModelViewSet):
-    queryset           = Role.objects.prefetch_related('permissions', 'centros_costo', 'cuentas', 'comprobantes').all()
+    queryset           = Role.objects.prefetch_related('permissions', 'centros_costo', 'cuentas', 'comprobantes', 'congregaciones').all()
     serializer_class   = RoleSerializer
     pagination_class   = None
     module             = 'roles'

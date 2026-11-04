@@ -38,6 +38,9 @@ import UbicacionesPage from './pages/Activos/UbicacionesPage';
 import EstadosActivosPage from './pages/Activos/EstadosActivosPage';
 import ActivosPage     from './pages/Activos/ActivosPage';
 import EstadosPastorPage from './pages/EstadosPastor/EstadosPastorPage';
+import CargosPage from './pages/Cargos/CargosPage';
+import AreasTrabajoPage from './pages/AreasTrabajo/AreasTrabajoPage';
+import EquiposTrabajoPage from './pages/EquiposTrabajo/EquiposTrabajoPage';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -90,6 +93,9 @@ function AppRoutes() {
 <Route path="/secretaria/estados"          element={<PrivateRoute><EstadosPage /></PrivateRoute>} />
 <Route path="/secretaria/pastores"         element={<PrivateRoute><PastoresPage /></PrivateRoute>} />
 <Route path="/secretaria/estados-pastor"   element={<PrivateRoute><EstadosPastorPage /></PrivateRoute>} />
+      <Route path="/secretaria/cargos"           element={<PrivateRoute><CargosPage /></PrivateRoute>} />
+      <Route path="/secretaria/areas-trabajo"    element={<PrivateRoute><AreasTrabajoPage /></PrivateRoute>} />
+      <Route path="/secretaria/equipos-trabajo"  element={<PrivateRoute><EquiposTrabajoPage /></PrivateRoute>} />
 <Route path="/activos/categorias"         element={<PrivateRoute><CategoriasPage /></PrivateRoute>} />
 <Route path="/activos/ubicaciones"        element={<PrivateRoute><UbicacionesPage /></PrivateRoute>} />
 <Route path="/activos/estados"            element={<PrivateRoute><EstadosActivosPage /></PrivateRoute>} />

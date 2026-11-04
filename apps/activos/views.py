@@ -12,6 +12,7 @@ from apps.core.views import HardDeleteMixin
 from apps.audit.mixins import AuditMixin
 from apps.core.services import cloudinary_service
 from apps.core.utils.exceptions import ServiceNotConfigured
+from apps.users.services.scopes import user_scope
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
@@ -62,6 +63,13 @@ class ActivoFViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
     ordering_fields = ['id_activo_f', 'nombre_activo_f', 'fecha_adquisicion', 'valor_compra']
     ordering = ['id_activo_f']
     queryset = ActivoF.objects.all().select_related('categoria', 'ubicacion', 'congregacion', 'responsable', 'estado_actual')
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        scope = user_scope(self.request.user)
+        if scope['congregaciones'] is not None:
+            qs = qs.filter(congregacion__codigo__in=scope['congregaciones'])
+        return qs
 
     def perform_create(self, serializer):
         serializer.save()

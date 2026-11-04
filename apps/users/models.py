@@ -26,6 +26,8 @@ class Role(models.Model):
                                              related_name='roles')
     comprobantes   = models.ManyToManyField('accounting.Comprobante', blank=True,
                                              related_name='roles')
+    congregaciones = models.ManyToManyField('congregacion.Congregacion', blank=True,
+                                             related_name='roles')
     controles      = models.JSONField(default=dict, blank=True,
                                       help_text="Ej: {'editar_movimiento': 'P'|'D'}")
     is_system      = models.BooleanField(default=False)
