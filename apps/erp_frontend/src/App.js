@@ -41,6 +41,10 @@ import EstadosPastorPage from './pages/EstadosPastor/EstadosPastorPage';
 import CargosPage from './pages/Cargos/CargosPage';
 import AreasTrabajoPage from './pages/AreasTrabajo/AreasTrabajoPage';
 import EquiposTrabajoPage from './pages/EquiposTrabajo/EquiposTrabajoPage';
+import ActasPage from './pages/Actas/ActasPage';
+import ActaFormPage from './pages/Actas/ActaFormPage';
+import ActaViewPage from './pages/Actas/ActaViewPage';
+import FirmaPublicaPage from './pages/Actas/FirmaPublicaPage';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -62,6 +66,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login"          element={user ? <Navigate to="/dashboard" /> : <LoginPage />} />
       <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
+      <Route path="/firmar-acta/:token" element={<FirmaPublicaPage />} />
       <Route path="/configurar-verificacion"
         element={<PrivateRoute><ConfigurarVerificacion /></PrivateRoute>} />
       <Route path="/dashboard"      element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
@@ -96,6 +101,10 @@ function AppRoutes() {
       <Route path="/secretaria/cargos"           element={<PrivateRoute><CargosPage /></PrivateRoute>} />
       <Route path="/secretaria/areas-trabajo"    element={<PrivateRoute><AreasTrabajoPage /></PrivateRoute>} />
       <Route path="/secretaria/equipos-trabajo"  element={<PrivateRoute><EquiposTrabajoPage /></PrivateRoute>} />
+      <Route path="/secretaria/actas"            element={<PrivateRoute><ActasPage /></PrivateRoute>} />
+      <Route path="/secretaria/actas/nueva"      element={<PrivateRoute><ActaFormPage /></PrivateRoute>} />
+      <Route path="/secretaria/actas/:id"        element={<PrivateRoute><ActaFormPage /></PrivateRoute>} />
+      <Route path="/secretaria/actas/:id/ver"    element={<PrivateRoute><ActaViewPage /></PrivateRoute>} />
 <Route path="/activos/categorias"         element={<PrivateRoute><CategoriasPage /></PrivateRoute>} />
 <Route path="/activos/ubicaciones"        element={<PrivateRoute><UbicacionesPage /></PrivateRoute>} />
 <Route path="/activos/estados"            element={<PrivateRoute><EstadosActivosPage /></PrivateRoute>} />

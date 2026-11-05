@@ -59,6 +59,7 @@ const GRUPOS = [
       { to: '/secretaria/cargos', icon: 'bi-briefcase', label: 'Cargos', mod: 'cargos' },
       { to: '/secretaria/areas-trabajo', icon: 'bi-grid', label: 'Áreas de Trabajo', mod: 'areas_trabajo' },
       { to: '/secretaria/equipos-trabajo', icon: 'bi-people-fill', label: 'Equipos de Trabajo', mod: 'equipos_trabajo' },
+      { to: '/secretaria/actas', icon: 'bi-file-text', label: 'Actas de Reunión', mod: 'actas' },
     ],
   },
   {
