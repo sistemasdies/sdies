@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'apps.audit',
     'apps.membresia',
     'apps.activos',
+    'apps.actividades',
     'apps.congregacion',
     'apps.organizacion',
     'apps.actas',

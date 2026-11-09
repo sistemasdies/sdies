@@ -33,6 +33,7 @@ urlpatterns = [
     path('api/anotaciones-misionero/', include('apps.membresia.urls.anotaciones_misionero')),
     path('api/pastores/',              include('apps.membresia.urls.pastores')),
     path('api/activos/',               include('apps.activos.urls')),
+    path('api/actividades/',           include('apps.actividades.urls')),
     path('api/estados-pastor/',        include('apps.membresia.urls.estados_pastor')),
     path('api/cargos/',                include('apps.membresia.urls.cargos')),
     path('api/areas-trabajo/',         include('apps.membresia.urls.areas_trabajo')),

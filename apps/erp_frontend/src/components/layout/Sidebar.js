@@ -77,6 +77,17 @@ const GRUPOS = [
     ],
   },
   {
+    key: 'actividades',
+    icon: 'bi-calendar-event',
+    label: 'Actividades',
+    mod: null,
+    requerir_hijos: true,
+    hijos: [
+      { to: '/actividades/asistencia', icon: 'bi-people', label: 'Asistencia', mod: 'actividades' },
+      { to: '/actividades/acontecimientos', icon: 'bi-megaphone', label: 'Acontecimientos', mod: 'actividades' },
+    ],
+  },
+  {
     key: 'configuracion',
     icon: 'bi-sliders',
     label: 'Configuración',
