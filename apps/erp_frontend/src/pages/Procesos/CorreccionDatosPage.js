@@ -9,6 +9,8 @@ import { getCentrosCosto } from '../../api/centrosCosto';
 import { getTerceros } from '../../api/terceros';
 import { getComprobantes } from '../../api/comprobantes';
 import { getPlantillas } from '../../api/plantillas';
+import { getEstados } from '../../api/estados';
+import { getCongregaciones } from '../../api/congregaciones';
 import { formatDate } from '../../utils/formato';
 import toast from 'react-hot-toast';
 
@@ -16,6 +18,8 @@ const TABLAS = [
   { id: 'movicont',       label: 'Movimientos (MoviCont)',  icon: 'bi-journal-text' },
   { id: 'plantillas',     label: 'Plantillas (títulos)',    icon: 'bi-journals' },
   { id: 'det_plantillas', label: 'Detalle de Plantillas',   icon: 'bi-list-ul' },
+  { id: 'terceros',       label: 'Terceros',                icon: 'bi-people' },
+  { id: 'membresia',      label: 'Membresía',               icon: 'bi-person-badge' },
 ];
 
 const FILTROS_DEFAULT = {
@@ -29,18 +33,31 @@ const FILTROS_DEFAULT = {
     plantilla: [], item: '', cuenta: [], doc_ref: '', observacion: '', tipo_mov: '',
     cedula: [], centro_costo: [], comentarios: '', doc_soporte: '', valor: '', base: '',
   },
+  terceros: {
+    cedula: '', tipo_persona: '', nombre1: '', nombre2: '', apellido1: '', apellido2: '',
+    razon_social: '', direccion: '', barrio: '', email: '', telefono1: '', celular: '', sexo: '',
+  },
+  membresia: {
+    cedula: '', nombre: '', estado: '', congregacion: '', estado_civil: '',
+    sw_bautizado: '', sw_promesado: '',
+  },
 };
 
 const PISTA_TABLA = {
   movicont:       'Movimientos contables (cabecera y líneas en una sola tabla).',
   plantillas:     'Títulos de plantillas contables.',
   det_plantillas: 'Renglones de las plantillas contables.',
+  terceros:       'Maestro de terceros (personas naturales y jurídicas).',
+  membresia:      'Datos eclesiales de los miembros.',
 };
 
 export default function CorreccionDatosPage() {
   const [tabla, setTabla]       = useState('movicont');
   const [filtros, setFiltros]   = useState(FILTROS_DEFAULT.movicont);
-  const [opciones, setOpciones] = useState({ cuentas: [], centros: [], terceros: [], comprobantes: [], plantillas: [] });
+  const [opciones, setOpciones] = useState({
+    cuentas: [], centros: [], terceros: [], comprobantes: [], plantillas: [],
+    estados: [], congregaciones: [],
+  });
   const [preview, setPreview]   = useState(null);
   const [acuse, setAcuse]       = useState(false);
   const [campo, setCampo]       = useState('');
@@ -58,6 +75,8 @@ export default function CorreccionDatosPage() {
     getTerceros({ page_size: 10000 }).then(r => setOpciones(o => ({ ...o, terceros: r.data.results || r.data }))).catch(() => {});
     getComprobantes().then(r => setOpciones(o => ({ ...o, comprobantes: r.data.results || r.data }))).catch(() => {});
     getPlantillas().then(r => setOpciones(o => ({ ...o, plantillas: r.data.results || r.data }))).catch(() => {});
+    getEstados().then(r => setOpciones(o => ({ ...o, estados: r.data.results || r.data }))).catch(() => {});
+    getCongregaciones().then(r => setOpciones(o => ({ ...o, congregaciones: r.data.results || r.data }))).catch(() => {});
   }, []);
 
   const cambiarTabla = (t) => {
@@ -99,6 +118,7 @@ export default function CorreccionDatosPage() {
   const valorValido = () => {
     if (!campoDef) return false;
     if (campoDef.tipo === 'texto') return true;
+    if (campoDef.tipo === 'booleano') return valor !== '';
     return String(valor).trim() !== '';
   };
 
@@ -400,6 +420,160 @@ export default function CorreccionDatosPage() {
               </>
             )}
 
+            {tabla === 'terceros' && (
+              <>
+                <div className="row g-2 mb-2">
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Cédula contiene</label>
+                    <input className="form-control form-control-sm" value={filtros.cedula}
+                      onChange={e => setFiltro('cedula', e.target.value)} />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Tipo persona</label>
+                    <select className="form-select form-select-sm" value={filtros.tipo_persona}
+                      onChange={e => setFiltro('tipo_persona', e.target.value)}>
+                      <option value="">Todos</option>
+                      <option value="N">Natural</option>
+                      <option value="J">Jurídica</option>
+                    </select>
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Nombre1</label>
+                    <input className="form-control form-control-sm" value={filtros.nombre1}
+                      onChange={e => setFiltro('nombre1', e.target.value)} />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Nombre2</label>
+                    <input className="form-control form-control-sm" value={filtros.nombre2}
+                      onChange={e => setFiltro('nombre2', e.target.value)} />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Apellido1</label>
+                    <input className="form-control form-control-sm" value={filtros.apellido1}
+                      onChange={e => setFiltro('apellido1', e.target.value)} />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Apellido2</label>
+                    <input className="form-control form-control-sm" value={filtros.apellido2}
+                      onChange={e => setFiltro('apellido2', e.target.value)} />
+                  </div>
+                </div>
+                <div className="row g-2 mb-2">
+                  <div className="col-md-3">
+                    <label className="form-label small mb-0">Razón social contiene</label>
+                    <input className="form-control form-control-sm" value={filtros.razon_social}
+                      onChange={e => setFiltro('razon_social', e.target.value)} />
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label small mb-0">Dirección contiene</label>
+                    <input className="form-control form-control-sm" value={filtros.direccion}
+                      onChange={e => setFiltro('direccion', e.target.value)} />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Barrio contiene</label>
+                    <input className="form-control form-control-sm" value={filtros.barrio}
+                      onChange={e => setFiltro('barrio', e.target.value)} />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Sexo</label>
+                    <select className="form-select form-select-sm" value={filtros.sexo}
+                      onChange={e => setFiltro('sexo', e.target.value)}>
+                      <option value="">Todos</option>
+                      <option value="M">Masculino</option>
+                      <option value="F">Femenino</option>
+                    </select>
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Correo contiene</label>
+                    <input className="form-control form-control-sm" value={filtros.email}
+                      onChange={e => setFiltro('email', e.target.value)} />
+                  </div>
+                </div>
+                <div className="row g-2">
+                  <div className="col-md-3">
+                    <label className="form-label small mb-0">Teléfono contiene</label>
+                    <input className="form-control form-control-sm" value={filtros.telefono1}
+                      onChange={e => setFiltro('telefono1', e.target.value)} />
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label small mb-0">Celular contiene</label>
+                    <input className="form-control form-control-sm" value={filtros.celular}
+                      onChange={e => setFiltro('celular', e.target.value)} />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {tabla === 'membresia' && (
+              <>
+                <div className="row g-2 mb-2">
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Cédula contiene</label>
+                    <input className="form-control form-control-sm" value={filtros.cedula}
+                      onChange={e => setFiltro('cedula', e.target.value)} />
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label small mb-0">Nombre contiene</label>
+                    <input className="form-control form-control-sm" value={filtros.nombre}
+                      onChange={e => setFiltro('nombre', e.target.value)} />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Estado membresía</label>
+                    <select className="form-select form-select-sm" value={filtros.estado}
+                      onChange={e => setFiltro('estado', e.target.value)}>
+                      <option value="">Todos</option>
+                      {opciones.estados.map(e => (
+                        <option key={e.estado} value={e.estado}>{e.estado} - {e.descripcion}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label small mb-0">Congregación</label>
+                    <select className="form-select form-select-sm" value={filtros.congregacion}
+                      onChange={e => setFiltro('congregacion', e.target.value)}>
+                      <option value="">Todas</option>
+                      {opciones.congregaciones.map(c => (
+                        <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Estado civil</label>
+                    <select className="form-select form-select-sm" value={filtros.estado_civil}
+                      onChange={e => setFiltro('estado_civil', e.target.value)}>
+                      <option value="">Todos</option>
+                      <option value="1">Soltero</option>
+                      <option value="2">Casado</option>
+                      <option value="3">Divorciado</option>
+                      <option value="4">Separado</option>
+                      <option value="5">Viudo</option>
+                      <option value="6">Unión Libre</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="row g-2">
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Bautizado</label>
+                    <select className="form-select form-select-sm" value={filtros.sw_bautizado}
+                      onChange={e => setFiltro('sw_bautizado', e.target.value)}>
+                      <option value="">Todos</option>
+                      <option value="true">Sí</option>
+                      <option value="false">No</option>
+                    </select>
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label small mb-0">Promesado</label>
+                    <select className="form-select form-select-sm" value={filtros.sw_promesado}
+                      onChange={e => setFiltro('sw_promesado', e.target.value)}>
+                      <option value="">Todos</option>
+                      <option value="true">Sí</option>
+                      <option value="false">No</option>
+                    </select>
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className="mt-3">
               <button className="btn btn-success btn-sm" onClick={buscar} disabled={cargando}>
                 {cargando
@@ -543,6 +717,71 @@ export default function CorreccionDatosPage() {
                         ))}
                       </datalist>
                     </>
+                  )}
+                  {campoDef?.tipo === 'booleano' && (
+                    <select className="form-select form-select-sm" value={valor}
+                      onChange={e => setValor(e.target.value)}>
+                      <option value="">— Seleccione —</option>
+                      <option value="true">Sí</option>
+                      <option value="false">No</option>
+                    </select>
+                  )}
+                  {campoDef?.tipo === 'select_tipo_persona' && (
+                    <select className="form-select form-select-sm" value={valor}
+                      onChange={e => setValor(e.target.value)}>
+                      <option value="">— Seleccione —</option>
+                      <option value="N">Natural</option>
+                      <option value="J">Jurídica</option>
+                    </select>
+                  )}
+                  {campoDef?.tipo === 'select_sexo' && (
+                    <select className="form-select form-select-sm" value={valor}
+                      onChange={e => setValor(e.target.value)}>
+                      <option value="">— Seleccione —</option>
+                      <option value="M">Masculino</option>
+                      <option value="F">Femenino</option>
+                    </select>
+                  )}
+                  {campoDef?.tipo === 'select_estado_civil' && (
+                    <select className="form-select form-select-sm" value={valor}
+                      onChange={e => setValor(e.target.value)}>
+                      <option value="">— Seleccione —</option>
+                      <option value="1">Soltero</option>
+                      <option value="2">Casado</option>
+                      <option value="3">Divorciado</option>
+                      <option value="4">Separado</option>
+                      <option value="5">Viudo</option>
+                      <option value="6">Unión Libre</option>
+                    </select>
+                  )}
+                  {campoDef?.tipo === 'select_tipo_matrimonio' && (
+                    <select className="form-select form-select-sm" value={valor}
+                      onChange={e => setValor(e.target.value)}>
+                      <option value="">— Seleccione —</option>
+                      <option value="C">Civil</option>
+                      <option value="J">Juzgado</option>
+                      <option value="R">Religioso</option>
+                      <option value="A">Alcaldía</option>
+                      <option value="B">Civil-Religioso</option>
+                    </select>
+                  )}
+                  {campoDef?.tipo === 'select_estado_membresia' && (
+                    <select className="form-select form-select-sm" value={valor}
+                      onChange={e => setValor(e.target.value)}>
+                      <option value="">— Seleccione —</option>
+                      {opciones.estados.map(e => (
+                        <option key={e.estado} value={e.estado}>{e.estado} - {e.descripcion}</option>
+                      ))}
+                    </select>
+                  )}
+                  {campoDef?.tipo === 'select_congregacion' && (
+                    <select className="form-select form-select-sm" value={valor}
+                      onChange={e => setValor(e.target.value)}>
+                      <option value="">— Seleccione —</option>
+                      {opciones.congregaciones.map(c => (
+                        <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.nombre}</option>
+                      ))}
+                    </select>
                   )}
                 </div>
               </div>

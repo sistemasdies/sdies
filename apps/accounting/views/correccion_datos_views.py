@@ -22,6 +22,8 @@ from apps.accounting.models import (
     CentroCosto, Comprobante, Cuenta, DetallePlantilla, MoviCont,
     PlantillaContable, Tercero,
 )
+from apps.membresia.models import Membresia, EstadoMembresia
+from apps.congregacion.models import Congregacion
 from apps.users.services.scopes import user_scope, fecha_cierre_usuario, validar_fecha_cierre
 
 MODULE = 'correccion_datos'
@@ -97,6 +99,62 @@ CAMPOS_EDITABLES = {
         {'campo': 'comentarios',  'label': 'Comentarios',      'tipo': 'texto', 'max': 200, 'update_key': 'comentarios'},
         {'campo': 'doc_soporte',  'label': 'Doc. soporte',     'tipo': 'texto', 'max': 15,  'update_key': 'doc_soporte'},
     ],
+    'terceros': [
+        {'campo': 'tipo_persona',   'label': 'Tipo persona',    'tipo': 'select_tipo_persona', 'update_key': 'tipo_persona'},
+        {'campo': 'nombre1',        'label': 'Primer nombre',   'tipo': 'texto', 'max': 50,  'update_key': 'nombre1'},
+        {'campo': 'nombre2',        'label': 'Segundo nombre',  'tipo': 'texto', 'max': 50,  'update_key': 'nombre2'},
+        {'campo': 'apellido1',      'label': 'Primer apellido', 'tipo': 'texto', 'max': 50,  'update_key': 'apellido1'},
+        {'campo': 'apellido2',      'label': 'Segundo apellido','tipo': 'texto', 'max': 50,  'update_key': 'apellido2'},
+        {'campo': 'razon_social',   'label': 'Razón social',    'tipo': 'texto', 'max': 200, 'update_key': 'razon_social'},
+        {'campo': 'direccion',      'label': 'Dirección',       'tipo': 'texto', 'max': 200, 'update_key': 'direccion'},
+        {'campo': 'barrio',         'label': 'Barrio',          'tipo': 'texto', 'max': 50,  'update_key': 'barrio'},
+        {'campo': 'codigo_postal',  'label': 'Código postal',   'tipo': 'texto', 'max': 6,   'update_key': 'codigo_postal'},
+        {'campo': 'distrito',       'label': 'Distrito',        'tipo': 'texto', 'max': 2,   'update_key': 'distrito'},
+        {'campo': 'telefono1',      'label': 'Teléfono',        'tipo': 'texto', 'max': 30,  'update_key': 'telefono1'},
+        {'campo': 'celular',        'label': 'Celular',         'tipo': 'texto', 'max': 20,  'update_key': 'celular'},
+        {'campo': 'email',          'label': 'Correo',          'tipo': 'texto', 'max': 80,  'update_key': 'email'},
+        {'campo': 'fecha_nacimiento','label': 'Fecha nacimiento','tipo': 'fecha',            'update_key': 'fecha_nacimiento'},
+        {'campo': 'lugar_nacimiento','label': 'Lugar nacimiento','tipo': 'texto', 'max': 100,'update_key': 'lugar_nacimiento'},
+        {'campo': 'sexo',           'label': 'Sexo',            'tipo': 'select_sexo',        'update_key': 'sexo'},
+        {'campo': 'tipo_sangre',    'label': 'Tipo sangre',     'tipo': 'texto', 'max': 3,   'update_key': 'tipo_sangre'},
+        {'campo': 'comentarios',    'label': 'Comentarios',     'tipo': 'texto', 'max': 2000,'update_key': 'comentarios'},
+        {'campo': 'is_active',      'label': 'Activo',          'tipo': 'booleano',           'update_key': 'is_active'},
+    ],
+    'membresia': [
+        {'campo': 'tipo_sangre',              'label': 'Tipo sangre',            'tipo': 'texto', 'max': 3,   'update_key': 'tipo_sangre'},
+        {'campo': 'estado_civil',             'label': 'Estado civil',           'tipo': 'select_estado_civil',  'update_key': 'estado_civil'},
+        {'campo': 'fecha_matrimonio',         'label': 'Fecha matrimonio',       'tipo': 'fecha',                 'update_key': 'fecha_matrimonio'},
+        {'campo': 'tipo_matrimonio',          'label': 'Tipo matrimonio',        'tipo': 'select_tipo_matrimonio','update_key': 'tipo_matrimonio'},
+        {'campo': 'lugar_matrimonio',         'label': 'Lugar matrimonio',       'tipo': 'texto', 'max': 30,     'update_key': 'lugar_matrimonio'},
+        {'campo': 'nombre_oficiado_por',      'label': 'Oficiado por',           'tipo': 'texto', 'max': 30,     'update_key': 'nombre_oficiado_por'},
+        {'campo': 'nombre_papa',              'label': 'Nombre padre',           'tipo': 'texto', 'max': 30,     'update_key': 'nombre_papa'},
+        {'campo': 'nombre_mama',              'label': 'Nombre madre',           'tipo': 'texto', 'max': 30,     'update_key': 'nombre_mama'},
+        {'campo': 'nombre_conyuge',           'label': 'Nombre cónyuge',         'tipo': 'texto', 'max': 30,     'update_key': 'nombre_conyuge'},
+        {'campo': 'personas_a_cargo',         'label': 'Personas a cargo',       'tipo': 'numero',                'update_key': 'personas_a_cargo'},
+        {'campo': 'comentario_familiar',      'label': 'Comentario familiar',    'tipo': 'texto', 'max': 2000,   'update_key': 'comentario_familiar'},
+        {'campo': 'folio_reg_civil',          'label': 'Folio reg. civil',       'tipo': 'texto', 'max': 12,     'update_key': 'folio_reg_civil'},
+        {'campo': 'oficina_reg_civil',        'label': 'Oficina reg. civil',     'tipo': 'texto', 'max': 30,     'update_key': 'oficina_reg_civil'},
+        {'campo': 'escolaridad',              'label': 'Escolaridad',            'tipo': 'texto', 'max': 30,     'update_key': 'escolaridad'},
+        {'campo': 'profesion',                'label': 'Profesión',              'tipo': 'texto', 'max': 30,     'update_key': 'profesion'},
+        {'campo': 'ocupacion',                'label': 'Ocupación',              'tipo': 'texto', 'max': 30,     'update_key': 'ocupacion'},
+        {'campo': 'lugar_de_trabajo',         'label': 'Lugar trabajo',          'tipo': 'texto', 'max': 30,     'update_key': 'lugar_de_trabajo'},
+        {'campo': 'telefono_trabajo',         'label': 'Teléfono trabajo',       'tipo': 'texto', 'max': 20,     'update_key': 'telefono_trabajo'},
+        {'campo': 'comentarios_academico_laboral','label': 'Comentarios acad./lab.','tipo': 'texto', 'max': 2000,'update_key': 'comentarios_academico_laboral'},
+        {'campo': 'estado',                   'label': 'Estado membresía',       'tipo': 'select_estado_membresia','update_key': 'estado_id'},
+        {'campo': 'comentarios_eclesiales',   'label': 'Comentarios eclesiales', 'tipo': 'texto', 'max': 2000,   'update_key': 'comentarios_eclesiales'},
+        {'campo': 'congregacion',             'label': 'Congregación',           'tipo': 'select_congregacion',   'update_key': 'congregacion_id'},
+        {'campo': 'sw_bautizado',             'label': 'Bautizado',              'tipo': 'booleano',              'update_key': 'sw_bautizado'},
+        {'campo': 'fecha_bautismo',           'label': 'Fecha bautismo',         'tipo': 'fecha',                 'update_key': 'fecha_bautismo'},
+        {'campo': 'lugar_bautismo',           'label': 'Lugar bautismo',         'tipo': 'texto', 'max': 30,     'update_key': 'lugar_bautismo'},
+        {'campo': 'pastor_que_bautizo',       'label': 'Pastor bautizo',         'tipo': 'texto', 'max': 30,     'update_key': 'pastor_que_bautizo'},
+        {'campo': 'sw_promesado',             'label': 'Promesado',              'tipo': 'booleano',              'update_key': 'sw_promesado'},
+        {'campo': 'fecha_promesado',          'label': 'Fecha promesado',        'tipo': 'fecha',                 'update_key': 'fecha_promesado'},
+        {'campo': 'lugar_promesado',          'label': 'Lugar promesado',        'tipo': 'texto', 'max': 30,     'update_key': 'lugar_promesado'},
+        {'campo': 'congregacion_anterior',    'label': 'Congregación anterior',  'tipo': 'texto', 'max': 30,     'update_key': 'congregacion_anterior'},
+        {'campo': 'salio_para',               'label': 'Salió para',             'tipo': 'texto', 'max': 30,     'update_key': 'salio_para'},
+        {'campo': 'fecha_llegada',            'label': 'Fecha llegada',          'tipo': 'fecha',                 'update_key': 'fecha_llegada'},
+        {'campo': 'fecha_salida',             'label': 'Fecha salida',           'tipo': 'fecha',                 'update_key': 'fecha_salida'},
+    ],
 }
 
 COLUMNAS_MUESTRA = {
@@ -119,6 +177,20 @@ COLUMNAS_MUESTRA = {
         {'key': 'valor', 'label': 'Valor'}, {'key': 'base', 'label': 'Base'},
         {'key': 'cedula', 'label': 'Código'}, {'key': 'centro_costo', 'label': 'C. Costo'},
         {'key': 'comentarios', 'label': 'Comentarios'},
+    ],
+    'terceros': [
+        {'key': 'cedula', 'label': 'Cédula'}, {'key': 'nombre_completo', 'label': 'Nombre'},
+        {'key': 'tipo_persona', 'label': 'Tipo'}, {'key': 'direccion', 'label': 'Dirección'},
+        {'key': 'barrio', 'label': 'Barrio'}, {'key': 'telefono1', 'label': 'Teléfono'},
+        {'key': 'celular', 'label': 'Celular'}, {'key': 'email', 'label': 'Correo'},
+        {'key': 'sexo', 'label': 'Sexo'}, {'key': 'is_active', 'label': 'Activo'},
+    ],
+    'membresia': [
+        {'key': 'cedula', 'label': 'Cédula'}, {'key': 'nombre_completo', 'label': 'Nombre'},
+        {'key': 'estado', 'label': 'Estado'}, {'key': 'congregacion', 'label': 'Congregación'},
+        {'key': 'estado_civil', 'label': 'E. Civil'}, {'key': 'telefono_trabajo', 'label': 'Tel. Trabajo'},
+        {'key': 'profesion', 'label': 'Profesión'}, {'key': 'ocupacion', 'label': 'Ocupación'},
+        {'key': 'sw_bautizado', 'label': 'Baut.'}, {'key': 'sw_promesado', 'label': 'Prom.'},
     ],
 }
 
@@ -214,10 +286,66 @@ def _qs_det_plantillas(filtros, user):
     return qs.order_by('plantilla__cod_plantilla', 'item')
 
 
+def _qs_terceros(filtros, user):
+    qs = Tercero.objects.filter(deleted=False)
+    f = filtros or {}
+    if f.get('cedula'):
+        qs = qs.filter(cedula__icontains=f['cedula'])
+    if f.get('tipo_persona'):
+        qs = qs.filter(tipo_persona=f['tipo_persona'])
+    for key in ('nombre1', 'nombre2', 'apellido1', 'apellido2', 'razon_social'):
+        if f.get(key):
+            qs = qs.filter(**{f'{key}__icontains': f[key]})
+    if f.get('direccion'):
+        qs = qs.filter(direccion__icontains=f['direccion'])
+    if f.get('barrio'):
+        qs = qs.filter(barrio__icontains=f['barrio'])
+    if f.get('email'):
+        qs = qs.filter(email__icontains=f['email'])
+    if f.get('telefono1'):
+        qs = qs.filter(telefono1__icontains=f['telefono1'])
+    if f.get('celular'):
+        qs = qs.filter(celular__icontains=f['celular'])
+    if f.get('sexo'):
+        qs = qs.filter(sexo=f['sexo'])
+    return qs.order_by('apellido1', 'nombre1')
+
+
+def _qs_membresia(filtros, user):
+    qs = Membresia.objects.filter(deleted=False).select_related('tercero', 'estado', 'congregacion')
+    f = filtros or {}
+    if f.get('cedula'):
+        qs = qs.filter(tercero__cedula__icontains=f['cedula'])
+    if f.get('nombre'):
+        qs = qs.filter(
+            models.Q(tercero__nombre1__icontains=f['nombre']) |
+            models.Q(tercero__nombre2__icontains=f['nombre']) |
+            models.Q(tercero__apellido1__icontains=f['nombre']) |
+            models.Q(tercero__apellido2__icontains=f['nombre'])
+        )
+    if f.get('estado'):
+        qs = qs.filter(estado__estado=f['estado'])
+    if f.get('congregacion'):
+        qs = qs.filter(congregacion__codigo=f['congregacion'])
+    if f.get('estado_civil'):
+        qs = qs.filter(estado_civil=f['estado_civil'])
+    if f.get('sw_bautizado') in (True, 'true', 'True', '1'):
+        qs = qs.filter(sw_bautizado=True)
+    elif f.get('sw_bautizado') in (False, 'false', 'False', '0'):
+        qs = qs.filter(sw_bautizado=False)
+    if f.get('sw_promesado') in (True, 'true', 'True', '1'):
+        qs = qs.filter(sw_promesado=True)
+    elif f.get('sw_promesado') in (False, 'false', 'False', '0'):
+        qs = qs.filter(sw_promesado=False)
+    return qs.order_by('tercero__apellido1', 'tercero__nombre1')
+
+
 TABLAS = {
     'movicont':       {'qs': _qs_movicont,       'modelo': 'MoviCont'},
     'plantillas':     {'qs': _qs_plantillas,     'modelo': 'PlantillaContable'},
     'det_plantillas': {'qs': _qs_det_plantillas, 'modelo': 'DetallePlantilla'},
+    'terceros':       {'qs': _qs_terceros,       'modelo': 'Tercero'},
+    'membresia':      {'qs': _qs_membresia,      'modelo': 'Membresia'},
 }
 
 
@@ -250,10 +378,70 @@ def _ser_detalle(d):
     }
 
 
+def _ser_tercero(t):
+    return {
+        'cedula': t.cedula,
+        'nombre_completo': t.nombre_completo,
+        'tipo_persona': t.tipo_persona,
+        'nombre1': t.nombre1, 'nombre2': t.nombre2,
+        'apellido1': t.apellido1, 'apellido2': t.apellido2,
+        'razon_social': t.razon_social,
+        'direccion': t.direccion, 'barrio': t.barrio,
+        'codigo_postal': t.codigo_postal, 'distrito': t.distrito,
+        'telefono1': t.telefono1, 'celular': t.celular, 'email': t.email,
+        'fecha_nacimiento': t.fecha_nacimiento.isoformat() if t.fecha_nacimiento else '',
+        'lugar_nacimiento': t.lugar_nacimiento,
+        'sexo': t.sexo, 'tipo_sangre': t.tipo_sangre,
+        'comentarios': t.comentarios,
+        'is_active': 'Sí' if t.is_active else 'No',
+    }
+
+
+def _ser_membresia(m):
+    return {
+        'cedula': m.tercero_id,
+        'nombre_completo': m.tercero.nombre_completo,
+        'tipo_sangre': m.tipo_sangre,
+        'estado_civil': m.estado_civil,
+        'fecha_matrimonio': m.fecha_matrimonio.isoformat() if m.fecha_matrimonio else '',
+        'tipo_matrimonio': m.tipo_matrimonio,
+        'lugar_matrimonio': m.lugar_matrimonio,
+        'nombre_oficiado_por': m.nombre_oficiado_por,
+        'nombre_papa': m.nombre_papa, 'nombre_mama': m.nombre_mama,
+        'nombre_conyuge': m.nombre_conyuge,
+        'personas_a_cargo': m.personas_a_cargo,
+        'comentario_familiar': m.comentario_familiar,
+        'folio_reg_civil': m.folio_reg_civil,
+        'oficina_reg_civil': m.oficina_reg_civil,
+        'escolaridad': m.escolaridad,
+        'profesion': m.profesion,
+        'ocupacion': m.ocupacion,
+        'lugar_de_trabajo': m.lugar_de_trabajo,
+        'telefono_trabajo': m.telefono_trabajo,
+        'comentarios_academico_laboral': m.comentarios_academico_laboral,
+        'estado': m.estado_id or '',
+        'comentarios_eclesiales': m.comentarios_eclesiales,
+        'congregacion': m.congregacion_id or '',
+        'sw_bautizado': 'Sí' if m.sw_bautizado else 'No',
+        'fecha_bautismo': m.fecha_bautismo.isoformat() if m.fecha_bautismo else '',
+        'lugar_bautismo': m.lugar_bautismo,
+        'pastor_que_bautizo': m.pastor_que_bautizo,
+        'sw_promesado': 'Sí' if m.sw_promesado else 'No',
+        'fecha_promesado': m.fecha_promesado.isoformat() if m.fecha_promesado else '',
+        'lugar_promesado': m.lugar_promesado,
+        'congregacion_anterior': m.congregacion_anterior,
+        'salio_para': m.salio_para,
+        'fecha_llegada': m.fecha_llegada.isoformat() if m.fecha_llegada else '',
+        'fecha_salida': m.fecha_salida.isoformat() if m.fecha_salida else '',
+    }
+
+
 SERIALIZADORES = {
     'movicont': _ser_movicont,
     'plantillas': _ser_plantilla,
     'det_plantillas': _ser_detalle,
+    'terceros': _ser_tercero,
+    'membresia': _ser_membresia,
 }
 
 
@@ -319,6 +507,45 @@ def _preparar_valor(tabla, fdef, valor, scope):
         if not Comprobante.objects.filter(codigo=cod, deleted=False).exists():
             return None, f"El comprobante '{cod}' no existe.", None
         return cod, None, {}
+
+    if tipo == 'select_tipo_persona':
+        v = str(valor or '').strip().upper()
+        if v not in ('N', 'J'):
+            return None, "El tipo de persona debe ser 'N' (Natural) o 'J' (Jurídica).", None
+        return v, None, {}
+
+    if tipo == 'select_sexo':
+        v = str(valor or '').strip().upper()
+        if v not in ('M', 'F'):
+            return None, "El sexo debe ser 'M' o 'F'.", None
+        return v, None, {}
+
+    if tipo == 'select_estado_civil':
+        v = str(valor or '').strip()
+        if v not in ('1', '2', '3', '4', '5', '6'):
+            return None, "Estado civil no válido.", None
+        return v, None, {}
+
+    if tipo == 'select_tipo_matrimonio':
+        v = str(valor or '').strip().upper()
+        if v not in ('C', 'J', 'R', 'A', 'B'):
+            return None, "Tipo de matrimonio no válido.", None
+        return v, None, {}
+
+    if tipo == 'select_estado_membresia':
+        v = str(valor or '').strip()
+        if not EstadoMembresia.objects.filter(estado=v).exists():
+            return None, f"El estado de membresía '{v}' no existe.", None
+        return v, None, {}
+
+    if tipo == 'select_congregacion':
+        v = str(valor or '').strip()
+        if v and not Congregacion.objects.filter(codigo=v, deleted=False).exists():
+            return None, f"La congregación '{v}' no existe.", None
+        return v or None, None, {}
+
+    if tipo == 'booleano':
+        return bool(valor in (True, 'true', 'True', '1', 'Sí', 'SI', 'si')), None, {}
 
     return None, 'Tipo de campo no soportado.', None
 

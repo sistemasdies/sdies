@@ -5,23 +5,36 @@ import { useAuth } from '../../context/AuthContext';
 const MENU = [
   { to: '/dashboard',           icon: 'bi-speedometer2',        label: 'Dashboard',               mod: null },
   { to: '/vista-rapida',        icon: 'bi-lightning-charge',    label: 'Vista Rápida',            mod: 'vista_rapida' },
-  { to: '/asientos',            icon: 'bi-journal-text',        label: 'Asientos',                mod: 'asientos' },
-  { to: '/asientos/plantilla',  icon: 'bi-layout-text-window',  label: 'Asiento con plantilla',   mod: 'asientos_plantilla' },
 ];
 
 const GRUPOS = [
   {
-    key: 'tablas',
-    icon: 'bi-table',
-    label: 'Tablas',
+    key: 'contabilidad',
+    icon: 'bi-calculator',
+    label: 'Contabilidad',
     mod: null,
     requerir_hijos: true,
     hijos: [
-      { to: '/cuentas',        icon: 'bi-diagram-3',         label: 'Plan de Cuentas',         mod: 'plan_cuentas' },
-      { to: '/plantillas',     icon: 'bi-journals',           label: 'Plantillas contables',    mod: 'plantillas' },
+      { to: '/asientos',            icon: 'bi-journal-text',        label: 'Asientos',                mod: 'asientos' },
+      { to: '/asientos/plantilla',  icon: 'bi-layout-text-window',  label: 'Asiento con plantilla',   mod: 'asientos_plantilla' },
+      { to: '/cuentas',             icon: 'bi-diagram-3',           label: 'Plan de Cuentas',         mod: 'plan_cuentas' },
+      { to: '/plantillas',          icon: 'bi-journals',            label: 'Plantillas contables',    mod: 'plantillas' },
+      { to: '/comprobantes',        icon: 'bi-receipt',             label: 'Comprobantes',            mod: 'comprobantes' },
+      { to: '/centros-costo',       icon: 'bi-bullseye',            label: 'Centros de Costo',        mod: 'centros_costo' },
+      { to: '/informes/auxiliares',          icon: 'bi-list-ul',       label: 'Auxiliares',          mod: 'reportes' },
+      { to: '/informes/comparativo-meses',    icon: 'bi-calendar3',     label: 'Saldos Meses/Años',   mod: 'reportes' },
+      { to: '/informes/estado-presupuestal', icon: 'bi-graph-up-arrow', label: 'Estado Presupuestal', mod: 'reportes' },
+      { to: '/reportes',                    icon: 'bi-cash-coin',        label: 'Balances',          mod: 'reportes' },
+    ],
+  },
+  {
+    key: 'tablas',
+    icon: 'bi-table',
+    label: 'Tablas Generales',
+    mod: null,
+    requerir_hijos: true,
+    hijos: [
       { to: '/terceros',       icon: 'bi-people',             label: 'Terceros',                mod: 'terceros' },
-      { to: '/centros-costo',  icon: 'bi-bullseye',           label: 'Centros de Costo',        mod: 'centros_costo' },
-      { to: '/comprobantes',   icon: 'bi-receipt',            label: 'Comprobantes',            mod: 'comprobantes' },
       { to: '/roles',          icon: 'bi-shield',             label: 'Roles',                   mod: 'roles' },
       { to: '/usuarios',       icon: 'bi-person-gear',        label: 'Usuarios',                mod: 'usuarios' },
     ],
@@ -35,7 +48,6 @@ const GRUPOS = [
     hijos: [
       { to: '/procesos/bloquear-fecha',     icon: 'bi-calendar-x',     label: 'Bloquear Fecha',     mod: 'usuarios' },
       { to: '/procesos/cierre-periodo',    icon: 'bi-calendar-check', label: 'Cierre de Periodo',   mod: 'periodos' },
-      { to: '/procesos/generar-balance',   icon: 'bi-calculator',     label: 'Generar Balance',     mod: 'reportes' },
       { to: '/procesos/generar-presupuesto', icon: 'bi-journal-check', label: 'Generar Presupuesto', mod: 'reportes' },
       { to: '/procesos/correccion-datos',  icon: 'bi-tools',          label: 'Corrección de Datos', mod: 'correccion_datos' },
       { to: '/procesos/copia-seguridad',   icon: 'bi-database-down',  label: 'Copia de Seguridad',  soloStaff: true },
@@ -73,19 +85,6 @@ const GRUPOS = [
       { to: '/activos/ubicaciones', icon: 'bi-geo-alt', label: 'Ubicaciones', mod: 'activos' },
       { to: '/activos/estados', icon: 'bi-check2-circle', label: 'Estados', mod: 'activos' },
       { to: '/activos/activos', icon: 'bi-pc-display', label: 'Activos', mod: 'activos' },
-    ],
-  },
-  {
-    key: 'informes',
-    icon: 'bi-file-earmark-bar-graph',
-    label: 'Informes',
-    mod: null,
-    requerir_hijos: true,
-    hijos: [
-      { to: '/informes/auxiliares',          icon: 'bi-list-ul',       label: 'Auxiliares',          mod: 'reportes' },
-      { to: '/informes/comparativo-meses',    icon: 'bi-calendar3',     label: 'Saldos Meses/Años',   mod: 'reportes' },
-      { to: '/informes/estado-presupuestal', icon: 'bi-graph-up-arrow', label: 'Estado Presupuestal', mod: 'reportes' },
-      { to: '/reportes',                    icon: 'bi-cash-coin',        label: 'Balances',          mod: 'reportes' },
     ],
   },
   {
