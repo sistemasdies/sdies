@@ -148,10 +148,17 @@ export default function AcontecimientosPage() {
       }
       if (r.data.creadas?.length) {
         toast.success(`${r.data.creadas.length} foto(s) subida(s)`);
+        const nuevas = r.data.creadas;
+        const fotosActuales = a.fotos || [];
+        setGaleria(g => ({
+          ...g,
+          acontecimiento: {
+            ...a,
+            fotos: [...fotosActuales, ...nuevas].sort((x, y) => x.orden - y.orden),
+            cantidad_fotos: fotosActuales.length + nuevas.length,
+          },
+        }));
       }
-      // Refrescar lista y galería
-      const res = await getAcontecimiento(a.id);
-      setGaleria(g => ({ ...g, acontecimiento: res.data }));
       cargar();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -163,14 +170,23 @@ export default function AcontecimientosPage() {
 
   const eliminarFoto = async (foto) => {
     if (!window.confirm('¿Eliminar esta foto?')) return;
+    const a = galeria.acontecimiento;
     try {
-      await eliminarFotoAcontecimiento(galeria.acontecimiento.id, foto.id);
+      await eliminarFotoAcontecimiento(a.id, foto.id);
       toast.success('Foto eliminada');
-      const res = await getAcontecimiento(galeria.acontecimiento.id);
-      setGaleria(g => ({ ...g, acontecimiento: res.data }));
+      const fotosRestantes = (a.fotos || []).filter(f => f.id !== foto.id);
+      setGaleria(g => ({
+        ...g,
+        acontecimiento: {
+          ...a,
+          fotos: fotosRestantes,
+          cantidad_fotos: fotosRestantes.length,
+        },
+      }));
       cargar();
-    } catch {
-      toast.error('No se pudo eliminar la foto');
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      toast.error(Array.isArray(detail) ? detail.join(' ') : (detail || 'No se pudo eliminar la foto'));
     }
   };
 
