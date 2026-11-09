@@ -204,7 +204,7 @@ export default function CongregacionesPage() {
               <table className="table table-hover table-sm mb-0 align-middle">
                 <thead className="table-dark">
                   <tr>
-                    <th>Cedula</th>
+                    <th>Código</th>
                     <th>Nombre</th>
                     <th>Dirección</th>
                     <th>Pastor</th>
