@@ -154,7 +154,8 @@ export default function AcontecimientosPage() {
       setGaleria(g => ({ ...g, acontecimiento: res.data }));
       cargar();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Error al subir fotos');
+      const detail = err.response?.data?.detail;
+      toast.error(Array.isArray(detail) ? detail.join(' ') : (detail || 'Error al subir fotos'));
     } finally {
       setGaleria(g => ({ ...g, subiendo: false }));
     }

@@ -16,9 +16,7 @@ export const deleteAcontecimiento = (id)      => API.delete(`/actividades/aconte
 export const subirFotosAcontecimiento = (id, files) => {
   const data = new FormData();
   files.forEach(f => data.append('imagen', f));
-  return API.post(`/actividades/acontecimientos/${id}/fotos/`, data, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  return API.post(`/actividades/acontecimientos/${id}/fotos/`, data);
 };
 export const eliminarFotoAcontecimiento = (id, fotoId) =>
   API.delete(`/actividades/acontecimientos/${id}/fotos/${fotoId}/`);
