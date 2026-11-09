@@ -46,6 +46,16 @@ class AcontecimientoViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
         serializer.save()
         self._log('update', serializer.instance, before=before, after=self._snapshot(serializer.instance))
 
+    def perform_destroy(self, instance):
+        fotos = list(instance.fotos.values_list('public_id', flat=True))
+        for public_id in fotos:
+            if public_id:
+                try:
+                    cloudinary_service.eliminar_foto(public_id)
+                except Exception:
+                    pass
+        instance.delete()
+
     def _nombre_foto(self, acontecimiento, numero):
         return f"{acontecimiento.congregacion_id}_{acontecimiento.item:04d}_{numero:02d}"
 
