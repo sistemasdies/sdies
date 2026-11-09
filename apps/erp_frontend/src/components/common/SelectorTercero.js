@@ -18,7 +18,7 @@ const PAGE = 20;
  *                       las cédulas que ya están usadas con un badge.
  */
 export default function SelectorTercero({
-  abierto, onCerrar, onElegir, cedulaInicial, cargarReservados,
+  abierto, onCerrar, onElegir, cedulaInicial, cargarReservados, onGenerarCodigo,
 }) {
   const [q, setQ]         = useState('');
   const [lista, setLista] = useState([]);
@@ -100,7 +100,13 @@ export default function SelectorTercero({
               : lista.length === 0 ? (
                 <div className="text-center text-muted py-4">
                   <i className="bi bi-person-x display-6 d-block mb-2 text-muted"></i>
-                  No se encontraron terceros
+                  <div>No se encontraron terceros</div>
+                  {onGenerarCodigo && (
+                    <button type="button" className="btn btn-success btn-sm mt-3"
+                      onClick={onGenerarCodigo}>
+                      <i className="bi bi-plus-circle me-2"></i>Generar Nuevo Código
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="table-responsive">

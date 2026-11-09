@@ -20,6 +20,7 @@ import {
   buscarTerceroPorCedula, getCedulasConMembresia,
   subirFotoMembresia, eliminarFotoMembresia,
 } from '../../api/membresias';
+import { siguienteCedula } from '../../api/terceros';
 
 const PAGE_SIZE = 50;
 
@@ -823,6 +824,20 @@ export default function MembresiaPage() {
     cargarTercero(t.cedula);
   };
 
+  const generarNuevoCodigo = async () => {
+    try {
+      const r = await siguienteCedula();
+      const nueva = r.data.siguiente_cedula || r.data;
+      setForm(p => ({ ...p, tercero: { ...TERCERO_VACIO, cedula: String(nueva) } }));
+      setTerceroInfo(null);
+      setCedulaEstado('nuevo');
+      setSelectorAbierto(false);
+      toast.success(`Nuevo código generado: ${nueva}`);
+    } catch (e) {
+      toast.error('No se pudo generar el siguiente código');
+    }
+  };
+
   const abrirMembresiaExistentePorCedula = async (cedula) => {
     if (!cedula) return;
     try {
@@ -1191,7 +1206,8 @@ export default function MembresiaPage() {
         cedulaInicial={form.tercero.cedula}
         cargarReservados={getCedulasConMembresia}
         onCerrar={() => setSelectorAbierto(false)}
-        onElegir={elegirTercero} />
+        onElegir={elegirTercero}
+        onGenerarCodigo={generarNuevoCodigo} />
 
       {/* Lupa de congregación — mismo recurso que usa el módulo de Congregaciones */}
       <SelectorCongregacion
