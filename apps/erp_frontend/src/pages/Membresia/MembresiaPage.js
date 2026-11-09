@@ -168,8 +168,8 @@ function SeccionGenerales({ t, setT, tipo_sangre, setTipoSangre, cedulaEstado, t
   return (
     <>
       {avisoCedula && (
-        <div className={`alert ${avisoCódigo.clase} d-flex align-items-center gap-2 py-2 small`}>
-          <i className={`bi ${avisoCódigo.icono}`}></i>
+        <div className={`alert ${avisoCedula.clase} d-flex align-items-center gap-2 py-2 small`}>
+          <i className={`bi ${avisoCedula.icono}`}></i>
           <span className="flex-grow-1">{avisoCedula.texto}</span>
           {cedulaEstado === 'ya_existe_membresia' && (
             <button type="button" className="btn btn-sm btn-outline-dark" onClick={abrirMembresiaExistente}>
