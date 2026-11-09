@@ -14,7 +14,7 @@ import toast from 'react-hot-toast';
 const PAGE_SIZE = 50;
 const FORM_VACIO = {
   id: '', fecha: '', congregacion: '', creyentes: 0, simpatizantes: 0,
-  visitas: 0, ninos: 0, comentarios: '',
+  visitas: 0, ninos: 0, online: 0, tema_predicacion: '', comentarios: '',
 };
 
 export default function AsistenciaPage() {
@@ -68,6 +68,8 @@ export default function AsistenciaPage() {
       simpatizantes: a.simpatizantes || 0,
       visitas: a.visitas || 0,
       ninos: a.ninos || 0,
+      online: a.online || 0,
+      tema_predicacion: a.tema_predicacion || '',
       comentarios: a.comentarios || '',
     });
     setModal(true);
@@ -88,6 +90,8 @@ export default function AsistenciaPage() {
         simpatizantes: parseInt(form.simpatizantes, 10) || 0,
         visitas: parseInt(form.visitas, 10) || 0,
         ninos: parseInt(form.ninos, 10) || 0,
+        online: parseInt(form.online, 10) || 0,
+        tema_predicacion: form.tema_predicacion,
         comentarios: form.comentarios,
       };
       if (editando) {
@@ -162,7 +166,9 @@ export default function AsistenciaPage() {
                       <th className="text-end">Simpatizantes</th>
                       <th className="text-end">Visitas</th>
                       <th className="text-end">Niños</th>
+                      <th className="text-end">OnLine</th>
                       <th className="text-end">Total</th>
+                      <th>Tema</th>
                       <th>Comentarios</th>
                       <th className="text-center">Acciones</th>
                     </tr>
@@ -176,7 +182,9 @@ export default function AsistenciaPage() {
                         <td className="text-end">{a.simpatizantes}</td>
                         <td className="text-end">{a.visitas}</td>
                         <td className="text-end">{a.ninos}</td>
+                        <td className="text-end">{a.online}</td>
                         <td className="text-end fw-bold">{a.total}</td>
+                        <td className="small">{a.tema_predicacion || '—'}</td>
                         <td className="small text-muted">{a.comentarios || '—'}</td>
                         <td className="text-center">
                           {canEdit && (
@@ -259,6 +267,16 @@ export default function AsistenciaPage() {
                       <label className="form-label small fw-semibold">Niños</label>
                       <input type="number" min="0" className="form-control"
                         value={form.ninos} onChange={e => setForm(f => ({ ...f, ninos: e.target.value }))} />
+                    </div>
+                    <div className="col-6 col-md-3">
+                      <label className="form-label small fw-semibold">OnLine</label>
+                      <input type="number" min="0" className="form-control"
+                        value={form.online} onChange={e => setForm(f => ({ ...f, online: e.target.value }))} />
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label small fw-semibold">Tema de predicación</label>
+                      <input type="text" maxLength={25} className="form-control"
+                        value={form.tema_predicacion} onChange={e => setForm(f => ({ ...f, tema_predicacion: e.target.value }))} />
                     </div>
                     <div className="col-12">
                       <label className="form-label small fw-semibold">Comentarios</label>

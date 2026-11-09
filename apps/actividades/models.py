@@ -16,6 +16,8 @@ class Asistencia(BaseModel):
     simpatizantes = models.IntegerField(default=0)
     visitas = models.IntegerField(default=0)
     ninos = models.IntegerField(default=0)
+    online = models.IntegerField(default=0, verbose_name='OnLine')
+    tema_predicacion = models.CharField(max_length=25, blank=True, verbose_name='Tema de predicación')
     comentarios = models.CharField(max_length=200, blank=True)
 
     class Meta:

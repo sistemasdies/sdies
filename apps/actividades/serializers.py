@@ -11,8 +11,8 @@ class AsistenciaSerializer(serializers.ModelSerializer):
         model = Asistencia
         fields = [
             'id', 'fecha', 'congregacion', 'congregacion_nombre',
-            'creyentes', 'simpatizantes', 'visitas', 'ninos',
-            'comentarios', 'total',
+            'creyentes', 'simpatizantes', 'visitas', 'ninos', 'online',
+            'tema_predicacion', 'comentarios', 'total',
         ]
         read_only_fields = ['id']
 
@@ -23,8 +23,11 @@ class AsistenciaSerializer(serializers.ModelSerializer):
         return (obj.creyentes or 0) + (obj.simpatizantes or 0) + (obj.visitas or 0) + (obj.ninos or 0)
 
     def validate(self, data):
-        for campo in ('creyentes', 'simpatizantes', 'visitas', 'ninos'):
+        for campo in ('creyentes', 'simpatizantes', 'visitas', 'ninos', 'online'):
             val = data.get(campo, 0)
             if val is not None and val < 0:
                 raise serializers.ValidationError({campo: 'El valor no puede ser negativo.'})
         return data
+
+    def validate_tema_predicacion(self, value):
+        return (value or '').strip()
