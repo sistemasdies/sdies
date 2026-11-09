@@ -30,19 +30,23 @@ export default function AsistenciaPage() {
   const [form, setForm] = useState(FORM_VACIO);
   const [editando, setEditando] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [orden, setOrden] = useState({ campo: 'fecha', dir: 'desc' });
 
   const [congregaciones, setCongregaciones] = useState([]);
   const [selectorCong, setSelectorCong] = useState(false);
 
   const cargar = useCallback(() => {
     setLoading(true);
-    const params = { page: pagina, page_size: PAGE_SIZE };
+    const params = {
+      page: pagina, page_size: PAGE_SIZE,
+      ordering: `${orden.dir === 'desc' ? '-' : ''}${orden.campo}`,
+    };
     if (busqueda.trim()) params.search = busqueda.trim();
     getAsistencias(params)
       .then(r => { setLista(r.data.results || []); setTotal(r.data.count || 0); })
       .catch(() => toast.error('No se pudieron cargar las asistencias'))
       .finally(() => setLoading(false));
-  }, [pagina, busqueda]);
+  }, [pagina, busqueda, orden]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
@@ -124,6 +128,16 @@ export default function AsistenciaPage() {
   const totalPaginas = Math.ceil(total / PAGE_SIZE);
   const nombreCongregacion = (cod) => congregaciones.find(c => c.codigo === cod)?.nombre || cod;
 
+  const cambiarOrden = (campo) => {
+    setOrden(o => ({ campo, dir: o.campo === campo && o.dir === 'asc' ? 'desc' : 'asc' }));
+    setPagina(1);
+  };
+
+  const iconoOrden = (campo) => {
+    if (orden.campo !== campo) return <i className="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>;
+    return <i className={`bi bi-arrow-${orden.dir === 'asc' ? 'up' : 'down'} ms-1 small`}></i>;
+  };
+
   return (
     <MainLayout>
       <TopBar title="Asistencia" />
@@ -140,7 +154,7 @@ export default function AsistenciaPage() {
           <div className="col-md-4">
             <div className="input-group">
               <span className="input-group-text"><i className="bi bi-search"></i></span>
-              <input className="form-control form-control-sm" placeholder="Buscar..."
+              <input className="form-control form-control-sm" placeholder="Buscar por tema o congregación..."
                 value={busqueda} onChange={e => { setBusqueda(e.target.value); setPagina(1); }} />
               {busqueda && (
                 <button className="btn btn-outline-secondary btn-sm" onClick={() => { setBusqueda(''); setPagina(1); }}>
@@ -160,14 +174,20 @@ export default function AsistenciaPage() {
                 <table className="table table-hover table-sm align-middle">
                   <thead className="table-dark">
                     <tr>
-                      <th>Fecha</th>
-                      <th>Congregación</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => cambiarOrden('fecha')}>
+                        Fecha {iconoOrden('fecha')}
+                      </th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => cambiarOrden('congregacion')}>
+                        Congregación {iconoOrden('congregacion')}
+                      </th>
                       <th className="text-end">Creyentes</th>
                       <th className="text-end">Simpatizantes</th>
                       <th className="text-end">Visitas</th>
                       <th className="text-end">Niños</th>
                       <th className="text-end">OnLine</th>
-                      <th className="text-end">Total</th>
+                      <th className="text-end" style={{ cursor: 'pointer' }} onClick={() => cambiarOrden('total')}>
+                        Total {iconoOrden('total')}
+                      </th>
                       <th>Tema</th>
                       <th>Comentarios</th>
                       <th className="text-center">Acciones</th>

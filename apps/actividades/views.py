@@ -1,6 +1,7 @@
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import F
 
 from apps.actividades.models import Asistencia
 from apps.actividades.serializers import AsistenciaSerializer
@@ -17,7 +18,7 @@ class AsistenciaViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['congregacion', 'fecha']
-    search_fields = ['comentarios']
+    search_fields = ['comentarios', 'tema_predicacion', 'congregacion__codigo', 'congregacion__nombre']
     ordering_fields = ['fecha', 'congregacion']
     ordering = ['-fecha', 'congregacion']
     queryset = Asistencia.objects.all().select_related('congregacion')
@@ -27,6 +28,13 @@ class AsistenciaViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
         scope = user_scope(self.request.user)
         if scope['congregaciones'] is not None:
             qs = qs.filter(congregacion__codigo__in=scope['congregaciones'])
+        # Permitir ordenar por el total calculado
+        ordering = self.request.query_params.get('ordering', '')
+        campo = ordering.lstrip('-')
+        if campo == 'total':
+            qs = qs.annotate(
+                total=F('creyentes') + F('simpatizantes') + F('visitas') + F('ninos')
+            )
         return qs
 
     def perform_create(self, serializer):
