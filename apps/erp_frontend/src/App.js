@@ -38,6 +38,7 @@ import UbicacionesPage from './pages/Activos/UbicacionesPage';
 import EstadosActivosPage from './pages/Activos/EstadosActivosPage';
 import ActivosPage     from './pages/Activos/ActivosPage';
 import AsistenciaPage  from './pages/Actividades/AsistenciaPage';
+import AcontecimientosPage from './pages/Actividades/AcontecimientosPage';
 import EstadosPastorPage from './pages/EstadosPastor/EstadosPastorPage';
 import CargosPage from './pages/Cargos/CargosPage';
 import AreasTrabajoPage from './pages/AreasTrabajo/AreasTrabajoPage';
@@ -111,7 +112,7 @@ function AppRoutes() {
 <Route path="/activos/estados"            element={<PrivateRoute><EstadosActivosPage /></PrivateRoute>} />
 <Route path="/activos/activos"            element={<PrivateRoute><ActivosPage /></PrivateRoute>} />
       <Route path="/actividades/asistencia"       element={<PrivateRoute><AsistenciaPage /></PrivateRoute>} />
-      <Route path="/actividades/acontecimientos"  element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
+      <Route path="/actividades/acontecimientos"  element={<PrivateRoute><AcontecimientosPage /></PrivateRoute>} />
       <Route path="/informes/auxiliares"          element={<PrivateRoute><AuxiliaresPage /></PrivateRoute>} />
       <Route path="/informes/comparativo-meses"   element={<PrivateRoute><ComparativoMesesPage /></PrivateRoute>} />
       <Route path="/informes/balances"            element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />

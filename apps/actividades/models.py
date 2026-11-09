@@ -3,6 +3,51 @@ from django.db import models
 from apps.core.models.base import BaseModel
 
 
+class Acontecimiento(BaseModel):
+    """Eventos especiales de una congregación: campamentos, paseos, salidas, etc."""
+
+    item = models.PositiveIntegerField()
+    congregacion = models.ForeignKey(
+        'congregacion.Congregacion', on_delete=models.PROTECT,
+        to_field='codigo', db_column='congregacion',
+        related_name='acontecimientos',
+    )
+    fecha = models.DateField()
+    titulo = models.CharField(max_length=30)
+    comentarios = models.TextField(blank=True)
+
+    class Meta:
+        db_table = 'actividades_acontecimiento'
+        ordering = ['-fecha', 'congregacion', 'item']
+        verbose_name = 'Acontecimiento'
+        verbose_name_plural = 'Acontecimientos'
+        unique_together = ['congregacion', 'item']
+
+    def __str__(self):
+        return f'{self.congregacion_id} - {self.item} - {self.titulo}'
+
+
+class FotoAcontecimiento(models.Model):
+    """Fotos vinculadas a un acontecimiento."""
+
+    acontecimiento = models.ForeignKey(
+        Acontecimiento, on_delete=models.CASCADE,
+        related_name='fotos',
+    )
+    url = models.URLField(max_length=500)
+    public_id = models.CharField(max_length=255, blank=True)
+    orden = models.PositiveIntegerField(default=0)
+    descripcion = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'actividades_fotoacontecimiento'
+        ordering = ['acontecimiento', 'orden']
+
+    def __str__(self):
+        return f'{self.acontecimiento} - foto {self.orden}'
+
+
 class Asistencia(BaseModel):
     """Registro semanal/mensual de asistencia a una congregación."""
 
