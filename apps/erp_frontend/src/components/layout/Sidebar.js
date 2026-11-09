@@ -21,22 +21,11 @@ const GRUPOS = [
       { to: '/plantillas',          icon: 'bi-journals',            label: 'Plantillas contables',    mod: 'plantillas' },
       { to: '/comprobantes',        icon: 'bi-receipt',             label: 'Comprobantes',            mod: 'comprobantes' },
       { to: '/centros-costo',       icon: 'bi-bullseye',            label: 'Centros de Costo',        mod: 'centros_costo' },
+      { to: '/terceros',            icon: 'bi-people',             label: 'Terceros',                mod: 'terceros' },
       { to: '/informes/auxiliares',          icon: 'bi-list-ul',       label: 'Auxiliares',          mod: 'reportes' },
       { to: '/informes/comparativo-meses',    icon: 'bi-calendar3',     label: 'Saldos Meses/Años',   mod: 'reportes' },
       { to: '/informes/estado-presupuestal', icon: 'bi-graph-up-arrow', label: 'Estado Presupuestal', mod: 'reportes' },
       { to: '/reportes',                    icon: 'bi-cash-coin',        label: 'Balances',          mod: 'reportes' },
-    ],
-  },
-  {
-    key: 'tablas',
-    icon: 'bi-table',
-    label: 'Tablas Generales',
-    mod: null,
-    requerir_hijos: true,
-    hijos: [
-      { to: '/terceros',       icon: 'bi-people',             label: 'Terceros',                mod: 'terceros' },
-      { to: '/roles',          icon: 'bi-shield',             label: 'Roles',                   mod: 'roles' },
-      { to: '/usuarios',       icon: 'bi-person-gear',        label: 'Usuarios',                mod: 'usuarios' },
     ],
   },
   {
@@ -95,6 +84,8 @@ const GRUPOS = [
     requerir_hijos: true,
     hijos: [
       { to: '/configuracion/datos-generales', icon: 'bi-building-gear', label: 'Datos Generales', mod: 'datos_generales' },
+      { to: '/roles',                         icon: 'bi-shield',        label: 'Roles',           mod: 'roles' },
+      { to: '/usuarios',                      icon: 'bi-person-gear',   label: 'Usuarios',        mod: 'usuarios' },
     ],
   },
 ];
