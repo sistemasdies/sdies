@@ -1,7 +1,7 @@
 from django.db import migrations
 
-MODULE = 'actividades'
-LABEL = 'Actividades'
+MODULE = 'asistencia'
+LABEL = 'Asistencia'
 ACTIONS = ['acceder', 'listar', 'agregar', 'editar', 'borrar']
 
 

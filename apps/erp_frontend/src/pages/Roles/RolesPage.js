@@ -47,7 +47,8 @@ const MODULE_LABELS = {
   equipos_trabajo:   'Equipos de Trabajo',
   usuarios:          'Usuarios',
   roles:             'Roles',
-  actividades:       'Actividades',
+  asistencia:        'Asistencia',
+  acontecimientos:   'Acontecimientos',
 };
 
 const FORM_VACIO = {

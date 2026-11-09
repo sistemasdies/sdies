@@ -14,7 +14,7 @@ from apps.users.services.scopes import user_scope
 class AsistenciaViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
     pagination_class = StandardPagination
     serializer_class = AsistenciaSerializer
-    module = 'actividades'
+    module = 'asistencia'
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['congregacion', 'fecha']
