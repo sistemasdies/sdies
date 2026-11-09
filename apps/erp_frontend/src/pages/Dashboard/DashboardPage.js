@@ -63,7 +63,7 @@ export default function DashboardPage() {
 
   return (
     <MainLayout>
-      <TopBar title="Dashboard" LabelVersion="v 1.17">
+      <TopBar title="Dashboard" LabelVersion="v 1.18">
         <div className="d-flex align-items-center gap-2">
           <button type="button" className="btn btn-sm btn-outline-success"
             onClick={abrirPerfil} title="Mis datos">
