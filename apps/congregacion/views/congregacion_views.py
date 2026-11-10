@@ -6,6 +6,7 @@ from apps.congregacion.models import Congregacion
 from apps.congregacion.serializers.congregacion import CongregacionSerializer
 from apps.core.utils.pagination import StandardPagination
 from apps.core.views import HardDeleteMixin
+from apps.users.services.scopes import user_scope
 
 
 class CongregacionViewSet(HardDeleteMixin, viewsets.ModelViewSet):
@@ -21,6 +22,13 @@ class CongregacionViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     ordering_fields    = ['codigo', 'nombre', 'direccion', 'created_at']
     ordering           = ['codigo']
     queryset           = Congregacion.objects.filter(deleted=False).select_related('pastor')
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        scope = user_scope(self.request.user)
+        if scope['congregaciones'] is not None:
+            qs = qs.filter(codigo__in=scope['congregaciones'])
+        return qs
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
