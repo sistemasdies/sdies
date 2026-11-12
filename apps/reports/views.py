@@ -89,7 +89,7 @@ class BalanceComprobacionView(APIView):
 
 
 class AuxiliaresView(APIView):
-    module             = 'reportes'
+    module             = 'auxiliares'
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -125,7 +125,7 @@ class AuxiliaresView(APIView):
 
 
 class ComparativoMesesView(APIView):
-    module             = 'reportes'
+    module             = 'saldos_meses'
     permission_classes = [IsAuthenticated]
 
     def get(self, request):

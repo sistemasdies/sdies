@@ -49,6 +49,8 @@ const MODULE_LABELS = {
   roles:             'Roles',
   asistencia:        'Asistencia',
   acontecimientos:   'Acontecimientos',
+  auxiliares:        'Auxiliares',
+  saldos_meses:      'Saldos Meses/Años',
 };
 
 const FORM_VACIO = {

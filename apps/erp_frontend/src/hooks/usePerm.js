@@ -10,6 +10,8 @@ const MODULE_MAP = {
   '/comprobantes':        'comprobantes',
   '/periodos':            'periodos',
   '/reportes':            'reportes',
+  '/informes/auxiliares':        'auxiliares',
+  '/informes/comparativo-meses': 'saldos_meses',
   '/importar':            'importar',
   '/procesos/exportar-datos': 'exportar',
   '/procesos/correccion-datos': 'correccion_datos',
