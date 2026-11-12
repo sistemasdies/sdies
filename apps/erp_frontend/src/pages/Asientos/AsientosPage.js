@@ -5,7 +5,7 @@ import PageHeader from '../../components/common/PageHeader';
 import Spinner from '../../components/common/Spinner';
 import AvisoCierre from '../../components/common/AvisoCierre';
 import MultiSelect from '../../components/common/MultiSelect';
-import { getAsientos, getMovimiento, eliminarMovimiento, anularMovimiento, editarLineaMovimiento, editarLineasMovimientos } from '../../api/asientos';
+import { getAsientos, getMovimiento, eliminarMovimiento, anularMovimiento, editarLineaMovimiento, editarLineasMovimientos, agregarLineaMovimiento } from '../../api/asientos';
 import { getComprobantes } from '../../api/comprobantes';
 import { getCuentas }     from '../../api/cuentas';
 import { getCentrosCosto } from '../../api/centrosCosto';
@@ -187,6 +187,49 @@ export default function AsientosPage() {
 
   const abrirEdicion = () => { setEdits(nuevoEdits(detalle.lineas)); setEditando(true); };
 
+  const esNueva = (l) => String(l.id).startsWith('nuevo-');
+
+  const adicionarRegistro = () => {
+    const lineas = detalle.lineas;
+    const l0 = lineas[0];
+    const maxItem = lineas.reduce((m, l) => Math.max(m, l.item_comprob || 0), 0);
+    const nuevoId = `nuevo-${Date.now()}`;
+    const fechaBase = edits[l0?.id]?.fecha || detalle.fecha || '';
+    const nuevaLinea = {
+      id: nuevoId,
+      cod_comprob: l0?.cod_comprob || '',
+      num_comprob: l0?.num_comprob || 0,
+      item_comprob: maxItem + 1,
+      fecha: fechaBase,
+      cuenta: '',
+      cuenta_descripcion: '',
+      doc_ref: '',
+      observacion: '',
+      cedula: '',
+      tercero_nombre: '',
+      centro_costo: '',
+      cc_descripcion: '',
+      doc_soporte: '',
+      vr_debitos: '',
+      vr_creditos: '',
+    };
+    setDetalle(d => ({ ...d, lineas: [...d.lineas, nuevaLinea] }));
+    setEdits(m => ({
+      ...m,
+      [nuevoId]: {
+        fecha: fechaBase,
+        cuenta: '',
+        doc_ref: '',
+        observacion: '',
+        cedula: '',
+        centro_costo: '',
+        doc_soporte: '',
+        vr_debitos: '',
+        vr_creditos: '',
+      },
+    }));
+  };
+
   const setEdit = (id, campo, valor) =>
     setEdits(m => ({ ...m, [id]: { ...m[id], [campo]: valor } }));
 
@@ -248,28 +291,44 @@ export default function AsientosPage() {
     if (!e) return;
     setEditSaving(l.id);
     try {
-      await editarLineaMovimiento({
-        cod_comprob:  l.cod_comprob,
-        num_comprob:  l.num_comprob,
-        item_comprob: l.item_comprob,
-        fecha:        e.fecha,
-        cuenta:       e.cuenta,
-        doc_ref:      e.doc_ref,
-        observacion:  e.observacion,
-        cedula:       e.cedula || null,
-        centro_costo: e.centro_costo || null,
-        doc_soporte:  e.doc_soporte,
-        vr_debitos:   e.vr_debitos === '' ? 0 : e.vr_debitos,
-        vr_creditos:  e.vr_creditos === '' ? 0 : e.vr_creditos,
-      });
-      toast.success('Línea actualizada');
+      if (esNueva(l)) {
+        await agregarLineaMovimiento({
+          cod_comprob:  l.cod_comprob,
+          num_comprob:  l.num_comprob,
+          cuenta:       e.cuenta,
+          doc_ref:      e.doc_ref,
+          observacion:  e.observacion,
+          cedula:       e.cedula || null,
+          centro_costo: e.centro_costo || null,
+          doc_soporte:  e.doc_soporte,
+          vr_debitos:   e.vr_debitos === '' ? 0 : e.vr_debitos,
+          vr_creditos:  e.vr_creditos === '' ? 0 : e.vr_creditos,
+        });
+        toast.success('Línea creada');
+      } else {
+        await editarLineaMovimiento({
+          cod_comprob:  l.cod_comprob,
+          num_comprob:  l.num_comprob,
+          item_comprob: l.item_comprob,
+          fecha:        e.fecha,
+          cuenta:       e.cuenta,
+          doc_ref:      e.doc_ref,
+          observacion:  e.observacion,
+          cedula:       e.cedula || null,
+          centro_costo: e.centro_costo || null,
+          doc_soporte:  e.doc_soporte,
+          vr_debitos:   e.vr_debitos === '' ? 0 : e.vr_debitos,
+          vr_creditos:  e.vr_creditos === '' ? 0 : e.vr_creditos,
+        });
+        toast.success('Línea actualizada');
+      }
       const r = await getMovimiento({ cod_comprob: l.cod_comprob, num_comprob: l.num_comprob });
       setDetalle(d => ({ ...d, lineas: r.data, fecha: r.data[0]?.fecha || d.fecha }));
       setEdits(nuevoEdits(r.data));
       cargar();
     } catch (err) {
       const msg = err.response?.data?.detail;
-      toast.error(Array.isArray(msg) ? msg.join(' · ') : (msg || 'Error al actualizar la línea'));
+      toast.error(Array.isArray(msg) ? msg.join(' · ') : (msg || 'Error al guardar la línea'));
     } finally { setEditSaving(null); }
   };
 
@@ -300,14 +359,41 @@ export default function AsientosPage() {
     const lineas = detalle.lineas;
     if (!lineas || lineas.length === 0) return;
     const l0 = lineas[0];
-    const lineasPayload = lineas
-      .map(l => {
+    const existentes = lineas.filter(l => !esNueva(l));
+    const nuevas = lineas.filter(l => esNueva(l));
+    setEditSaving('todos');
+    try {
+      if (existentes.length > 0) {
+        const lineasPayload = existentes
+          .map(l => {
+            const e = edits[l.id];
+            if (!e) return null;
+            return {
+              cod_comprob:  l.cod_comprob,
+              num_comprob:  l.num_comprob,
+              item_comprob: l.item_comprob,
+              cuenta:       e.cuenta,
+              doc_ref:      e.doc_ref,
+              observacion:  e.observacion,
+              cedula:       e.cedula || null,
+              centro_costo: e.centro_costo || null,
+              doc_soporte:  e.doc_soporte,
+              vr_debitos:   e.vr_debitos === '' ? 0 : e.vr_debitos,
+              vr_creditos:  e.vr_creditos === '' ? 0 : e.vr_creditos,
+            };
+          })
+          .filter(Boolean);
+        const l0e = l0 && edits[l0.id];
+        const payload = { lineas: lineasPayload };
+        if (l0e && l0e.fecha) payload.fecha = l0e.fecha;
+        await editarLineasMovimientos(payload);
+      }
+      for (const l of nuevas) {
         const e = edits[l.id];
-        if (!e) return null;
-        return {
+        if (!e) continue;
+        await agregarLineaMovimiento({
           cod_comprob:  l.cod_comprob,
           num_comprob:  l.num_comprob,
-          item_comprob: l.item_comprob,
           cuenta:       e.cuenta,
           doc_ref:      e.doc_ref,
           observacion:  e.observacion,
@@ -316,16 +402,9 @@ export default function AsientosPage() {
           doc_soporte:  e.doc_soporte,
           vr_debitos:   e.vr_debitos === '' ? 0 : e.vr_debitos,
           vr_creditos:  e.vr_creditos === '' ? 0 : e.vr_creditos,
-        };
-      })
-      .filter(Boolean);
-    const l0e = l0 && edits[l0.id];
-    setEditSaving('todos');
-    try {
-      const payload = { lineas: lineasPayload };
-      if (l0e && l0e.fecha) payload.fecha = l0e.fecha;
-      await editarLineasMovimientos(payload);
-      toast.success(`Guardadas ${lineasPayload.length} línea(s)`);
+        });
+      }
+      toast.success(`Guardadas ${lineas.length} línea(s)`);
       const r = await getMovimiento({ cod_comprob: l0.cod_comprob, num_comprob: l0.num_comprob });
       setDetalle(d => ({ ...d, lineas: r.data, fecha: r.data[0]?.fecha || d.fecha }));
       setEdits(nuevoEdits(r.data));
@@ -648,6 +727,14 @@ export default function AsientosPage() {
                     {editSaving === 'todos'
                       ? <span className="spinner-border spinner-border-sm"></span>
                       : <><i className="bi bi-check2-all me-1"></i>Guardar todos</>}
+                  </button>
+                )}
+                {editando && (
+                  <button className="btn btn-outline-success btn-sm" style={{marginLeft:10}}
+                    title="Adicionar registro"
+                    disabled={editSaving !== null}
+                    onClick={adicionarRegistro}>
+                    <i className="bi bi-plus-lg me-1"></i>Adicionar registro
                   </button>
                 )}
                 {hasControl('editar_movimiento') && (

@@ -82,6 +82,40 @@ class MoviContCreateSerializer(serializers.Serializer):
             user=self.context['request'].user, data=validated_data)
 
 
+class MoviContAddLineSerializer(serializers.Serializer):
+    """Agrega una nueva línea a un movimiento existente."""
+    cod_comprob  = serializers.CharField()
+    num_comprob  = serializers.IntegerField()
+    cuenta       = serializers.SlugRelatedField(slug_field='codigo',
+                                                queryset=Cuenta.objects.all())
+    cedula       = serializers.SlugRelatedField(slug_field='cedula',
+                                                queryset=Tercero.objects.all(),
+                                                allow_null=True, required=False)
+    centro_costo = serializers.SlugRelatedField(slug_field='codigo',
+                                                queryset=CentroCosto.objects.all(),
+                                                allow_null=True, required=False)
+    doc_ref      = serializers.CharField(required=False, allow_blank=True, max_length=14)
+    observacion  = serializers.CharField(required=False, allow_blank=True, max_length=200)
+    doc_soporte  = serializers.CharField(required=False, allow_blank=True, max_length=15)
+    vr_debitos   = serializers.DecimalField(max_digits=14, decimal_places=2, required=False, min_value=0)
+    vr_creditos  = serializers.DecimalField(max_digits=14, decimal_places=2, required=False, min_value=0)
+
+    def validate(self, data):
+        scope = user_scope(self.context['request'].user)
+        errores = []
+        if scope['comprobantes'] is not None and data['cod_comprob'] not in scope['comprobantes']:
+            errores.append(f"El comprobante '{data['cod_comprob']}' no está permitido para su rol.")
+        cta = data.get('cuenta')
+        if cta is not None and scope['cuentas'] is not None and cta.codigo not in scope['cuentas']:
+            errores.append(f"La cuenta {cta.codigo} no está permitida para su rol.")
+        cc = data.get('centro_costo')
+        if cc is not None and scope['centros_costo'] is not None and cc.codigo not in scope['centros_costo']:
+            errores.append(f"El centro de costo {cc.codigo} no está permitido para su rol.")
+        if errores:
+            raise serializers.ValidationError({'detail': errores})
+        return data
+
+
 class MoviContUpdateSerializer(serializers.Serializer):
     """Actualiza una línea de movimiento (los campos clave no son editables)."""
     cod_comprob  = serializers.CharField()

@@ -12,7 +12,7 @@ from apps.accounting.models import (
 )
 from apps.accounting.serializers.movicont import (
     MoviContSerializer, MoviContCreateSerializer, MoviContAsientoSerializer,
-    MoviContUpdateSerializer
+    MoviContUpdateSerializer, MoviContAddLineSerializer,
 )
 from apps.users.services.scopes import user_scope, validar_fecha_cierre
 from apps.core.utils.pagination import StandardPagination
@@ -323,6 +323,71 @@ class MoviContViewSet(viewsets.GenericViewSet):
         )
         return Response({'detail': f'{len(guardadas)} línea(s) actualizada(s).',
                          'ok': True})
+
+    @action(detail=False, methods=['post'], url_path='agregar-linea')
+    def agregar_linea(self, request):
+        """Agrega una nueva línea a un movimiento contable existente."""
+        serializer = MoviContAddLineSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        v = serializer.validated_data
+
+        filas = list(self.get_queryset().filter(
+            cod_comprob__codigo=v['cod_comprob'], num_comprob=v['num_comprob']))
+        if not filas:
+            return Response({'detail': 'Movimiento no encontrado.'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        fecha = filas[0].fecha
+        error_mov = validar_fecha_cierre(request.user, fecha, accion='modificar movimientos')
+        if error_mov:
+            return Response({'detail': error_mov}, status=status.HTTP_400_BAD_REQUEST)
+
+        max_item = max(f.item_comprob for f in filas)
+        comprobante = filas[0].cod_comprob
+        cuenta = v['cuenta']
+        cedula = v.get('cedula')
+        centro_costo = v.get('centro_costo')
+        vr_debitos = v.get('vr_debitos', 0) or 0
+        vr_creditos = v.get('vr_creditos', 0) or 0
+
+        fila = MoviCont(
+            cod_comprob=comprobante,
+            num_comprob=v['num_comprob'],
+            item_comprob=max_item + 1,
+            fecha=fecha,
+            cuenta=cuenta,
+            doc_ref=v.get('doc_ref', ''),
+            observacion=v.get('observacion', ''),
+            cedula=cedula,
+            centro_costo=centro_costo,
+            doc_soporte=v.get('doc_soporte', ''),
+            vr_debitos=vr_debitos,
+            vr_creditos=vr_creditos,
+            created_by=request.user,
+            updated_by=request.user,
+        )
+        try:
+            fila.full_clean(exclude=['created_by', 'updated_by'])
+        except DjangoValidationError as e:
+            return Response({'detail': e.messages}, status=status.HTTP_400_BAD_REQUEST)
+        fila.save()
+
+        try:
+            AuditLog.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                action='create',
+                resource='MoviCont',
+                resource_id=f'{v["cod_comprob"]}-{v["num_comprob"]}',
+                after_data=MoviContSerializer(fila).data,
+                ip_address=request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR')),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
+                endpoint=request.path,
+                http_method=request.method,
+            )
+        except Exception:
+            pass
+
+        return Response(MoviContSerializer(fila).data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['post'], url_path='eliminar')
     def eliminar(self, request):
