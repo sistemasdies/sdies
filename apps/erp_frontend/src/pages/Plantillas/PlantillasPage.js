@@ -425,7 +425,7 @@ export default function PlantillasPage() {
                 {loadingDet ? <div className="p-4"><Spinner/></div> : (
                   <div className="table-responsive">
                     <table className="table table-sm table-bordered mb-0 align-middle"
-                      style={{minWidth:940}}>
+                      style={{minWidth:820}}>
                       <thead className="table-dark sticky-top">
                         <tr>
                           <th style={{width:64}} className="text-center">#</th>
@@ -433,15 +433,14 @@ export default function PlantillasPage() {
                           <th style={{width:200}}>Observación</th>
                           <th style={{width:100}} className="text-center">Tipo mov.</th>
                           <th style={{width:130}} className="text-end">Valor</th>
-                          <th style={{width:120}}>Base</th>
-                          <th style={{width:130}}>Cedula</th>
+                          <th style={{width:130}}>Código Tercero</th>
                           <th style={{width:100}}>C. Costo</th>
                           <th style={{width:140}} className="text-center">Acciones</th>
                         </tr>
                       </thead>
                       <tbody>
                         {detalles.length===0&&(
-                          <tr><td colSpan={9} className="text-center text-muted py-5">
+                          <tr><td colSpan={8} className="text-center text-muted py-5">
                             Sin líneas — haz clic en "Agregar línea"
                           </td></tr>
                         )}
@@ -512,16 +511,11 @@ export default function PlantillasPage() {
                                   value={det.valor} placeholder="Número / DIGITE"
                                   onChange={e=>upd(det.item,'valor',e.target.value)}/>
                               </td>
-                              <td>
-                                <input className="form-control form-control-sm"
-                                  value={det.base} placeholder="Base / DIGITE"
-                                  onChange={e=>upd(det.item,'base',e.target.value)}/>
-                              </td>
-                              {/* CÉDULA + F3 */}
+                              {/* CÓDIGO TERCERO + F3 */}
                               <td>
                                 <div className="input-group input-group-sm">
                                   <input className="form-control form-control-sm"
-                                    value={det.cedula} placeholder="Código / DIGITE"
+                                    value={det.cedula} placeholder="Código tercero / DIGITE"
                                     list={`plt-det-terceros-${det.item}`}
                                     title={terceros.find(t=>t.cedula===det.cedula)?.nombre_completo || ''}
                                     onChange={e=>upd(det.item,'cedula',e.target.value)}
@@ -607,7 +601,7 @@ export default function PlantillasPage() {
                                 {detalles.filter(d=>d.tipo_mov==='C').length} créditos
                               </span>
                             </td>
-                            <td colSpan={6} className="text-muted">
+                            <td colSpan={5} className="text-muted">
                               {detalles.filter(d=>
                                 [d.cuenta,d.observacion,d.cedula,d.centro_costo,d.valor]
                                 .some(v=>esDig(v))).length} línea(s) con campos DIGITE

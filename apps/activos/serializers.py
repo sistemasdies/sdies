@@ -45,6 +45,7 @@ class EstadoActivoFSerializer(serializers.ModelSerializer):
 class ActivoFSerializer(serializers.ModelSerializer):
     congregacion_nombre = serializers.SerializerMethodField()
     responsable_nombre = serializers.SerializerMethodField()
+    foto_count = serializers.SerializerMethodField()
 
     class Meta:
         model = ActivoF
@@ -52,8 +53,11 @@ class ActivoFSerializer(serializers.ModelSerializer):
             'id_activo_f', 'nombre_activo_f', 'cantidad', 'categoria', 'marca', 'modelo',
             'numero_serie', 'congregacion', 'congregacion_nombre', 'ubicacion',
             'responsable', 'responsable_nombre', 'estado_actual',
-            'fecha_adquisicion', 'valor_compra', 'comentarios',
+            'fecha_adquisicion', 'valor_compra', 'comentarios', 'foto_count',
         ]
+
+    def get_foto_count(self, obj):
+        return obj.fotos.count()
 
     def get_congregacion_nombre(self, obj):
         if not obj.congregacion_id:

@@ -32,6 +32,8 @@ class Tercero(BaseModel):
     sexo           = models.CharField(max_length=1, blank=True)
     tipo_sangre    = models.CharField(max_length=3, blank=True)
     parametros     = models.CharField(max_length=30, blank=True)
+    latitud        = models.DecimalField(max_digits=10, decimal_places=8, null=True, blank=True)
+    longitud       = models.DecimalField(max_digits=11, decimal_places=8, null=True, blank=True)
     comentarios    = models.TextField(blank=True)
     is_active      = models.BooleanField(default=True)
 

@@ -10,7 +10,7 @@ CAMPOS_TERCERO = [
     'apellido1', 'apellido2', 'fecha_nacimiento',
     'lugar_nacimiento', 'sexo', 'direccion', 'barrio', 'codigo_postal',
     'distrito', 'telefono1', 'celular', 'email',
-    'comentarios',
+    'latitud', 'longitud', 'comentarios',
 ]
 
 

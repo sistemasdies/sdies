@@ -32,6 +32,7 @@ export default function ActivosPage() {
   const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
   const [total, setTotal] = useState(0);
+  const [orden, setOrden] = useState({ campo: '', dir: 'asc' });
 
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(FORM_VACIO);
@@ -47,6 +48,7 @@ export default function ActivosPage() {
   const [respNombre, setRespNombre] = useState('');
   const [fotos, setFotos] = useState([]);
   const [subiendoFoto, setSubiendoFoto] = useState(false);
+  const [visor, setVisor] = useState({ abierto: false, url: '', zoom: 1 });
   const [cropSrc, setCropSrc] = useState('');
   const [crop, setCrop] = useState();
   const [completedCrop, setCompletedCrop] = useState();
@@ -57,13 +59,23 @@ export default function ActivosPage() {
     setLoading(true);
     const params = { page: pagina, page_size: PAGE_SIZE };
     if (busqueda.trim()) params.search = busqueda.trim();
+    if (orden.campo) params.ordering = (orden.dir === 'desc' ? '-' : '') + orden.campo;
     getActivos(params)
       .then(r => { setLista(r.data.results || []); setTotal(r.data.count || 0); })
       .catch(() => toast.error('No se pudieron cargar los activos'))
       .finally(() => setLoading(false));
-  }, [pagina, busqueda]);
+  }, [pagina, busqueda, orden]);
 
   useEffect(() => { cargar(); }, [cargar]);
+
+  const handleOrden = (campo) => {
+    setOrden(o => {
+      if (o.campo !== campo) return { campo, dir: 'asc' };
+      if (o.dir === 'asc') return { campo, dir: 'desc' };
+      return { campo: '', dir: 'asc' };
+    });
+    setPagina(1);
+  };
 
   useEffect(() => {
     getCategorias({ page_size: 1000 }).then(r => setCategorias(r.data.results || r.data || [])).catch(() => {});
@@ -208,6 +220,10 @@ export default function ActivosPage() {
     setShowCrop(false);
   };
 
+  const abrirVisor = (url) => setVisor({ abierto: true, url, zoom: 1 });
+  const cerrarVisor = () => setVisor({ abierto: false, url: '', zoom: 1 });
+  const cambiarZoom = (delta) => setVisor(v => ({ ...v, zoom: Math.max(0.5, Math.min(v.zoom + delta, 5)) }));
+
   const quitarFotoActivo = async (foto) => {
     if (!editando) return;
     if (!window.confirm('¿Eliminar esta foto?')) return;
@@ -221,6 +237,18 @@ export default function ActivosPage() {
   };
 
   const paginas = Math.ceil(total / PAGE_SIZE);
+
+  const ThOrden = ({ campo, children }) => {
+    const activo = orden.campo === campo;
+    return (
+      <th style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}
+        onClick={() => handleOrden(campo)}>
+        {children}
+        {activo && <i className={`bi bi-arrow-${orden.dir === 'asc' ? 'up' : 'down'} ms-1`}></i>}
+        {!activo && <i className="bi bi-arrow-down-up ms-1 opacity-25"></i>}
+      </th>
+    );
+  };
 
   return (
     <MainLayout>
@@ -236,7 +264,7 @@ export default function ActivosPage() {
           <div className="card-body py-2">
             <div className="input-group" style={{ maxWidth: 420 }}>
               <span className="input-group-text bg-white"><i className="bi bi-search text-muted"></i></span>
-              <input className="form-control border-start-0" placeholder="Buscar por código, nombre, marca..." value={busqueda}
+              <input className="form-control border-start-0" placeholder="Buscar por código, nombre, marca, congregación..." value={busqueda}
                 onChange={e => { setBusqueda(e.target.value); setPagina(1); }} />
               {busqueda && <button className="btn btn-outline-secondary" onClick={() => { setBusqueda(''); setPagina(1); }}><i className="bi bi-x"></i></button>}
             </div>
@@ -255,7 +283,15 @@ export default function ActivosPage() {
               <table className="table table-hover table-sm mb-0 align-middle">
                 <thead className="table-dark">
                   <tr>
-                    <th>Cedula</th><th>Nombre</th><th>Cant.</th><th>Categoría</th><th>Ubicación</th><th>Estado</th><th className="text-center">Acciones</th>
+                    <ThOrden campo="id_activo_f">Código Act</ThOrden>
+                    <ThOrden campo="nombre_activo_f">Nombre</ThOrden>
+                    <th>Cant.</th>
+                    <ThOrden campo="categoria">Categoría</ThOrden>
+                    <th>Congregación</th>
+                    <ThOrden campo="ubicacion">Ubicación</ThOrden>
+                    <ThOrden campo="estado_actual">Estado</ThOrden>
+                    <th className="text-center">Fotos</th>
+                    <th className="text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -265,8 +301,16 @@ export default function ActivosPage() {
                       <td className="small fw-semibold">{a.nombre_activo_f}</td>
                       <td className="small text-center">{a.cantidad}</td>
                       <td className="small">{a.categoria}</td>
+                      <td className="small">{a.congregacion_nombre || a.congregacion || '—'}</td>
                       <td className="small">{a.ubicacion}</td>
                       <td className="small">{a.estado_actual}</td>
+                      <td className="text-center">
+                        {a.foto_count > 0 ? (
+                          <span className="badge bg-info"><i className="bi bi-camera me-1"></i>{a.foto_count}</span>
+                        ) : (
+                          <span className="text-muted small">—</span>
+                        )}
+                      </td>
                       <td className="text-center">
                         <div className="btn-group btn-group-sm">
                           <button type="button" className="btn btn-outline-primary" onClick={() => abrirEditar(a)} disabled={!canEdit} title="Editar"><i className="bi bi-pencil"></i></button>
@@ -303,7 +347,7 @@ export default function ActivosPage() {
                 <div className="modal-body" style={{ maxHeight: '68vh', overflowY: 'auto' }}>
                   <div className="row g-3">
                     <div className="col-md-3">
-                      <label className="form-label small fw-semibold">Cedula <span className="text-danger">*</span></label>
+                      <label className="form-label small fw-semibold">Código Act <span className="text-danger">*</span></label>
                       <div className="input-group">
                         <input className="form-control font-monospace text-uppercase" maxLength={5} required value={form.id_activo_f}
                           disabled={!!editando} onChange={e => setForm(f => ({ ...f, id_activo_f: e.target.value }))} />
@@ -408,7 +452,8 @@ export default function ActivosPage() {
                       <div className="d-flex flex-wrap gap-2 mb-2">
                         {fotos.map(f => (
                           <div key={f.id} className="position-relative border rounded" style={{ width: 120 }}>
-                            <img src={f.url} alt="" style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 4 }}
+                            <img src={f.url} alt="" style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 4, cursor: 'pointer' }}
+                              onClick={() => abrirVisor(f.url)}
                               onError={e => { e.target.style.display = 'none'; }} />
                             <button type="button" className="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-1"
                               onClick={() => quitarFotoActivo(f)} title="Eliminar foto">
@@ -453,6 +498,32 @@ export default function ActivosPage() {
         codigoInicial={form.congregacion}
         onCerrar={() => setSelectorCong(false)}
         onElegir={c => setForm(f => ({ ...f, congregacion: c.codigo }))} />
+
+      {/* Visor de foto ampliada */}
+      {visor.abierto && (
+        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.92)', zIndex: 1070 }} onClick={cerrarVisor}>
+          <div className="modal-dialog modal-dialog-centered modal-xl" style={{ pointerEvents: 'none' }}>
+            <div className="modal-content bg-transparent border-0" style={{ pointerEvents: 'auto' }} onClick={e => e.stopPropagation()}>
+              <div className="modal-header border-0 text-white">
+                <h5 className="modal-title"><i className="bi bi-image me-2"></i>Vista ampliada</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={cerrarVisor}></button>
+              </div>
+              <div className="modal-body text-center overflow-auto" style={{ maxHeight: '75vh' }}>
+                <img src={visor.url} alt="Ampliada"
+                  style={{ transform: `scale(${visor.zoom})`, transition: 'transform 0.2s ease', maxWidth: '100%' }} />
+              </div>
+              <div className="modal-footer border-0 justify-content-center">
+                <div className="btn-group">
+                  <button type="button" className="btn btn-outline-light" onClick={() => cambiarZoom(-0.25)}><i className="bi bi-zoom-out"></i></button>
+                  <span className="btn btn-outline-light disabled" style={{ minWidth: 70 }}>{Math.round(visor.zoom * 100)}%</span>
+                  <button type="button" className="btn btn-outline-light" onClick={() => cambiarZoom(0.25)}><i className="bi bi-zoom-in"></i></button>
+                </div>
+                <button type="button" className="btn btn-outline-light ms-2" onClick={() => setVisor(v => ({ ...v, zoom: 1 }))}><i className="bi bi-aspect-ratio me-1"></i>Original</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de recorte de foto (formato 4×3) */}
       {showCrop && cropSrc && (

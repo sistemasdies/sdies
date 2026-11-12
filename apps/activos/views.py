@@ -58,9 +58,13 @@ class ActivoFViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
     module = 'activos'
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['id_activo_f', 'nombre_activo_f', 'marca', 'modelo', 'numero_serie', 'comentarios']
+    search_fields = ['id_activo_f', 'nombre_activo_f', 'marca', 'modelo', 'numero_serie', 'comentarios',
+                     'congregacion__codigo', 'congregacion__nombre']
     filterset_fields = ['categoria', 'ubicacion', 'congregacion', 'estado_actual', 'responsable']
-    ordering_fields = ['id_activo_f', 'nombre_activo_f', 'fecha_adquisicion', 'valor_compra']
+    ordering_fields = ['id_activo_f', 'nombre_activo_f', 'categoria', 'categoria__nombre_categoria',
+                       'ubicacion', 'ubicacion__descripcion',
+                       'estado_actual', 'estado_actual__descripcion_estado_activo_f',
+                       'fecha_adquisicion', 'valor_compra']
     ordering = ['id_activo_f']
     queryset = ActivoF.objects.all().select_related('categoria', 'ubicacion', 'congregacion', 'responsable', 'estado_actual')
 

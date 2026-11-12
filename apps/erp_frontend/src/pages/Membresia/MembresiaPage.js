@@ -12,6 +12,7 @@ import 'react-image-crop/dist/ReactCrop.css';
 import Draggable from 'react-draggable';
 import SelectorTercero from '../../components/common/SelectorTercero';
 import SelectorCongregacion from '../../components/common/SelectorCongregacion';
+import MapaMiembros from '../../components/common/MapaMiembros';
 import { usePerm } from '../../hooks/usePerm';
 import { useAuth } from '../../context/AuthContext';
 import API from '../../api/client';
@@ -21,6 +22,7 @@ import {
   subirFotoMembresia, eliminarFotoMembresia,
 } from '../../api/membresias';
 import { siguienteCedula } from '../../api/terceros';
+import { getCongregaciones } from '../../api/congregaciones';
 
 const PAGE_SIZE = 50;
 
@@ -61,6 +63,7 @@ const TERCERO_VACIO = {
   fecha_nacimiento: '', lugar_nacimiento: '',
   sexo: '', direccion: '', barrio: '', codigo_postal: '', distrito: '',
   telefono1: '', celular: '', email: '', comentarios: '',
+  latitud: '', longitud: '',
 };
 
 const FORM_VACIO = {
@@ -245,6 +248,12 @@ function SeccionGenerales({ t, setT, tipo_sangre, setTipoSangre, cedulaEstado, t
         </Campo>
         <Campo label="Distrito" ancho="col-md-2">
           <Texto value={t.distrito} onChange={v => setT('distrito', v)} maxLength={2} />
+        </Campo>
+        <Campo label="Latitud" ancho="col-md-2">
+          <Texto value={t.latitud} onChange={v => setT('latitud', v)} placeholder="Ej: 4.710989" maxLength={12} />
+        </Campo>
+        <Campo label="Longitud" ancho="col-md-2">
+          <Texto value={t.longitud} onChange={v => setT('longitud', v)} placeholder="Ej: -74.072092" maxLength={12} />
         </Campo>
         <Campo label="Teléfono 1"><Texto value={t.telefono1} onChange={v => setT('telefono1', v)} maxLength={30} /></Campo>
 
@@ -523,7 +532,7 @@ export default function MembresiaPage() {
   const [pagina,   setPagina]   = useState(1);
   const [busqueda, setBusqueda] = useState('');
   const [orden,    setOrden]    = useState(null);
-  const [filtros,  setFiltros]  = useState({ estado: '', bautizados: '', promesados: '' });
+  const [filtros,  setFiltros]  = useState({ estado: '', bautizados: '', promesados: '', congregacion: '' });
 
   const [modal,        setModal]        = useState(false);
   const [editando,     setEditando]     = useState(null);
@@ -540,6 +549,10 @@ export default function MembresiaPage() {
   const [buscando,     setBuscando]     = useState(false);
   const [selectorAbierto, setSelectorAbierto] = useState(false);
   const [lupaCongregacion, setLupaCongregacion] = useState(false);
+  const [mapaAbierto, setMapaAbierto] = useState(false);
+  const [mapaMiembros, setMapaMiembros] = useState([]);
+  const [mapaCargando, setMapaCargando] = useState(false);
+  const [congregaciones, setCongregaciones] = useState([]);
 
   // Foto del miembro (Cloudinary)
   const [fotoFile,     setFotoFile]     = useState(null);   // archivo pendiente (registro nuevo)
@@ -556,9 +569,10 @@ export default function MembresiaPage() {
     const params = { page: pagina, page_size: PAGE_SIZE };
     if (busqueda)  params.search = busqueda;
     if (orden)     params.ordering = (orden.dir === 'desc' ? '-' : '') + orden.campo;
-    if (filtros.estado)     params.estado = filtros.estado;
-    if (filtros.bautizados) params.solo_bautizados = filtros.bautizados;
-    if (filtros.promesados) params.solo_promesados = filtros.promesados;
+    if (filtros.estado)       params.estado = filtros.estado;
+    if (filtros.bautizados)   params.solo_bautizados = filtros.bautizados;
+    if (filtros.promesados)   params.solo_promesados = filtros.promesados;
+    if (filtros.congregacion) params.congregacion = filtros.congregacion;
     getMembresias(params)
       .then(r => {
         setMembresias(r.data.results || r.data);
@@ -569,6 +583,12 @@ export default function MembresiaPage() {
   }, [pagina, busqueda, orden, filtros]);
 
   useEffect(() => { cargar(); }, [cargar]);
+
+  useEffect(() => {
+    getCongregaciones({ page_size: 1000 })
+      .then(r => setCongregaciones(r.data.results || r.data || []))
+      .catch(() => {});
+  }, []);
 
   const sortOn = (campo) => {
     if (!campo) return;
@@ -719,6 +739,8 @@ export default function MembresiaPage() {
         sexo: m.tercero.sexo || '', direccion: m.tercero.direccion || '',
         barrio: m.tercero.barrio || '', codigo_postal: m.tercero.codigo_postal || '',
         distrito: m.tercero.distrito || '',
+        latitud: m.tercero.latitud ?? '',
+        longitud: m.tercero.longitud ?? '',
         telefono1: m.tercero.telefono1 || '',
         celular: m.tercero.celular || '', email: m.tercero.email || '',
         comentarios: m.tercero.comentarios || '',
@@ -912,7 +934,25 @@ export default function MembresiaPage() {
     }
   };
 
-  const hayFiltros = filtros.estado || filtros.bautizados || filtros.promesados;
+  const abrirMapa = async () => {
+    if (!filtros.congregacion) {
+      toast('Selecciona una congregación primero', { icon: 'ℹ️' });
+      return;
+    }
+    setMapaAbierto(true);
+    setMapaCargando(true);
+    try {
+      const params = { congregacion: filtros.congregacion, page_size: 10000 };
+      const r = await getMembresias(params);
+      setMapaMiembros(r.data.results || r.data || []);
+    } catch {
+      toast.error('No se pudieron cargar los miembros para el mapa');
+    } finally {
+      setMapaCargando(false);
+    }
+  };
+
+  const hayFiltros = filtros.estado || filtros.bautizados || filtros.promesados || filtros.congregacion;
   const totalPaginas = Math.ceil(total / PAGE_SIZE);
 
   return (
@@ -944,6 +984,15 @@ export default function MembresiaPage() {
                 <option value="">Todos los estados</option>
                 {ESTADOS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
+              <select className="form-select form-select-sm" style={{ maxWidth: 220 }}
+                value={filtros.congregacion} onChange={e => { setFiltros(p => ({ ...p, congregacion: e.target.value })); setPagina(1); }}>
+                <option value="">Todas las congregaciones</option>
+                {congregaciones.map(c => <option key={c.codigo} value={c.codigo}>{c.nombre}</option>)}
+              </select>
+              <button className="btn btn-sm btn-outline-success"
+                onClick={abrirMapa} disabled={!filtros.congregacion || mapaCargando}>
+                <i className="bi bi-map me-1"></i>Ver mapa
+              </button>
               <div className="btn-group btn-group-sm">
                 <button className={`btn ${filtros.bautizados === '1' ? 'btn-primary' : 'btn-outline-primary'}`}
                   onClick={() => { setFiltros(p => ({ ...p, bautizados: p.bautizados === '1' ? '' : '1' })); setPagina(1); }}>
@@ -956,7 +1005,7 @@ export default function MembresiaPage() {
               </div>
               {hayFiltros && (
                 <button className="btn btn-sm btn-outline-danger"
-                  onClick={() => { setFiltros({ estado: '', bautizados: '', promesados: '' }); setPagina(1); }}>
+                  onClick={() => { setFiltros({ estado: '', bautizados: '', promesados: '', congregacion: '' }); setPagina(1); }}>
                   <i className="bi bi-x-circle me-1"></i>Limpiar
                 </button>
               )}
@@ -1260,6 +1309,12 @@ export default function MembresiaPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {mapaAbierto && (
+        <MapaMiembros
+          miembros={mapaMiembros}
+          onCerrar={() => setMapaAbierto(false)} />
       )}
     </MainLayout>
   );

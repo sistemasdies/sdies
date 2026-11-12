@@ -230,6 +230,50 @@ export default function AsientosPage() {
     }));
   };
 
+  const duplicarLinea = (l) => {
+    const e = edits[l.id];
+    if (!e) return;
+    const lineas = [...detalle.lineas];
+    const idx = lineas.findIndex(li => li.id === l.id);
+    if (idx < 0) return;
+    const nuevoId = `nuevo-${Date.now()}`;
+    const nuevaLinea = {
+      id: nuevoId,
+      cod_comprob: l.cod_comprob,
+      num_comprob: l.num_comprob,
+      item_comprob: l.item_comprob + 1,
+      fecha: e.fecha,
+      cuenta: e.cuenta,
+      cuenta_descripcion: descCuenta(e.cuenta),
+      doc_ref: e.doc_ref,
+      observacion: e.observacion,
+      cedula: e.cedula,
+      tercero_nombre: nombreTerc(e.cedula),
+      centro_costo: e.centro_costo,
+      cc_descripcion: descCentro(e.centro_costo),
+      doc_soporte: e.doc_soporte,
+      vr_debitos: e.vr_debitos,
+      vr_creditos: e.vr_creditos,
+    };
+    lineas.splice(idx + 1, 0, nuevaLinea);
+    const lineasReordenadas = lineas.map((li, i) => ({ ...li, item_comprob: i + 1 }));
+    setDetalle(d => ({ ...d, lineas: lineasReordenadas }));
+    setEdits(m => ({
+      ...m,
+      [nuevoId]: {
+        fecha: e.fecha,
+        cuenta: e.cuenta,
+        doc_ref: e.doc_ref,
+        observacion: e.observacion,
+        cedula: e.cedula,
+        centro_costo: e.centro_costo,
+        doc_soporte: e.doc_soporte,
+        vr_debitos: e.vr_debitos,
+        vr_creditos: e.vr_creditos,
+      },
+    }));
+  };
+
   const setEdit = (id, campo, valor) =>
     setEdits(m => ({ ...m, [id]: { ...m[id], [campo]: valor } }));
 
@@ -887,6 +931,12 @@ export default function AsientosPage() {
                                       {editSaving === l.id
                                         ? <span className="spinner-border spinner-border-sm"></span>
                                         : <i className="bi bi-check-lg"></i>}
+                                    </button>
+                                    <button className="btn btn-outline-success btn-sm"
+                                      title="Duplicar renglón"
+                                      disabled={editSaving !== null}
+                                      onClick={() => duplicarLinea(l)}>
+                                      <i className="bi bi-copy"></i>
                                     </button>
                                     <div className="btn-group btn-group-vertical btn-group-sm">
                                       <button className="btn btn-outline-secondary px-1" title="Subir renglón (intercambia datos con el superior)"
