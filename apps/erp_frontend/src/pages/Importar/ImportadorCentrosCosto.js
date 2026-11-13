@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createCentroCosto, updateCentroCosto, getCentrosCosto } from '../../api/centrosCosto';
+import { importarCentrosCosto } from '../../api/centrosCosto';
 import toast from 'react-hot-toast';
 
 const PLANTILLA_CSV = `codigo,descripcion,responsable
@@ -76,52 +76,26 @@ export default function ImportadorCentrosCosto() {
     if (!validas.length) { toast.error('No hay filas válidas'); return; }
     setCargando(true);
 
-    // Cargar centros de costo existentes en BD (código -> id)
-    const existentes = new Map();
     try {
-      const res  = await getCentrosCosto();
-      const list = res.data.results || res.data;
-      list.forEach(c => existentes.set((c.codigo || '').toUpperCase(), c.id));
-    } catch {
-      toast.error('No se pudieron cargar los centros de costo existentes');
-      setCargando(false);
-      return;
+      const r = await importarCentrosCosto({
+        modo,
+        registros: validas.map(f => ({
+          codigo: f.codigo.toUpperCase(),
+          descripcion: f.descripcion,
+          responsable: f.responsable || null,
+        })),
+      });
+      const { creados, actualizados, omitidos, errores } = r.data;
+      setResultado({ creados, actualizados, omitidos, fail: errores?.length || 0, erroresImport: errores || [] });
+      setPaso(3);
+      if (creados)      toast.success(`${creados} centro(s) creado(s)`);
+      if (actualizados) toast.success(`${actualizados} centro(s) actualizado(s)`);
+      if (omitidos)     toast.info(`${omitidos} omitido(s)`);
+      if (errores?.length) toast.error(`${errores.length} con error`);
+    } catch (err) {
+      toast.error(extraerError(err));
     }
-
-    let creados = 0, actualizados = 0, omitidos = 0, fail = 0;
-    const erroresImport = [];
-
-    for (const f of validas) {
-      const codigo = f.codigo.toUpperCase();
-      const existe = existentes.has(codigo);
-      const payload = {
-        codigo,
-        descripcion: f.descripcion,
-        responsable: f.responsable || null,
-      };
-      try {
-        if (existe) {
-          if (modo === 'solo_nuevos') { omitidos++; continue; }
-          await updateCentroCosto(existentes.get(codigo), payload);
-          actualizados++;
-        } else {
-          if (modo === 'reemplazar') { omitidos++; continue; }
-          await createCentroCosto(payload);
-          creados++;
-        }
-      } catch (err) {
-        fail++;
-        erroresImport.push({ fila: f._fila, codigo, error: extraerError(err) });
-      }
-    }
-
     setCargando(false);
-    setResultado({ creados, actualizados, omitidos, fail, erroresImport });
-    setPaso(3);
-    if (creados)      toast.success(`${creados} centro(s) creado(s)`);
-    if (actualizados) toast.success(`${actualizados} centro(s) actualizado(s)`);
-    if (omitidos)     toast.info(`${omitidos} omitido(s)`);
-    if (fail)         toast.error(`${fail} con error`);
   };
 
   const reiniciar = () => { setFilas([]); setErrores([]); setResultado(null); setPaso(1); };

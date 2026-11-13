@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createUbicacion, updateUbicacion, getUbicaciones } from '../../api/activos';
+import { importarUbicaciones } from '../../api/activos';
 import toast from 'react-hot-toast';
 
 const PLANTILLA_CSV = `ubicacion,descripcion
@@ -70,26 +70,23 @@ export default function ImportadorUbicaciones() {
     const validas = filas.filter(f => f._valida);
     if (!validas.length) { toast.error('No hay filas válidas'); return; }
     setCargando(true);
-    const existentes = new Map();
     try {
-      const r = await getUbicaciones({ page_size: 10000 });
-      (r.data.results || r.data || []).forEach(u => existentes.set(u.ubicacion, u));
-    } catch {}
-    let creados = 0, actualizados = 0, omitidos = 0;
-    const erroresImport = [];
-    for (const fila of validas) {
-      try {
-        const ex = existentes.get(fila.ubicacion);
-        if (ex && modo === 'solo_nuevos') { omitidos++; continue; }
-        if (!ex && modo === 'reemplazar') { omitidos++; continue; }
-        const payload = { ubicacion: fila.ubicacion, descripcion: fila.descripcion };
-        if (ex) { await updateUbicacion(ex.ubicacion, payload); actualizados++; }
-        else { await createUbicacion(payload); creados++; }
-      } catch (err) {
-        erroresImport.push({ fila: fila._fila, error: extraerError(err) });
-      }
+      const r = await importarUbicaciones({
+        modo,
+        registros: validas.map(f => ({
+          ubicacion: f.ubicacion,
+          descripcion: f.descripcion,
+        })),
+      });
+      const { creados, actualizados, omitidos, errores } = r.data;
+      setResultado({ creados, actualizados, omitidos, errores });
+      if (creados) toast.success(`${creados} ubicación(es) creada(s)`);
+      if (actualizados) toast.success(`${actualizados} ubicación(es) actualizada(s)`);
+      if (omitidos) toast.info(`${omitidos} omitida(s)`);
+      if (errores?.length) toast.error(`${errores.length} con error`);
+    } catch (err) {
+      toast.error(extraerError(err));
     }
-    setResultado({ creados, actualizados, omitidos, errores: erroresImport });
     setCargando(false);
   };
 

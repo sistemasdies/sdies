@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createCategoria, updateCategoria, getCategorias } from '../../api/activos';
+import { importarCategorias } from '../../api/activos';
 import toast from 'react-hot-toast';
 
 const PLANTILLA_CSV = `categoria,nombre_categoria
@@ -70,26 +70,23 @@ export default function ImportadorCategorias() {
     const validas = filas.filter(f => f._valida);
     if (!validas.length) { toast.error('No hay filas válidas'); return; }
     setCargando(true);
-    const existentes = new Map();
     try {
-      const r = await getCategorias({ page_size: 10000 });
-      (r.data.results || r.data || []).forEach(c => existentes.set(c.categoria, c));
-    } catch {}
-    let creados = 0, actualizados = 0, omitidos = 0;
-    const erroresImport = [];
-    for (const fila of validas) {
-      try {
-        const ex = existentes.get(fila.categoria);
-        if (ex && modo === 'solo_nuevos') { omitidos++; continue; }
-        if (!ex && modo === 'reemplazar') { omitidos++; continue; }
-        const payload = { categoria: fila.categoria, nombre_categoria: fila.nombre_categoria };
-        if (ex) { await updateCategoria(ex.categoria, payload); actualizados++; }
-        else { await createCategoria(payload); creados++; }
-      } catch (err) {
-        erroresImport.push({ fila: fila._fila, error: extraerError(err) });
-      }
+      const r = await importarCategorias({
+        modo,
+        registros: validas.map(f => ({
+          categoria: f.categoria,
+          nombre_categoria: f.nombre_categoria,
+        })),
+      });
+      const { creados, actualizados, omitidos, errores } = r.data;
+      setResultado({ creados, actualizados, omitidos, errores });
+      if (creados) toast.success(`${creados} categoría(s) creada(s)`);
+      if (actualizados) toast.success(`${actualizados} categoría(s) actualizada(s)`);
+      if (omitidos) toast.info(`${omitidos} omitida(s)`);
+      if (errores?.length) toast.error(`${errores.length} con error`);
+    } catch (err) {
+      toast.error(extraerError(err));
     }
-    setResultado({ creados, actualizados, omitidos, errores: erroresImport });
     setCargando(false);
   };
 

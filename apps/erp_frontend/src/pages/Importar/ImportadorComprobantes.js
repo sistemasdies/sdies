@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createComprobante, updateComprobante, getComprobantes } from '../../api/comprobantes';
+import { importarComprobantes } from '../../api/comprobantes';
 import toast from 'react-hot-toast';
 
 const PLANTILLA_CSV = `codigo,descripcion,numero_inicial,activo
@@ -79,41 +79,26 @@ export default function ImportadorComprobantes() {
     if (!validas.length) { toast.error('No hay filas válidas'); return; }
     setCargando(true);
 
-    // Cargar comprobantes existentes en BD
-    let existentes = {};
     try {
-      const res = await getComprobantes();
-      const list = res.data.results || res.data;
-      list.forEach(c => { existentes[c.codigo] = c.id; });
-    } catch { toast.error('No se pudo cargar comprobantes existentes'); setCargando(false); return; }
-
-    let creados = 0, actualizados = 0, fail = 0, erroresImport = [];
-    for (const f of validas) {
-      const payload = {
-        codigo:         f.codigo.trim(),
-        descripcion:    f.descripcion,
-        numero_inicial: f.numero_inicial ? parseInt(f.numero_inicial) : 1,
-        activo:         f.activo !== 'false' && f.activo !== '0',
-      };
-      try {
-        if (existentes[payload.codigo]) {
-          await updateComprobante(existentes[payload.codigo], payload);
-          actualizados++;
-        } else {
-          await createComprobante(payload);
-          creados++;
-        }
-      } catch (err) {
-        fail++;
-        erroresImport.push({ fila: f._fila, codigo: f.codigo, error: extraerError(err) });
-      }
+      const r = await importarComprobantes({
+        modo: 'ambos',
+        registros: validas.map(f => ({
+          codigo:         f.codigo.trim(),
+          descripcion:    f.descripcion,
+          numero_inicial: f.numero_inicial ? parseInt(f.numero_inicial, 10) : 1,
+          activo:         f.activo !== 'false' && f.activo !== '0',
+        })),
+      });
+      const { creados, actualizados, omitidos, errores } = r.data;
+      setResultado({ creados, actualizados, fail: errores?.length || 0, erroresImport: errores || [] });
+      setPaso(3);
+      if (creados || actualizados)
+        toast.success(`${creados} creado(s), ${actualizados} actualizado(s)`);
+      if (errores?.length) toast.error(`${errores.length} con error`);
+    } catch (err) {
+      toast.error(extraerError(err));
     }
     setCargando(false);
-    setResultado({ creados, actualizados, fail, erroresImport });
-    setPaso(3);
-    if (creados || actualizados)
-      toast.success(`${creados} creado(s), ${actualizados} actualizado(s)`);
-    if (fail) toast.error(`${fail} con error`);
   };
 
   const reiniciar = () => { setFilas([]); setErrores([]); setResultado(null); setPaso(1); };

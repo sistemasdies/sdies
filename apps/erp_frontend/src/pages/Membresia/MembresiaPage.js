@@ -23,15 +23,11 @@ import {
 } from '../../api/membresias';
 import { siguienteCedula } from '../../api/terceros';
 import { getCongregaciones } from '../../api/congregaciones';
+import { getEstados } from '../../api/estados';
 
 const PAGE_SIZE = 50;
 
 // ── Catálogos ───────────────────────────────────────────────────────────────
-const ESTADOS = [
-  ['1', 'Activo'], ['2', 'Ausente'], ['3', 'Vacaciones'],
-  ['4', 'Trasladado'], ['5', 'Enfermo'], ['6', 'Apartado'],
-  ['7', 'Desconocido'], ['8', 'Renuncia'],
-];
 const ESTADOS_CIVIL = [
   ['1', 'Soltero'], ['2', 'Casado'], ['3', 'Divorciado'],
   ['4', 'Separado'], ['5', 'Viudo'], ['6', 'Unión Libre'],
@@ -43,7 +39,6 @@ const TIPOS_MATRIMONIO = [
 const SEXOS = [['M', 'Masculino'], ['F', 'Femenino']];
 
 const ESTADO_COLOR = { 1:'success', 2:'secondary', 3:'info', 4:'primary', 5:'danger', 6:'warning', 7:'dark', 8:'secondary' };
-const ESTADO_LABEL  = Object.fromEntries(ESTADOS);
 const CIVIL_LABEL   = Object.fromEntries(ESTADOS_CIVIL);
 
 const SECCIONES = [
@@ -74,7 +69,7 @@ const FORM_VACIO = {
   folio_reg_civil: '', oficina_reg_civil: '', lugar_fallecimiento: '', fecha_fallecido: '1900-01-01',
   escolaridad: '', profesion: '', ocupacion: '', lugar_de_trabajo: '',
   telefono_trabajo: '', comentarios_academico_laboral: '',
-  estado: '1', comentarios_eclesiales: '',
+  estado: '1', activo: true, comentarios_eclesiales: '',
   congregacion: '', congregacion_nombre: '',
   foto: '',
   tipo_sangre: '',
@@ -390,17 +385,17 @@ function SeccionLaboral({ f, set }) {
 }
 
 // ── Sección 4 · Datos eclesiásticos ─────────────────────────────────────────
-function SeccionEclesiastica({ f, set, setLupaCongregacion }) {
+function SeccionEclesiastica({ f, set, setLupaCongregacion, estadosMembresia }) {
   return (
     <>
       <h6 className="fw-bold text-success border-bottom pb-2 mb-3">
         <i className="bi bi-person-check me-2"></i>Situación en la congregación
       </h6>
       <div className="row g-3 mb-4">
-        <Campo label="Estado" ancho="col-md-4">
-          <Lista value={f.estado} onChange={v => set('estado', v)} opciones={ESTADOS} placeholder="Seleccione" />
+        <Campo label="Estado" ancho="col-md-3">
+          <Lista value={f.estado} onChange={v => set('estado', v)} opciones={estadosMembresia.map(e => [e.estado, e.descripcion])} placeholder="Seleccione" />
         </Campo>
-        <Campo label="Congregación" ancho="col-md-8">
+        <Campo label="Congregación" ancho="col-md-6">
           {f.congregacion
             ? (
               <div className="input-group">
@@ -426,6 +421,7 @@ function SeccionEclesiastica({ f, set, setLupaCongregacion }) {
               </button>
             )}
         </Campo>
+        <div className="col-md-3"><Interruptor checked={f.activo} onChange={v => set('activo', v)} label="Activo" /></div>
         <Campo label="Fecha de llegada" ancho="col-md-4">
           <Fecha value={f.fecha_llegada} onChange={v => set('fecha_llegada', v)} />
         </Campo>
@@ -532,7 +528,7 @@ export default function MembresiaPage() {
   const [pagina,   setPagina]   = useState(1);
   const [busqueda, setBusqueda] = useState('');
   const [orden,    setOrden]    = useState(null);
-  const [filtros,  setFiltros]  = useState({ estado: '', bautizados: '', promesados: '', congregacion: '' });
+  const [filtros,  setFiltros]  = useState({ estado: '', bautizados: '', promesados: '', congregacion: '', activo: '' });
 
   const [modal,        setModal]        = useState(false);
   const [editando,     setEditando]     = useState(null);
@@ -553,6 +549,7 @@ export default function MembresiaPage() {
   const [mapaMiembros, setMapaMiembros] = useState([]);
   const [mapaCargando, setMapaCargando] = useState(false);
   const [congregaciones, setCongregaciones] = useState([]);
+  const [estadosMembresia, setEstadosMembresia] = useState([]);
 
   // Foto del miembro (Cloudinary)
   const [fotoFile,     setFotoFile]     = useState(null);   // archivo pendiente (registro nuevo)
@@ -573,6 +570,7 @@ export default function MembresiaPage() {
     if (filtros.bautizados)   params.solo_bautizados = filtros.bautizados;
     if (filtros.promesados)   params.solo_promesados = filtros.promesados;
     if (filtros.congregacion) params.congregacion = filtros.congregacion;
+    if (filtros.activo !== '') params.activo = filtros.activo;
     getMembresias(params)
       .then(r => {
         setMembresias(r.data.results || r.data);
@@ -587,6 +585,9 @@ export default function MembresiaPage() {
   useEffect(() => {
     getCongregaciones({ page_size: 1000 })
       .then(r => setCongregaciones(r.data.results || r.data || []))
+      .catch(() => {});
+    getEstados({ page_size: 1000 })
+      .then(r => setEstadosMembresia(r.data.results || r.data || []))
       .catch(() => {});
   }, []);
 
@@ -756,7 +757,7 @@ export default function MembresiaPage() {
       ocupacion: m.ocupacion || '', lugar_de_trabajo: m.lugar_de_trabajo || '',
       telefono_trabajo: m.telefono_trabajo || '',
       comentarios_academico_laboral: m.comentarios_academico_laboral || '',
-      estado: m.estado || '1', comentarios_eclesiales: m.comentarios_eclesiales || '',
+      estado: m.estado || '1', activo: m.activo ?? true, comentarios_eclesiales: m.comentarios_eclesiales || '',
       politica_datos_chk1: !!m.politica_datos_chk1, politica_datos_chk2: !!m.politica_datos_chk2,
       politica_datos_chk3: !!m.politica_datos_chk3, politica_datos_chk4: !!m.politica_datos_chk4,
       congregacion: m.congregacion || '',
@@ -952,7 +953,7 @@ export default function MembresiaPage() {
     }
   };
 
-  const hayFiltros = filtros.estado || filtros.bautizados || filtros.promesados || filtros.congregacion;
+  const hayFiltros = filtros.estado || filtros.bautizados || filtros.promesados || filtros.congregacion || filtros.activo !== '';
   const totalPaginas = Math.ceil(total / PAGE_SIZE);
 
   return (
@@ -982,7 +983,13 @@ export default function MembresiaPage() {
               <select className="form-select form-select-sm" style={{ maxWidth: 180 }}
                 value={filtros.estado} onChange={e => { setFiltros(p => ({ ...p, estado: e.target.value })); setPagina(1); }}>
                 <option value="">Todos los estados</option>
-                {ESTADOS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                {estadosMembresia.map(e => <option key={e.estado} value={e.estado}>{e.descripcion}</option>)}
+              </select>
+              <select className="form-select form-select-sm" style={{ maxWidth: 140 }}
+                value={filtros.activo} onChange={e => { setFiltros(p => ({ ...p, activo: e.target.value })); setPagina(1); }}>
+                <option value="">Activo: Todos</option>
+                <option value="true">Activo: Sí</option>
+                <option value="false">Activo: No</option>
               </select>
               <select className="form-select form-select-sm" style={{ maxWidth: 220 }}
                 value={filtros.congregacion} onChange={e => { setFiltros(p => ({ ...p, congregacion: e.target.value })); setPagina(1); }}>
@@ -1005,7 +1012,7 @@ export default function MembresiaPage() {
               </div>
               {hayFiltros && (
                 <button className="btn btn-sm btn-outline-danger"
-                  onClick={() => { setFiltros({ estado: '', bautizados: '', promesados: '', congregacion: '' }); setPagina(1); }}>
+                  onClick={() => { setFiltros({ estado: '', bautizados: '', promesados: '', congregacion: '', activo: '' }); setPagina(1); }}>
                   <i className="bi bi-x-circle me-1"></i>Limpiar
                 </button>
               )}
@@ -1074,7 +1081,7 @@ export default function MembresiaPage() {
                       <td className="small">{m.nombre_completo}</td>
                       <td>
                         <span className={`badge bg-${ESTADO_COLOR[m.estado] || 'secondary'}`}>
-                          {ESTADO_LABEL[m.estado] || '—'}
+                          {estadosMembresia.find(e => e.estado === m.estado)?.descripcion || '—'}
                         </span>
                       </td>
                       <td className="small">
@@ -1225,7 +1232,7 @@ export default function MembresiaPage() {
                     )}
                     {tab === 'familiares'   && <SeccionFamiliares   f={form} set={set} />}
                     {tab === 'laboral'      && <SeccionLaboral      f={form} set={set} />}
-                    {tab === 'eclesiastico' && <SeccionEclesiastica f={form} set={set} setLupaCongregacion={setLupaCongregacion} />}
+                    {tab === 'eclesiastico' && <SeccionEclesiastica f={form} set={set} setLupaCongregacion={setLupaCongregacion} estadosMembresia={estadosMembresia} />}
 {tab === 'tratamiento_datos' && <SeccionTratamientoDatos f={form} set={set} />}
 {tab === 'anotaciones_pastor' && <AnotacionesTab cedula={form.tercero?.cedula} nombre={editando?.nombre_completo || form.tercero?.nombre_completo} tipo="pastor" />}
 {tab === 'anotaciones_misionero' && <AnotacionesTab cedula={form.tercero?.cedula} nombre={editando?.nombre_completo || form.tercero?.nombre_completo} tipo="misionero" />}

@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -7,6 +7,7 @@ from apps.accounting.serializers.cuentas import CuentaSerializer, CuentaArbolSer
 from apps.accounting.services.balance_service import BalanceService
 from apps.core.utils.pagination import StandardPagination
 from apps.core.views import HardDeleteMixin
+from apps.core.import_export import importar_masivo
 from apps.users.services.scopes import user_scope
 
 
@@ -63,3 +64,15 @@ class CuentaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
         hijos  = cuenta.hijos.filter(deleted=False).order_by('codigo')
         return Response(CuentaSerializer(hijos, many=True,
                         context={'request': request}).data)
+
+    @action(detail=False, methods=['post'], url_path='importar')
+    def importar(self, request):
+        return importar_masivo(
+            request.data.get('registros', []),
+            Cuenta,
+            CuentaSerializer,
+            'codigo',
+            request,
+            save_kwargs_create={'created_by': request.user},
+            save_kwargs_update={'updated_by': request.user},
+        )

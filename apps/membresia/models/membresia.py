@@ -76,6 +76,7 @@ class Membresia(BaseModel):
         on_delete=models.PROTECT, default='1',
         verbose_name='Estado',
     )
+    activo                 = models.BooleanField(default=True, verbose_name='Activo')
 
     # ── 6. Tratamiento de datos ───────────────────────────────────────────────
     politica_datos_chk1 = models.BooleanField(default=False)

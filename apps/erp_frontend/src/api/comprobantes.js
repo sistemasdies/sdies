@@ -3,3 +3,4 @@ export const getComprobantes   = ()        => API.get('/comprobantes/?page_size=
 export const createComprobante = (data)    => API.post('/comprobantes/', data);
 export const updateComprobante = (id, d)   => API.put(`/comprobantes/${id}/`, d);
 export const getSiguienteNumero = (codigo) => API.get('/comprobantes/siguiente-numero/', { params: { codigo } });
+export const importarComprobantes = (data) => API.post('/comprobantes/importar/', data);

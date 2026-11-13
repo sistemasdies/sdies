@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from apps.accounting.models import PlantillaContable, DetallePlantilla
 from apps.core.views import HardDeleteMixin
+from apps.core.import_export import importar_masivo
 
 
 
@@ -74,6 +75,18 @@ class PlantillaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
             .filter(deleted=False)
             .prefetch_related('detalles')
             .order_by('cod_plantilla')
+        )
+
+    @action(detail=False, methods=['post'], url_path='importar')
+    def importar(self, request):
+        return importar_masivo(
+            request.data.get('registros', []),
+            PlantillaContable,
+            PlantillaSerializer,
+            'cod_plantilla',
+            request,
+            save_kwargs_create={'created_by': request.user},
+            save_kwargs_update={'updated_by': request.user},
         )
 
 

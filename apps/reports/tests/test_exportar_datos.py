@@ -15,7 +15,9 @@ from apps.users.models import Permission, Role, User
 
 BASE_URL = '/api/reports/exportar-datos/'
 ENTIDADES = ['cuentas', 'terceros', 'membresias', 'centros_costo',
-             'comprobantes', 'movicont', 'plantillas', 'det_plantillas']
+             'comprobantes', 'movicont', 'plantillas', 'det_plantillas',
+             'categorias_activos', 'ubicaciones_activos', 'estados_activos', 'activos_fijos',
+             'cargos', 'areas_trabajo', 'equipos_trabajo']
 
 
 class ExportarDatosBase(TestCase):

@@ -88,9 +88,9 @@ def _comprobantes():
 
 
 def _movicont():
-    headers = ['CodComprob', 'NumComprob', 'ItemComprob', 'Cuenta', 'DocRef',
-               'Observacion', 'Código', 'CentroCosto', 'DocSoporte',
-               'VrDebitos', 'VrCreditos', 'Fecha']
+    headers = ['cod_comprob', 'num_comprob', 'item_comprob', 'cuenta', 'doc_ref',
+               'observacion', 'cedula', 'centro_costo', 'doc_soporte',
+               'vr_debitos', 'vr_creditos', 'fecha']
     qs = (MoviCont.objects
           .select_related('cod_comprob', 'cuenta', 'cedula', 'centro_costo')
           .order_by('fecha', 'num_comprob', 'item_comprob'))
@@ -165,7 +165,7 @@ def _estados_activos():
 
 
 def _activos_fijos():
-    headers = ['id_activo_f', 'nombre_activo_f', 'categoria', 'marca', 'modelo',
+    headers = ['id_activo_f', 'nombre_activo_f', 'cantidad', 'categoria', 'marca', 'modelo',
                'numero_serie', 'congregacion', 'ubicacion', 'responsable',
                'estado_actual', 'fecha_adquisicion', 'valor_compra', 'comentarios']
     qs = (ActivoF.objects
@@ -174,6 +174,7 @@ def _activos_fijos():
     rows = ([
         a.id_activo_f,
         _clean(a.nombre_activo_f),
+        a.cantidad if a.cantidad is not None else 1,
         a.categoria_id or '',
         _clean(a.marca),
         _clean(a.modelo),

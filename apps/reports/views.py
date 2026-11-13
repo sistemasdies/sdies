@@ -292,6 +292,7 @@ class FichaMembresiaView(APIView):
             'personas_a_cargo': m.personas_a_cargo,
             'estado': m.estado_id if m.estado_id else '',
             'estado_label': (m.estado.descripcion if m.estado else ''),
+            'activo': m.activo,
             'direccion': t.direccion,
             'barrio': t.barrio,
             'codigo_postal': t.codigo_postal,

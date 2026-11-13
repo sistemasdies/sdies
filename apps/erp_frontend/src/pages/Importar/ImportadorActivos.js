@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { createActivo, updateActivo, getActivos } from '../../api/activos';
+import { importarActivos } from '../../api/activos';
 import toast from 'react-hot-toast';
 
-const PLANTILLA_CSV = `id_activo_f,nombre_activo_f,categoria,marca,modelo,numero_serie,congregacion,ubicacion,responsable,estado_actual,fecha_adquisicion,valor_compra,comentarios
-A0001,Laptop HP,COM,HP,EliteBook,X123,,BOD1,12345678,1,2024-01-15,2500000,Equipo principal`;
+const PLANTILLA_CSV = `id_activo_f,nombre_activo_f,cantidad,categoria,marca,modelo,numero_serie,congregacion,ubicacion,responsable,estado_actual,fecha_adquisicion,valor_compra,comentarios
+A0001,Laptop HP,1,COM,HP,EliteBook,X123,,BOD1,12345678,1,2024-01-15,2500000,Equipo principal`;
 
 const MODOS = [
   { id: 'solo_nuevos', label: 'Solo adicionar nuevos', desc: 'Omite los activos cuyo código ya existe' },
@@ -71,40 +71,33 @@ export default function ImportadorActivos() {
     const validas = filas.filter(f => f._valida);
     if (!validas.length) { toast.error('No hay filas válidas'); return; }
     setCargando(true);
-    const existentes = new Map();
     try {
-      const r = await getActivos({ page_size: 10000 });
-      (r.data.results || r.data || []).forEach(a => existentes.set(a.id_activo_f, a));
-    } catch {}
-    let creados = 0, actualizados = 0, omitidos = 0;
-    const erroresImport = [];
-    for (const fila of validas) {
-      try {
-        const ex = existentes.get(fila.id_activo_f);
-        if (ex && modo === 'solo_nuevos') { omitidos++; continue; }
-        if (!ex && modo === 'reemplazar') { omitidos++; continue; }
-        const payload = {
-          id_activo_f: fila.id_activo_f,
-          nombre_activo_f: fila.nombre_activo_f,
-          categoria: fila.categoria,
-          marca: fila.marca,
-          modelo: fila.modelo,
-          numero_serie: fila.numero_serie,
-          congregacion: fila.congregacion || null,
-          ubicacion: fila.ubicacion,
-          responsable: fila.responsable || null,
-          estado_actual: fila.estado_actual,
-          fecha_adquisicion: fila.fecha_adquisicion || null,
-          valor_compra: fila.valor_compra || null,
-          comentarios: fila.comentarios,
-        };
-        if (ex) { await updateActivo(ex.id_activo_f, payload); actualizados++; }
-        else { await createActivo(payload); creados++; }
-      } catch (err) {
-        erroresImport.push({ fila: fila._fila, error: extraerError(err) });
-      }
+      const registros = validas.map(f => ({
+        id_activo_f: f.id_activo_f,
+        nombre_activo_f: f.nombre_activo_f,
+        cantidad: f.cantidad === '' ? 1 : parseInt(f.cantidad, 10),
+        categoria: f.categoria,
+        marca: f.marca,
+        modelo: f.modelo,
+        numero_serie: f.numero_serie,
+        congregacion: f.congregacion || null,
+        ubicacion: f.ubicacion,
+        responsable: f.responsable || null,
+        estado_actual: f.estado_actual,
+        fecha_adquisicion: f.fecha_adquisicion || null,
+        valor_compra: f.valor_compra || null,
+        comentarios: f.comentarios,
+      }));
+      const r = await importarActivos({ modo, registros });
+      const { creados, actualizados, omitidos, errores } = r.data;
+      setResultado({ creados, actualizados, omitidos, errores });
+      if (creados) toast.success(`${creados} activo(s) creado(s)`);
+      if (actualizados) toast.success(`${actualizados} activo(s) actualizado(s)`);
+      if (omitidos) toast.info(`${omitidos} omitido(s)`);
+      if (errores?.length) toast.error(`${errores.length} con error`);
+    } catch (err) {
+      toast.error(extraerError(err));
     }
-    setResultado({ creados, actualizados, omitidos, errores: erroresImport });
     setCargando(false);
   };
 

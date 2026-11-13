@@ -5,24 +5,28 @@ export const getCategoria   = (id)     => API.get(`/activos/categorias/${id}/`);
 export const createCategoria = (data)  => API.post('/activos/categorias/', data);
 export const updateCategoria = (id, d) => API.put(`/activos/categorias/${id}/`, d);
 export const deleteCategoria = (id)    => API.delete(`/activos/categorias/${id}/`);
+export const importarCategorias = (data) => API.post('/activos/categorias/importar/', data);
 
 export const getUbicaciones   = (params) => API.get('/activos/ubicaciones/', { params });
 export const getUbicacion     = (id)     => API.get(`/activos/ubicaciones/${id}/`);
 export const createUbicacion = (data)   => API.post('/activos/ubicaciones/', data);
 export const updateUbicacion = (id, d)  => API.put(`/activos/ubicaciones/${id}/`, d);
 export const deleteUbicacion = (id)     => API.delete(`/activos/ubicaciones/${id}/`);
+export const importarUbicaciones = (data) => API.post('/activos/ubicaciones/importar/', data);
 
 export const getEstadosActivo   = (params) => API.get('/activos/estados-activos/', { params });
 export const getEstadoActivo     = (id)     => API.get(`/activos/estados-activos/${id}/`);
 export const createEstadoActivo = (data)   => API.post('/activos/estados-activos/', data);
 export const updateEstadoActivo = (id, d)  => API.put(`/activos/estados-activos/${id}/`, d);
 export const deleteEstadoActivo = (id)     => API.delete(`/activos/estados-activos/${id}/`);
+export const importarEstadosActivo = (data) => API.post('/activos/estados-activos/importar/', data);
 
 export const getActivos   = (params) => API.get('/activos/activos/', { params });
 export const getActivo     = (id)     => API.get(`/activos/activos/${id}/`);
 export const createActivo = (data)   => API.post('/activos/activos/', data);
 export const updateActivo = (id, d)  => API.put(`/activos/activos/${id}/`, d);
 export const deleteActivo = (id)     => API.delete(`/activos/activos/${id}/`);
+export const importarActivos = (data) => API.post('/activos/activos/importar/', data);
 
 export const getFotosActivo   = (params) => API.get('/activos/fotos-activos/', { params });
 export const createFotoActivo = (data)   => API.post('/activos/fotos-activos/', data);

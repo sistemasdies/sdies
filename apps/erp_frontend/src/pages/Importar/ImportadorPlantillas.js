@@ -1,11 +1,6 @@
 import { useState } from 'react';
-import API from '../../api/client';
+import { importarPlantillas } from '../../api/plantillas';
 import toast from 'react-hot-toast';
-
-const crearPlantilla    = (data)    => API.post('/plantillas/', data);
-const actualizarPlantilla = (id, data) => API.put(`/plantillas/${id}/`, data);
-const getPlantillas     = ()        => API.get('/plantillas/?page_size=1000');
-const getComprobantes   = ()        => API.get('/comprobantes/?page_size=1000');
 
 const PLANTILLA_CSV = `cod_plantilla,nombre,descripcion,comprobante
 NOM001,Nómina mensual,Registro de nómina del mes,CC
@@ -107,70 +102,33 @@ export default function ImportadorPlantillas() {
     setCargando(true);
     setProgreso(0);
 
-    // Cargar plantillas y comprobantes existentes
-    let plantillasExist = {}, comprobantesExist = {};
     try {
-      const [pRes, cRes] = await Promise.all([getPlantillas(), getComprobantes()]);
-      (pRes.data.results || pRes.data).forEach(p => {
-        plantillasExist[p.cod_plantilla] = p.id;
+      const r = await importarPlantillas({
+        modo: 'ambos',
+        registros: validas.map(f => ({
+          cod_plantilla: f.cod_plantilla,
+          nombre:        f.nombre,
+          descripcion:   f.descripcion || '',
+          comprobante:   f.comprobante || null,
+        })),
       });
-      (cRes.data.results || cRes.data).forEach(c => {
-        comprobantesExist[c.codigo] = c.id;
+      const { creados, actualizados, omitidos, errores } = r.data;
+      setResultado({
+        creadas: creados,
+        actualizadas: actualizados,
+        fail: errores?.length || 0,
+        erroresImport: errores || [],
       });
-    } catch {
-      toast.error('Error al cargar datos existentes');
-      setCargando(false);
-      return;
-    }
-
-    let creadas = 0, actualizadas = 0, fail = 0;
-    const erroresImport = [];
-
-    for (let i = 0; i < validas.length; i++) {
-      const f = validas[i];
-      setProgreso(Math.round(((i + 1) / validas.length) * 100));
-
-      // Validar comprobante si viene en el CSV
-      if (f.comprobante && !comprobantesExist[f.comprobante]) {
-        fail++;
-        erroresImport.push({
-          fila: f._fila, cod: f.cod_plantilla,
-          error: `Comprobante "${f.comprobante}" no existe en la tabla de comprobantes`,
-        });
-        continue;
-      }
-
-      const payload = {
-        cod_plantilla: f.cod_plantilla,
-        nombre:        f.nombre,
-        descripcion:   f.descripcion || '',
-        comprobante:   f.comprobante || null,
-      };
-
-      try {
-        if (plantillasExist[f.cod_plantilla]) {
-          await actualizarPlantilla(plantillasExist[f.cod_plantilla], payload);
-          actualizadas++;
-        } else {
-          await crearPlantilla(payload);
-          creadas++;
-        }
-      } catch (err) {
-        fail++;
-        erroresImport.push({
-          fila: f._fila, cod: f.cod_plantilla,
-          error: extraerError(err),
-        });
-      }
+      setPaso(3);
+      if (creados || actualizados)
+        toast.success(`${creados} creada(s), ${actualizados} actualizada(s)`);
+      if (errores?.length) toast.error(`${errores.length} con error`);
+    } catch (err) {
+      toast.error(extraerError(err));
     }
 
     setCargando(false);
     setProgreso(100);
-    setResultado({ creadas, actualizadas, fail, erroresImport });
-    setPaso(3);
-    if (creadas || actualizadas)
-      toast.success(`${creadas} creada(s), ${actualizadas} actualizada(s)`);
-    if (fail) toast.error(`${fail} con error`);
   };
 
   const reiniciar = () => {

@@ -35,7 +35,7 @@ class MembresiaViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
                           'tercero__razon_social', 'tercero__celular',
                           'congregacion__codigo', 'congregacion__nombre']
     filterset_fields   = ['estado', 'sw_bautizado', 'sw_promesado', 'estado_civil',
-                          'congregacion']
+                          'congregacion', 'activo']
     ordering_fields    = ['tercero__cedula', 'tercero__apellido1', 'tercero__nombre1',
                           'congregacion__nombre', 'created_at', 'estado',
                           'fecha_bautismo', 'fecha_llegada']

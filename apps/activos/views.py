@@ -17,6 +17,7 @@ from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
+from apps.core.import_export import importar_masivo
 
 
 class CategoriaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
@@ -29,6 +30,16 @@ class CategoriaViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     ordering = ['categoria']
     queryset = Categoria.objects.all()
 
+    @action(detail=False, methods=['post'], url_path='importar')
+    def importar(self, request):
+        return importar_masivo(
+            request.data.get('registros', []),
+            Categoria,
+            CategoriaSerializer,
+            'categoria',
+            request,
+        )
+
 
 class UbicacionViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     pagination_class = StandardPagination
@@ -40,6 +51,16 @@ class UbicacionViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     ordering = ['ubicacion']
     queryset = Ubicacion.objects.all()
 
+    @action(detail=False, methods=['post'], url_path='importar')
+    def importar(self, request):
+        return importar_masivo(
+            request.data.get('registros', []),
+            Ubicacion,
+            UbicacionSerializer,
+            'ubicacion',
+            request,
+        )
+
 
 class EstadoActivoFViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     pagination_class = StandardPagination
@@ -50,6 +71,16 @@ class EstadoActivoFViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     search_fields = ['estado_activo_f', 'descripcion_estado_activo_f']
     ordering = ['estado_activo_f']
     queryset = EstadoActivoF.objects.all()
+
+    @action(detail=False, methods=['post'], url_path='importar')
+    def importar(self, request):
+        return importar_masivo(
+            request.data.get('registros', []),
+            EstadoActivoF,
+            EstadoActivoFSerializer,
+            'estado_activo_f',
+            request,
+        )
 
 
 class ActivoFViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
@@ -83,6 +114,21 @@ class ActivoFViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
         before = self._snapshot(serializer.instance)
         serializer.save()
         self._log('update', serializer.instance, before=before, after=self._snapshot(serializer.instance))
+
+    @action(detail=False, methods=['post'], url_path='importar')
+    def importar(self, request):
+        scope = user_scope(request.user)
+        prefiltro = None
+        if scope['congregaciones'] is not None:
+            prefiltro = ActivoF.objects.filter(congregacion__codigo__in=scope['congregaciones'])
+        return importar_masivo(
+            request.data.get('registros', []),
+            ActivoF,
+            ActivoFSerializer,
+            'id_activo_f',
+            request,
+            prefiltro_qs=prefiltro,
+        )
 
     @action(detail=True, methods=['post', 'delete'], url_path='foto',
             parser_classes=[MultiPartParser, FormParser])

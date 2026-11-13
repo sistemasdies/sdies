@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from apps.accounting.models import Comprobante
 from apps.accounting.serializers.comprobantes import ComprobanteSerializer
 from apps.core.views import HardDeleteMixin
+from apps.core.import_export import importar_masivo
 from apps.users.services.scopes import user_scope
 
 
@@ -73,3 +74,15 @@ class ComprobanteViewSet(HardDeleteMixin, viewsets.ModelViewSet):
             cols = [col[0] for col in c.description]
             rows = [dict(zip(cols, row)) for row in c.fetchall()]
         return Response({'total': len(rows), 'registros': rows})
+
+    @action(detail=False, methods=['post'], url_path='importar')
+    def importar(self, request):
+        return importar_masivo(
+            request.data.get('registros', []),
+            Comprobante,
+            ComprobanteSerializer,
+            'codigo',
+            request,
+            save_kwargs_create={'created_by': request.user},
+            save_kwargs_update={'updated_by': request.user},
+        )

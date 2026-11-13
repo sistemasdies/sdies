@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createEstadoActivo, updateEstadoActivo, getEstadosActivo } from '../../api/activos';
+import { importarEstadosActivo } from '../../api/activos';
 import toast from 'react-hot-toast';
 
 const PLANTILLA_CSV = `estado_activo_f,descripcion_estado_activo_f
@@ -69,26 +69,23 @@ export default function ImportadorEstadosActivos() {
     const validas = filas.filter(f => f._valida);
     if (!validas.length) { toast.error('No hay filas válidas'); return; }
     setCargando(true);
-    const existentes = new Map();
     try {
-      const r = await getEstadosActivo({ page_size: 10000 });
-      (r.data.results || r.data || []).forEach(e => existentes.set(e.estado_activo_f, e));
-    } catch {}
-    let creados = 0, actualizados = 0, omitidos = 0;
-    const erroresImport = [];
-    for (const fila of validas) {
-      try {
-        const ex = existentes.get(fila.estado_activo_f);
-        if (ex && modo === 'solo_nuevos') { omitidos++; continue; }
-        if (!ex && modo === 'reemplazar') { omitidos++; continue; }
-        const payload = { estado_activo_f: fila.estado_activo_f, descripcion_estado_activo_f: fila.descripcion_estado_activo_f };
-        if (ex) { await updateEstadoActivo(ex.estado_activo_f, payload); actualizados++; }
-        else { await createEstadoActivo(payload); creados++; }
-      } catch (err) {
-        erroresImport.push({ fila: fila._fila, error: extraerError(err) });
-      }
+      const r = await importarEstadosActivo({
+        modo,
+        registros: validas.map(f => ({
+          estado_activo_f: f.estado_activo_f,
+          descripcion_estado_activo_f: f.descripcion_estado_activo_f,
+        })),
+      });
+      const { creados, actualizados, omitidos, errores } = r.data;
+      setResultado({ creados, actualizados, omitidos, errores });
+      if (creados) toast.success(`${creados} estado(s) creado(s)`);
+      if (actualizados) toast.success(`${actualizados} estado(s) actualizado(s)`);
+      if (omitidos) toast.info(`${omitidos} omitido(s)`);
+      if (errores?.length) toast.error(`${errores.length} con error`);
+    } catch (err) {
+      toast.error(extraerError(err));
     }
-    setResultado({ creados, actualizados, omitidos, errores: erroresImport });
     setCargando(false);
   };
 

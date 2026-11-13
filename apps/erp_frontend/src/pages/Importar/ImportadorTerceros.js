@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 // acepta tanto formato exportado (TipoDocumento, RazonSocial...) como snake_case.
 const MAPEO_HEADERS = {
   cedula: 'cedula',
-  lugarexpcedula: 'lugar_exp_cedula',
   tipopersona: 'tipo_persona',
   nombre1: 'nombre1',
   nombre2: 'nombre2',
@@ -15,7 +14,6 @@ const MAPEO_HEADERS = {
   razonsocial: 'razon_social',
   direccion: 'direccion',
   telefono1: 'telefono1',
-  telefono2: 'telefono2',
   celular: 'celular',
   email: 'email',
   fax: 'fax',
@@ -28,6 +26,9 @@ const MAPEO_HEADERS = {
   comentarios: 'comentarios',
   distrito: 'distrito',
   codigopostal: 'codigo_postal',
+  latitud: 'latitud',
+  longitud: 'longitud',
+  activo: 'is_active',
   fechanacimiento: 'fecha_nacimiento',
 };
 
@@ -37,14 +38,12 @@ const MODOS = [
   { id: 'ambos',       label: 'Ambos',                 desc: 'Actualiza los existentes y adiciona los nuevos' },
 ];
 
-const PLANTILLA_CSV = `Código,TipoDocumento,LugarExpCódigo,TipoPersona,Nombre1,Nombre2,Apellido1,Apellido2,RazonSocial,Direccion,Telefono1,Telefono2,Celular,eMail,Fax,Barrio,LugarNacimiento,Sexo,TipoSangre,Parametros,Comentarios,Distrito,Departamento,Municipio,FechaNacimiento
-1234567890,CC,Bogotá,N,Juan,Carlos,Pérez,García,,Calle 10 #5-20,3001234567,6012345678,3101234567,juan@email.com,,La Candelaria,Bogotá,M,O+,Activo,Cliente frecuente,01,11,001,1990-05-15
-900123456,NI,Medellín,J,,,,,Empresas SA,Av Principal 1,6041234567,,3121234567,info@empresa.com,6047654321,Centro,Medellín,F,,,Proveedor oficial,02,05,001,1999-01-01`;
+const PLANTILLA_CSV = `Código,TipoPersona,Nombre1,Nombre2,Apellido1,Apellido2,RazonSocial,Direccion,Barrio,CodigoPostal,Distrito,Telefono1,Celular,eMail,Fax,LugarNacimiento,Sexo,TipoSangre,Parametros,Latitud,Longitud,Comentarios,Activo,FechaNacimiento
+1234567890,N,Juan,Carlos,Pérez,García,,Calle 10 #5-20,La Candelaria,110001,01,3001234567,3101234567,juan@email.com,,Bogotá,M,O+,Activo,4.710989,-74.072092,Cliente frecuente,true,1990-05-15
+900123456,J,,,,,Empresas SA,Av Principal 1,Centro,050001,02,6041234567,3121234567,info@empresa.com,6047654321,Medellín,F,,,Proveedor oficial,,,Proveedor oficial,true,1999-01-01`;
 
 const COLUMNAS = [
   { key: 'cedula',            label: 'cedula',           req: true  },
-  { key: 'tipo_documento',    label: 'tipo_documento',   req: false, ejemplo: 'Indicativo, sin validar' },
-  { key: 'lugar_exp_cedula',  label: 'lugar_exp_cedula', req: false, ejemplo: 'Ciudad de expedición' },
   { key: 'tipo_persona',      label: 'tipo_persona',     req: false, ejemplo: 'N o J' },
   { key: 'nombre1',           label: 'nombre1',          req: false },
   { key: 'nombre2',           label: 'nombre2',          req: false },
@@ -52,19 +51,21 @@ const COLUMNAS = [
   { key: 'apellido2',         label: 'apellido2',        req: false },
   { key: 'razon_social',      label: 'razon_social',     req: false, ejemplo: 'Para jurídicas' },
   { key: 'direccion',         label: 'direccion',        req: false },
-  { key: 'telefono1',         label: 'telefono1',        req: false },
-  { key: 'telefono2',         label: 'telefono2',        req: false },
-  { key: 'celular',           label: 'celular',          req: false },
-  { key: 'email',             label: 'eMail',            req: false },
-  { key: 'fax',               label: 'fax',              req: false },
   { key: 'barrio',            label: 'barrio',           req: false },
+  { key: 'codigo_postal',     label: 'codigo_postal',    req: false, ejemplo: '6 dígitos' },
+  { key: 'distrito',          label: 'distrito',         req: false, ejemplo: 'Código 2 dígitos' },
+  { key: 'telefono1',         label: 'telefono1',        req: false },
+  { key: 'celular',           label: 'celular',          req: false },
+  { key: 'fax',               label: 'fax',              req: false },
+  { key: 'email',             label: 'eMail',            req: false },
   { key: 'lugar_nacimiento',  label: 'lugar_nacimiento', req: false, ejemplo: 'Ciudad de nacimiento' },
   { key: 'sexo',              label: 'sexo',             req: false, ejemplo: 'M o F' },
   { key: 'tipo_sangre',       label: 'tipo_sangre',      req: false, ejemplo: 'O+, A-, etc.' },
   { key: 'parametros',        label: 'parametros',       req: false, ejemplo: 'Código interno' },
+  { key: 'latitud',           label: 'latitud',          req: false, ejemplo: 'Ej: 4.710989' },
+  { key: 'longitud',          label: 'longitud',         req: false, ejemplo: 'Ej: -74.072092' },
   { key: 'comentarios',       label: 'comentarios',      req: false },
-  { key: 'distrito',          label: 'distrito',         req: false, ejemplo: 'Código 2 dígitos' },
-  { key: 'codigo_postal',     label: 'codigo_postal',    req: false, ejemplo: '6 dígitos' },
+  { key: 'is_active',         label: 'activo',           req: false, ejemplo: 'true / false' },
   { key: 'fecha_nacimiento',  label: 'fecha_nacimiento', req: false, ejemplo: 'YYYY-MM-DD' },
 ];
 
@@ -122,8 +123,6 @@ export default function ImportadorTerceros() {
     try {
       const registros = validas.map(f => ({
         cedula:            f.cedula,
-        tipo_documento:    f.tipo_documento    || '',
-        lugar_exp_cedula:  f.lugar_exp_cedula  || '',
         tipo_persona:      f.tipo_persona      || 'N',
         nombre1:           f.nombre1           || '',
         nombre2:           f.nombre2           || '',
@@ -136,7 +135,6 @@ export default function ImportadorTerceros() {
         direccion:         f.direccion         || '',
         barrio:            f.barrio            || '',
         telefono1:         f.telefono1         || '',
-        telefono2:         f.telefono2         || '',
         celular:           f.celular           || '',
         fax:               f.fax               || '',
         email:             f.email             || '',
@@ -144,6 +142,9 @@ export default function ImportadorTerceros() {
         parametros:        f.parametros        || '',
         codigo_postal:     f.codigo_postal     || '',
         distrito:          f.distrito          || '',
+        latitud:           f.latitud           || null,
+        longitud:          f.longitud          || null,
+        is_active:         /^(true|1|s|si|yes)$/i.test(String(f.is_active || '').trim()),
         comentarios:       f.comentarios       || '',
       }));
       const r = await importarTerceros({ modo, registros });
@@ -256,7 +257,7 @@ export default function ImportadorTerceros() {
             <div className="table-responsive" style={{maxHeight:380}}>
               <table className="table table-sm table-hover">
                 <thead className="table-dark sticky-top">
-                  <tr><th>#</th><th>Est</th><th>Código</th><th>Doc</th>
+                  <tr><th>#</th><th>Est</th><th>Código</th>
                       <th>Nombre / Razón social</th><th>Teléfono</th><th>Celular</th><th>Email</th></tr>
                 </thead>
                 <tbody>
@@ -268,7 +269,6 @@ export default function ImportadorTerceros() {
                         : <i className="bi bi-x-circle-fill text-danger" title={f._errores.join(', ')}></i>}
                       </td>
                       <td><code className="small">{f.cedula}</code></td>
-                      <td><span className="badge bg-secondary">{f.tipo_documento||''}</span></td>
                       <td className="small">
                         {f.tipo_persona==='J' ? f.razon_social
                           : `${[f.nombre1,f.nombre2,f.apellido1,f.apellido2].filter(Boolean).join(' ')}`.trim() || '—'}

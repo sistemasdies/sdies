@@ -38,7 +38,14 @@
     </tr>
   </table>
 
-  <div class="section">Datos Generales — Código: {{ cedula }}</div>
+  <div class="section" style="display:flex; justify-content:space-between; align-items:center;">
+    <span>Datos Generales — Código: {{ cedula }}</span>
+    <span style="font-weight:normal;">Activo
+      <span style="display:inline-block; width:14px; height:14px; border:2px solid #000; background:#fff; position:relative; vertical-align:middle; margin-left:4px;">
+        {% if activo %}<span style="position:absolute; top:-4px; left:1px; font-size:14px; font-weight:bold; color:#000;">&#10003;</span>{% endif %}
+      </span>
+    </span>
+  </div>
   <table>
     <tr>
       <td class="label">Nombre completo</td><td class="val">{{ nombre_completo }}</td>

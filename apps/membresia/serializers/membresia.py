@@ -45,7 +45,7 @@ class MembresiaSerializer(serializers.ModelSerializer):
             'lugar_fallecimiento', 'fecha_fallecido',
             'escolaridad', 'profesion', 'ocupacion', 'lugar_de_trabajo',
             'telefono_trabajo', 'comentarios_academico_laboral',
-            'estado', 'comentarios_eclesiales',
+            'estado', 'activo', 'comentarios_eclesiales',
             'congregacion', 'congregacion_nombre',
             'politica_datos_chk1', 'politica_datos_chk2', 'politica_datos_chk3', 'politica_datos_chk4',
             'tiene_notas_pastor', 'tiene_notas_misionero',

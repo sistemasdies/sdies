@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createCuenta, getCuentas, updateCuenta } from '../../api/cuentas';
+import { importarCuentas } from '../../api/cuentas';
 import toast from 'react-hot-toast';
 
 // ── Reglas de inferencia (sin padre — lo calcula el backend) ─────────────
@@ -123,66 +123,35 @@ export default function ImportadorCuentas() {
     setCargando(true);
     setProgreso(0);
 
-    // Cargar códigos existentes en BD
-    let codigosEnBD = new Map();
-    try {
-      const res  = await getCuentas({ page_size: 10000 });
-      const list = res.data.results || res.data;
-      list.forEach(c => codigosEnBD.set(c.codigo, c.id));
-    } catch {
-      toast.error('No se pudo cargar el plan de cuentas');
-      setCargando(false);
-      return;
-    }
-
-    // Ordenar: primero 1 dígito, luego 2, luego 4, luego 6
-    // así el padre siempre existe antes que el hijo
     const ordenadas = [...validas].sort((a, b) => a.codigo.length - b.codigo.length);
+    const registros = ordenadas.map(fila => ({
+      codigo:      fila.codigo,
+      descripcion: fila.descripcion,
+      nivel:       fila.nivel,
+      naturaleza:  fila.naturaleza,
+      tipo_pgmd:   fila.tipo_pgmd,
+      es_detalle:  fila.es_detalle,
+    }));
 
-    let creadas = 0, actualizadas = 0, fail = 0;
-    const erroresImport = [];
-
-    for (let i = 0; i < ordenadas.length; i++) {
-      const fila = ordenadas[i];
-      setProgreso(Math.round(((i + 1) / ordenadas.length) * 100));
-
-      // El backend calcula el padre en save() — solo enviamos los datos básicos
-      const payload = {
-        codigo:      fila.codigo,
-        descripcion: fila.descripcion,
-        nivel:       fila.nivel,
-        naturaleza:  fila.naturaleza,
-        tipo_pgmd:   fila.tipo_pgmd,
-        es_detalle:  fila.es_detalle,
-        // clase_aptig y padre los infiere el backend en save()
-      };
-
-      try {
-        if (codigosEnBD.has(fila.codigo)) {
-          await updateCuenta(codigosEnBD.get(fila.codigo), payload);
-          actualizadas++;
-        } else {
-          await createCuenta(payload);
-          creadas++;
-        }
-      } catch (err) {
-        fail++;
-        erroresImport.push({
-          fila:   fila._fila,
-          codigo: fila.codigo,
-          padre:  fila._padre,
-          error:  extraerError(err),
-        });
-      }
+    try {
+      const r = await importarCuentas({ modo: 'ambos', registros });
+      const { creados, actualizados, omitidos, errores } = r.data;
+      setResultado({
+        creadas: creados,
+        actualizadas: actualizados,
+        fail: errores?.length || 0,
+        erroresImport: errores || [],
+      });
+      setPaso(3);
+      if (creados || actualizados)
+        toast.success(`${creados} creada(s), ${actualizados} actualizada(s)`);
+      if (errores?.length) toast.error(`${errores.length} con error`);
+    } catch (err) {
+      toast.error(extraerError(err));
+      setCargando(false);
     }
-
-    setCargando(false);
     setProgreso(100);
-    setResultado({ creadas, actualizadas, fail, erroresImport });
-    setPaso(3);
-    if (creadas || actualizadas)
-      toast.success(`${creadas} creada(s), ${actualizadas} actualizada(s)`);
-    if (fail) toast.error(`${fail} con error`);
+    setCargando(false);
   };
 
   const reiniciar = () => {
