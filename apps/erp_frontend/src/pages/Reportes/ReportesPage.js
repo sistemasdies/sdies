@@ -80,7 +80,10 @@ export default function ReportesPage() {
     try {
       let res;
       if      (tipo === 'balance_general')      res = await getBalanceGeneral({ fecha_hasta: hasta });
-      else if (tipo === 'estado_resultados')    res = await getEstadoResultados({ fecha_desde: desde, fecha_hasta: hasta });
+      else if (tipo === 'estado_resultados')    res = await getEstadoResultados({
+        fecha_desde: desde, fecha_hasta: hasta,
+        centro: centro.length ? centro.join(',') : undefined,
+      });
       else                                      res = await getBalanceComprobacion({
         fecha_desde: desde, fecha_hasta: hasta,
         nivel: niveles.length ? `${Math.max(...niveles.map(Number))}` : '6',
@@ -118,7 +121,7 @@ export default function ReportesPage() {
         <div className="card border-0 shadow-sm mb-4">
           <div className="card-body">
             <div className="row g-3 align-items-end">
-              <div className="col-md-4">
+              <div className={tipo === 'estado_resultados' ? 'col-md-3' : 'col-md-4'}>
                 <label className="form-label small fw-semibold">Tipo de reporte</label>
                 <select className="form-select" value={tipo}
                   onChange={e => onTipo(e.target.value)}>
@@ -139,6 +142,16 @@ export default function ReportesPage() {
                 <input type="date" className="form-control" value={hasta}
                   onChange={e => onHasta(e.target.value)} />
               </div>
+              {tipo === 'estado_resultados' && (
+                <div className="col-md-3">
+                  <label className="form-label small fw-semibold">Centros de costo</label>
+                  <MultiSelect options={opciones.centros}
+                    value={centro} onChange={onCentro}
+                    getKey={c => c.codigo}
+                    getLabel={c => `${c.codigo} — ${c.descripcion}`}
+                    placeholder="Todos" />
+                </div>
+              )}
               <div className="col-md-2">
                 <button className="btn btn-success w-100" onClick={generar} disabled={loading || !canAdd}>
                   <i className="bi bi-play-fill me-1"></i>Generar
@@ -149,10 +162,10 @@ export default function ReportesPage() {
             {tipo === 'balance_comprobacion' && (
               <>
                 <hr className="my-3" />
-                <div className="row g-3 align-items-end">
-                  <div className="col-12">
-                    <label className="form-label small fw-semibold">Niveles a mostrar</label>
-                    <div className="d-flex flex-wrap gap-3 align-items-center">
+                <div className="row g-2 align-items-end">
+                  <div className="col-md-4">
+                    <label className="form-label small fw-semibold">Niveles</label>
+                    <div className="d-flex flex-wrap gap-2 align-items-center">
                       {NIVELES.map(n => (
                         <div key={n.valor} className="form-check form-check-inline mb-0">
                           <input className="form-check-input" type="checkbox"
@@ -168,22 +181,17 @@ export default function ReportesPage() {
                         onClick={setTodosNiveles}>
                         <i className="bi bi-check2-all me-1"></i>Todos
                       </button>
-                    </div>
-                    {niveles.length === 0 && (
-                      <small className="text-muted">Sin filtro = se muestran todos los niveles.</small>
-                    )}
-                  </div>
-                  <div className="col-12">
-                    <div className="form-check">
-                      <input className="form-check-input" type="checkbox" id="mostrar-ceros"
-                        checked={mostrarCeros} onChange={e => onCeros(e.target.checked)} />
-                      <label className="form-check-label small" htmlFor="mostrar-ceros">
-                        <i className="bi bi-ui-checks me-1"></i>Mostrar renglones en cero
-                      </label>
+                      <div className="form-check mb-0">
+                        <input className="form-check-input" type="checkbox" id="mostrar-ceros"
+                          checked={mostrarCeros} onChange={e => onCeros(e.target.checked)} />
+                        <label className="form-check-label small" htmlFor="mostrar-ceros">
+                          Ceros
+                        </label>
+                      </div>
                     </div>
                   </div>
-                  <div className="col-md-4">
-                    <label className="form-label small fw-semibold">Libros (tipos de comprobante)</label>
+                  <div className="col-md-3">
+                    <label className="form-label small fw-semibold">Libros</label>
                     <MultiSelect options={opciones.comprobantes}
                       value={libro} onChange={onLibro}
                       getKey={c => c.codigo}
@@ -198,7 +206,7 @@ export default function ReportesPage() {
                       getLabel={c => `${c.codigo} — ${c.descripcion}`}
                       placeholder="Todas" />
                   </div>
-                  <div className="col-md-3">
+                  <div className="col-md-2">
                     <label className="form-label small fw-semibold">Centros de costo</label>
                     <MultiSelect options={opciones.centros}
                       value={centro} onChange={onCentro}

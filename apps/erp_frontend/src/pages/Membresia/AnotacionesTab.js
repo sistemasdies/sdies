@@ -212,10 +212,10 @@ export default function AnotacionesTab({ cedula, nombre, tipo }) {
                       onChange={e => setForm(f => ({ ...f, anotacion: e.target.value }))} />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label small fw-semibold">Cedula firma</label>
+                    <label className="form-label small fw-semibold">Pastor / Misionero</label>
                     <div className="input-group">
                       <input className="form-control" value={form.cedula_firma}
-                        placeholder="Código de quien firma"
+                        placeholder="Código del pastor o misionero"
                         onChange={e => setForm(f => ({ ...f, cedula_firma: e.target.value }))} />
                       <button type="button" className="btn btn-outline-secondary" onClick={abrirLupaFirma} title="Buscar membresía">
                         <i className="bi bi-search"></i>

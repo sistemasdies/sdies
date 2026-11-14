@@ -20,3 +20,10 @@ export const subirFotosAcontecimiento = (id, files) => {
 };
 export const eliminarFotoAcontecimiento = (id, fotoId) =>
   API.delete(`/actividades/acontecimientos/${id}/fotos/${fotoId}/`);
+
+// Visitación
+export const getVisitaciones   = (params)  => API.get('/actividades/visitaciones/', { params });
+export const getVisitacion     = (id)      => API.get(`/actividades/visitaciones/${id}/`);
+export const createVisitacion  = (data)    => API.post('/actividades/visitaciones/', data);
+export const updateVisitacion  = (id, data) => API.put(`/actividades/visitaciones/${id}/`, data);
+export const deleteVisitacion  = (id)      => API.delete(`/actividades/visitaciones/${id}/`);

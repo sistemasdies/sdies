@@ -49,6 +49,7 @@ const MODULE_LABELS = {
   roles:             'Roles',
   asistencia:        'Asistencia',
   acontecimientos:   'Acontecimientos',
+  visitacion:        'Visitación',
   auxiliares:        'Auxiliares',
   saldos_meses:      'Saldos Meses/Años',
 };
@@ -63,7 +64,7 @@ export default function RolesPage() {
   const { user, asumirRol, retomarRol } = useAuth();
   const { canAdd, canEdit, canDel } = usePerm('/roles');
   const [roles,     setRoles]     = useState([]);
-  const [ordenRoles, setOrdenRoles] = useState(null);
+  const [ordenRoles, setOrdenRoles] = useState({ campo: 'NameRole', dir: 'asc' });
 
   const sortRoles = (campo) => {
     setOrdenRoles(prev => {
@@ -757,7 +758,7 @@ export default function RolesPage() {
                 {roles.length === 0
                   ? <p className="text-muted small mb-0">No hay roles disponibles.</p>
                   : <div className="list-group">
-                      {roles.map(r => (
+                      {[...roles].sort((a, b) => (a.NameRole || '').localeCompare(b.NameRole || '')).map(r => (
                         <button key={r.id} type="button"
                           className="list-group-item list-group-item-action d-flex
                                      align-items-center justify-content-between"

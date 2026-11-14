@@ -14,7 +14,7 @@ const PAGE = 20;
  *   cedulaInicial  string — precarga el buscador con la cédula actual
  */
 export default function SelectorMembresia({
-  abierto, onCerrar, onElegir, cedulaInicial,
+  abierto, onCerrar, onElegir, cedulaInicial, congregacion,
 }) {
   const [q, setQ]           = useState('');
   const [lista, setLista]   = useState([]);
@@ -36,6 +36,7 @@ export default function SelectorMembresia({
   const buscar = useCallback(() => {
     setCargando(true);
     const params = { page: pagina, page_size: PAGE, ...(q.trim() && { search: q.trim() }) };
+    if (congregacion) params.congregacion = congregacion;
     getMembresias(params)
       .then(r => {
         setLista(r.data.results || r.data);

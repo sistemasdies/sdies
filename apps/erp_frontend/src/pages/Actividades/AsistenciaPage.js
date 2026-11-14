@@ -295,7 +295,7 @@ export default function AsistenciaPage() {
                     </div>
                     <div className="col-12 col-md-6">
                       <label className="form-label small fw-semibold">Tema de predicación</label>
-                      <input type="text" maxLength={25} className="form-control"
+                      <input type="text" maxLength={50} className="form-control"
                         value={form.tema_predicacion} onChange={e => setForm(f => ({ ...f, tema_predicacion: e.target.value }))} />
                     </div>
                     <div className="col-12">

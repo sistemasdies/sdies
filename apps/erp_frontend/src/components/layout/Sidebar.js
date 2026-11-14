@@ -85,6 +85,7 @@ const GRUPOS = [
     hijos: [
       { to: '/actividades/asistencia', icon: 'bi-people', label: 'Asistencia', mod: 'asistencia' },
       { to: '/actividades/acontecimientos', icon: 'bi-megaphone', label: 'Acontecimientos', mod: 'acontecimientos' },
+      { to: '/actividades/visitacion', icon: 'bi-house-door', label: 'Visitación', mod: 'visitacion' },
     ],
   },
   {

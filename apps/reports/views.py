@@ -61,9 +61,18 @@ class EstadoResultadosView(APIView):
         fecha_hasta = request.query_params.get('fecha_hasta', str(today))
         excluir_cierre = request.query_params.get('excluir_cierre', '').lower() in ('1', 'true', 'si', 'yes')
         scope = user_scope(request.user)
+        # Filtro opcional por centros de costo seleccionados en el frontend.
+        centros_sel = request.query_params.get('centro', '')
+        solo_centros = scope['centros_costo']
+        if centros_sel:
+            seleccionados = set(c for c in centros_sel.split(',') if c)
+            if solo_centros is not None:
+                solo_centros = solo_centros & seleccionados
+            else:
+                solo_centros = seleccionados
         return Response(ReportService.estado_resultados(
             fecha_desde, fecha_hasta, excluir_cierre=excluir_cierre,
-            solo_cuentas=scope['cuentas'], solo_centros=scope['centros_costo'],
+            solo_cuentas=scope['cuentas'], solo_centros=solo_centros,
             solo_comprobantes=scope['comprobantes']))
 
 

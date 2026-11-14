@@ -17,7 +17,7 @@ import { usePerm } from '../../hooks/usePerm';
 import { useAuth } from '../../context/AuthContext';
 import API from '../../api/client';
 import {
-  getMembresias, createMembresia, updateMembresia, deleteMembresia,
+  getMembresias, createMembresia, updateMembresia, cambiarActivoMembresia, deleteMembresia,
   buscarTerceroPorCedula, getCedulasConMembresia,
   subirFotoMembresia, eliminarFotoMembresia,
 } from '../../api/membresias';
@@ -43,10 +43,10 @@ const CIVIL_LABEL   = Object.fromEntries(ESTADOS_CIVIL);
 
 const SECCIONES = [
   { key: 'generales',  label: 'Datos Generales',     icon: 'bi-person-vcard' },
-  { key: 'familiares', label: 'Datos Familiares',    icon: 'bi-people'      },
+  { key: 'familiares', label: 'Familiar',            icon: 'bi-people'      },
   { key: 'laboral',    label: 'Académico Laboral',   icon: 'bi-briefcase'   },
-  { key: 'eclesiastico', label: 'Datos Eclesiásticos', icon: 'bi-cross'       },
-  { key: 'tratamiento_datos', label: 'Tratamiento de datos', icon: 'bi-shield-check' },
+  { key: 'eclesiastico', label: 'Eclesial',          icon: 'bi-book'        },
+  { key: 'tratamiento_datos', label: 'Tratamiento Datos', icon: 'bi-shield-check' },
   { key: 'anotaciones_pastor', label: 'Notas Pastor', icon: 'bi-chat-left-text' },
   { key: 'anotaciones_misionero', label: 'Notas Misionero', icon: 'bi-chat-left-dots' },
 ];
@@ -935,6 +935,20 @@ export default function MembresiaPage() {
     }
   };
 
+  const toggleActivo = async (m) => {
+    if (!canEdit) return;
+    const nuevo = !m.activo;
+    // Optimistic update
+    setMembresias(prev => prev.map(x => x.id === m.id ? { ...x, activo: nuevo } : x));
+    try {
+      await cambiarActivoMembresia(m.id, nuevo);
+      toast.success(`Miembro ${nuevo ? 'activado' : 'desactivado'}`);
+    } catch {
+      toast.error('No se pudo cambiar el estado');
+      setMembresias(prev => prev.map(x => x.id === m.id ? { ...x, activo: !nuevo } : x));
+    }
+  };
+
   const abrirMapa = async () => {
     if (!filtros.congregacion) {
       toast('Selecciona una congregación primero', { icon: 'ℹ️' });
@@ -1107,6 +1121,22 @@ export default function MembresiaPage() {
                             disabled={!canEdit} title="Editar">
                             <i className="bi bi-pencil"></i>
                           </button>
+                          {canEdit && (
+                            <>
+                              <input type="checkbox" className="btn-check"
+                                id={`activo-${m.id}`}
+                                checked={!!m.activo}
+                                onChange={() => toggleActivo(m)} />
+                              <label className="btn btn-outline-secondary"
+                                htmlFor={`activo-${m.id}`}
+                                title={m.activo ? 'Activo — clic para desactivar' : 'Inactivo — clic para activar'}
+                                style={m.activo
+                                  ? { color: '#146c43', borderColor: '#146c43', backgroundColor: 'transparent', boxShadow: 'none' }
+                                  : { backgroundColor: 'transparent', boxShadow: 'none' }}>
+                                <i className={`bi ${m.activo ? 'bi-check-square' : 'bi-square'}`}></i>
+                              </label>
+                            </>
+                          )}
                           <button className="btn btn-outline-danger" onClick={() => eliminar(m)}
                             disabled={!canDel} title="Eliminar">
                             <i className="bi bi-trash"></i>

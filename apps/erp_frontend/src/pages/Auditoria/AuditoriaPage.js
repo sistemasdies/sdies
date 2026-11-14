@@ -4,7 +4,7 @@ import TopBar from '../../components/layout/TopBar';
 import PageHeader from '../../components/common/PageHeader';
 import Spinner from '../../components/common/Spinner';
 import EmptyState from '../../components/common/EmptyState';
-import { getAuditLogs } from '../../api/audit';
+import { getAuditLogs, getAuditResources, getAuditUsers } from '../../api/audit';
 import toast from 'react-hot-toast';
 
 const PAGE_SIZE = 50;
@@ -21,6 +21,13 @@ export default function AuditoriaPage() {
   const [pagina, setPagina] = useState(1);
   const [total, setTotal] = useState(0);
   const [detalle, setDetalle] = useState(null);
+  const [recursos, setRecursos] = useState([]);
+  const [usuariosOpts, setUsuariosOpts] = useState([]);
+
+  useEffect(() => {
+    getAuditResources().then(r => setRecursos(r.data || [])).catch(() => {});
+    getAuditUsers().then(r => setUsuariosOpts(r.data || [])).catch(() => {});
+  }, []);
 
   const cargar = useCallback(() => {
     setLoading(true);
@@ -56,7 +63,10 @@ export default function AuditoriaPage() {
           <div className="card-body py-2">
             <div className="row g-2">
               <div className="col-md-2">
-                <input className="form-control form-control-sm" placeholder="Recurso (ej: tercero)" value={recurso} onChange={e => { setRecurso(e.target.value); setPagina(1); }} />
+                <select className="form-select form-select-sm" value={recurso} onChange={e => { setRecurso(e.target.value); setPagina(1); }}>
+                  <option value="">Todos los recursos</option>
+                  {recursos.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
               </div>
               <div className="col-md-2">
                 <select className="form-select form-select-sm" value={accion} onChange={e => { setAccion(e.target.value); setPagina(1); }}>
@@ -67,7 +77,12 @@ export default function AuditoriaPage() {
                 </select>
               </div>
               <div className="col-md-2">
-                <input className="form-control form-control-sm" placeholder="Usuario (login)" value={usuario} onChange={e => { setUsuario(e.target.value); setPagina(1); }} />
+                <select className="form-select form-select-sm" value={usuario} onChange={e => { setUsuario(e.target.value); setPagina(1); }}>
+                  <option value="">Todos los usuarios</option>
+                  {usuariosOpts.map(u => (
+                    <option key={u.login} value={u.login}>{u.nombre ? `${u.login} — ${u.nombre}` : u.login}</option>
+                  ))}
+                </select>
               </div>
               <div className="col-md-2">
                 <input type="date" className="form-control form-control-sm" value={desde} onChange={e => { setDesde(e.target.value); setPagina(1); }} />

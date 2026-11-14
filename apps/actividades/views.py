@@ -6,9 +6,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F
 
-from apps.actividades.models import Acontecimiento, FotoAcontecimiento, Asistencia
+from apps.actividades.models import Acontecimiento, FotoAcontecimiento, Asistencia, Visitacion
 from apps.actividades.serializers import (
-    AcontecimientoSerializer, FotoAcontecimientoSerializer, AsistenciaSerializer,
+    AcontecimientoSerializer, FotoAcontecimientoSerializer, AsistenciaSerializer, VisitacionSerializer,
 )
 from apps.core.utils.pagination import StandardPagination
 from apps.core.views import HardDeleteMixin
@@ -142,6 +142,42 @@ class AsistenciaViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
             qs = qs.annotate(
                 total=F('creyentes') + F('simpatizantes') + F('visitas') + F('ninos')
             )
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save()
+        self._log('create', serializer.instance, before=None, after=self._snapshot(serializer.instance))
+
+    def perform_update(self, serializer):
+        before = self._snapshot(serializer.instance)
+        serializer.save()
+        self._log('update', serializer.instance, before=before, after=self._snapshot(serializer.instance))
+
+
+class VisitacionViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
+    pagination_class = StandardPagination
+    serializer_class = VisitacionSerializer
+    module = 'visitacion'
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['congregacion', 'fecha', 'modo']
+    search_fields = [
+        'objeto_visita', 'comentarios',
+        'visitado__tercero__cedula', 'visitado__tercero__nombre1',
+        'visitado__tercero__apellido1', 'responsable__tercero__cedula',
+        'responsable__tercero__nombre1', 'responsable__tercero__apellido1',
+        'congregacion__codigo', 'congregacion__nombre',
+    ]
+    ordering_fields = ['fecha', 'congregacion', 'item']
+    ordering = ['-fecha', 'congregacion', 'item']
+    queryset = Visitacion.objects.all().select_related(
+        'congregacion', 'visitado__tercero', 'responsable__tercero')
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        scope = user_scope(self.request.user)
+        if scope['congregaciones'] is not None:
+            qs = qs.filter(congregacion__codigo__in=scope['congregaciones'])
         return qs
 
     def perform_create(self, serializer):

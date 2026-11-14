@@ -201,7 +201,7 @@ export default function CentroCostosPage() {
                   <div className="row g-3">
                     <div className="col-4">
                       <label className="form-label small fw-semibold">
-                        Cedula <span className="text-danger">*</span>
+                        Código <span className="text-danger">*</span>
                       </label>
                       <input className="form-control font-monospace text-uppercase"
                         maxLength={7} value={form.codigo} required
