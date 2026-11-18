@@ -114,7 +114,7 @@ MEDIA_URL   = '/media/'
 MEDIA_ROOT  = BASE_DIR / 'media'
 
 # Cloudinary (almacenamiento de imágenes externas)
-CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME') or env_file('CLOUDINARY_CLOUD_NAME', default='')
+CLOUDINARY_CLOUD_NAME = (os.environ.get('CLOUDINARY_CLOUD_NAME') or env_file('CLOUDINARY_CLOUD_NAME', default='')).strip()
 CLOUDINARY_API_KEY    = os.environ.get('CLOUDINARY_API_KEY')    or env_file('CLOUDINARY_API_KEY', default='')
 CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET') or env_file('CLOUDINARY_API_SECRET', default='')
 CLOUDINARY_FOLDER     = os.environ.get('CLOUDINARY_FOLDER') or env_file('CLOUDINARY_FOLDER', default='sdies/fotos')

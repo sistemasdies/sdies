@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import useIdleLogout from './hooks/useIdleLogout';
 
 import LoginPage         from './pages/Login/LoginPage';
 import RecuperarContrasena from './pages/RecuperarContrasena/RecuperarContrasena';
@@ -65,6 +66,7 @@ function PrivateRoute({ children }) {
 
 function AppRoutes() {
   const { user } = useAuth();
+  useIdleLogout();
   return (
     <Routes>
       <Route path="/login"          element={user ? <Navigate to="/dashboard" /> : <LoginPage />} />

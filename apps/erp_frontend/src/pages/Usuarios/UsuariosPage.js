@@ -367,7 +367,7 @@ export default function UsuariosPage() {
                       <select className="form-select" value={form.role || ''}
                         onChange={e=>setForm({...form, role: e.target.value ? Number(e.target.value) : null})}>
                         <option value="">Sin rol</option>
-                        {roles.map(r => (
+                        {[...roles].sort((a, b) => (a.NameRole || '').localeCompare(b.NameRole || '')).map(r => (
                           <option key={r.id} value={r.id}>{r.NameRole} — {r.description}</option>
                         ))}
                       </select>

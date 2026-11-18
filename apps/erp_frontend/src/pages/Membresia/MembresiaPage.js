@@ -567,8 +567,8 @@ export default function MembresiaPage() {
     if (busqueda)  params.search = busqueda;
     if (orden)     params.ordering = (orden.dir === 'desc' ? '-' : '') + orden.campo;
     if (filtros.estado)       params.estado = filtros.estado;
-    if (filtros.bautizados)   params.solo_bautizados = filtros.bautizados;
-    if (filtros.promesados)   params.solo_promesados = filtros.promesados;
+    if (filtros.bautizados !== '') params.sw_bautizado = filtros.bautizados;
+    if (filtros.promesados !== '') params.sw_promesado = filtros.promesados;
     if (filtros.congregacion) params.congregacion = filtros.congregacion;
     if (filtros.activo !== '') params.activo = filtros.activo;
     getMembresias(params)
@@ -584,7 +584,14 @@ export default function MembresiaPage() {
 
   useEffect(() => {
     getCongregaciones({ page_size: 1000 })
-      .then(r => setCongregaciones(r.data.results || r.data || []))
+      .then(r => {
+        const list = r.data.results || r.data || [];
+        setCongregaciones(list);
+        if (list.length && !filtros.congregacion) {
+          setFiltros(p => ({ ...p, congregacion: list[0].codigo }));
+          setPagina(1);
+        }
+      })
       .catch(() => {});
     getEstados({ page_size: 1000 })
       .then(r => setEstadosMembresia(r.data.results || r.data || []))
@@ -967,7 +974,7 @@ export default function MembresiaPage() {
     }
   };
 
-  const hayFiltros = filtros.estado || filtros.bautizados || filtros.promesados || filtros.congregacion || filtros.activo !== '';
+  const hayFiltros = filtros.estado || filtros.bautizados !== '' || filtros.promesados !== '' || filtros.congregacion || filtros.activo !== '';
   const totalPaginas = Math.ceil(total / PAGE_SIZE);
 
   return (
@@ -1005,6 +1012,18 @@ export default function MembresiaPage() {
                 <option value="true">Activo: Sí</option>
                 <option value="false">Activo: No</option>
               </select>
+              <select className="form-select form-select-sm" style={{ maxWidth: 150 }}
+                value={filtros.bautizados} onChange={e => { setFiltros(p => ({ ...p, bautizados: e.target.value })); setPagina(1); }}>
+                <option value="">Bautizado: Todos</option>
+                <option value="1">Bautizado: Sí</option>
+                <option value="0">Bautizado: No</option>
+              </select>
+              <select className="form-select form-select-sm" style={{ maxWidth: 150 }}
+                value={filtros.promesados} onChange={e => { setFiltros(p => ({ ...p, promesados: e.target.value })); setPagina(1); }}>
+                <option value="">Promesado: Todos</option>
+                <option value="1">Promesado: Sí</option>
+                <option value="0">Promesado: No</option>
+              </select>
               <select className="form-select form-select-sm" style={{ maxWidth: 220 }}
                 value={filtros.congregacion} onChange={e => { setFiltros(p => ({ ...p, congregacion: e.target.value })); setPagina(1); }}>
                 <option value="">Todas las congregaciones</option>
@@ -1014,16 +1033,6 @@ export default function MembresiaPage() {
                 onClick={abrirMapa} disabled={!filtros.congregacion || mapaCargando}>
                 <i className="bi bi-map me-1"></i>Ver mapa
               </button>
-              <div className="btn-group btn-group-sm">
-                <button className={`btn ${filtros.bautizados === '1' ? 'btn-primary' : 'btn-outline-primary'}`}
-                  onClick={() => { setFiltros(p => ({ ...p, bautizados: p.bautizados === '1' ? '' : '1' })); setPagina(1); }}>
-                  <i className="bi bi-water me-1"></i>Bautizados
-                </button>
-                <button className={`btn ${filtros.promesados === '1' ? 'btn-primary' : 'btn-outline-primary'}`}
-                  onClick={() => { setFiltros(p => ({ ...p, promesados: p.promesados === '1' ? '' : '1' })); setPagina(1); }}>
-                  <i className="bi bi-snow2 me-1"></i>Promesados
-                </button>
-              </div>
               {hayFiltros && (
                 <button className="btn btn-sm btn-outline-danger"
                   onClick={() => { setFiltros({ estado: '', bautizados: '', promesados: '', congregacion: '', activo: '' }); setPagina(1); }}>
