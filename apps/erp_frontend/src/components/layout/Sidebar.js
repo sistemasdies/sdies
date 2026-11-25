@@ -37,7 +37,8 @@ const GRUPOS = [
     hijos: [
       { to: '/procesos/bloquear-fecha',     icon: 'bi-calendar-x',     label: 'Bloquear Fecha',     mod: 'usuarios' },
       { to: '/procesos/cierre-periodo',    icon: 'bi-calendar-check', label: 'Cierre de Periodo',   mod: 'periodos' },
-      { to: '/procesos/generar-presupuesto', icon: 'bi-journal-check', label: 'Generar Presupuesto', mod: 'reportes' },
+      { to: '/procesos/generar-presupuesto', icon: 'bi-journal-check', label: 'Generar Presupuesto', mod: 'presupuesto' },
+      { to: '/procesos/control-presupuestal', icon: 'bi-graph-up-arrow', label: 'Control Presupuestal', mod: 'presupuesto' },
       { to: '/procesos/correccion-datos',  icon: 'bi-tools',          label: 'Corrección de Datos', mod: 'correccion_datos' },
       { to: '/procesos/copia-seguridad',   icon: 'bi-database-down',  label: 'Copia de Seguridad',  soloStaff: true },
       { to: '/importar',                   icon: 'bi-cloud-upload',   label: 'Importar datos',     mod: 'importar' },

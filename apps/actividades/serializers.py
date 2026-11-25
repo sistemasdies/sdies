@@ -45,19 +45,23 @@ class AcontecimientoSerializer(serializers.ModelSerializer):
 
 class AsistenciaSerializer(serializers.ModelSerializer):
     congregacion_nombre = serializers.SerializerMethodField()
+    subtotal = serializers.SerializerMethodField()
     total = serializers.SerializerMethodField()
 
     class Meta:
         model = Asistencia
         fields = [
             'id', 'fecha', 'congregacion', 'congregacion_nombre',
-            'creyentes', 'simpatizantes', 'visitas', 'ninos', 'online',
+            'creyentes', 'simpatizantes', 'visitas', 'subtotal', 'ninos', 'online',
             'tema_predicacion', 'comentarios', 'total',
         ]
         read_only_fields = ['id']
 
     def get_congregacion_nombre(self, obj):
         return obj.congregacion.nombre if obj.congregacion_id else ''
+
+    def get_subtotal(self, obj):
+        return (obj.creyentes or 0) + (obj.simpatizantes or 0) + (obj.visitas or 0)
 
     def get_total(self, obj):
         return (obj.creyentes or 0) + (obj.simpatizantes or 0) + (obj.visitas or 0) + (obj.ninos or 0)

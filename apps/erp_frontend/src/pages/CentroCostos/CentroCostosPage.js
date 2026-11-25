@@ -18,6 +18,7 @@ export default function CentroCostosPage() {
   const [loading,   setLoading]   = useState(true);
   const [busqueda,  setBusqueda]  = useState('');
   const [busqResp,  setBusqResp]  = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('activos');
   const [modal,     setModal]     = useState(false);
   const [form,      setForm]      = useState(FORM_VACIO);
   const [editando,  setEditando]  = useState(null);
@@ -79,10 +80,31 @@ export default function CentroCostosPage() {
     }
   };
 
-  const filtrados = centros.filter(c =>
-    c.codigo.toLowerCase().includes(busqueda.toLowerCase()) ||
-    c.descripcion.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const toggleActivo = async (c) => {
+    try {
+      await updateCentroCosto(c.id, {
+        codigo: c.codigo,
+        descripcion: c.descripcion,
+        responsable: c.responsable || null,
+        is_active: !c.is_active,
+      });
+      toast.success(`Centro de costo ${!c.is_active ? 'activado' : 'desactivado'}`);
+      cargar();
+    } catch {
+      toast.error('No se pudo cambiar el estado');
+    }
+  };
+
+  const filtrados = centros.filter(c => {
+    const coincideTexto =
+      c.codigo.toLowerCase().includes(busqueda.toLowerCase()) ||
+      c.descripcion.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideEstado =
+      filtroEstado === 'todos' ? true :
+      filtroEstado === 'activos' ? c.is_active :
+      !c.is_active;
+    return coincideTexto && coincideEstado;
+  });
 
   return (
     <MainLayout>
@@ -95,23 +117,39 @@ export default function CentroCostosPage() {
           </button>
         </PageHeader>
 
-        {/* Buscador */}
+        {/* Filtros */}
         <div className="card border-0 shadow-sm mb-3">
           <div className="card-body py-2">
-            <div className="input-group" style={{ maxWidth: 380 }}>
-              <span className="input-group-text bg-white">
-                <i className="bi bi-search text-muted"></i>
-              </span>
-              <input className="form-control border-start-0"
-                placeholder="Buscar por código o descripción..."
-                value={busqueda}
-                onChange={e => setBusqueda(e.target.value)} />
-              {busqueda && (
-                <button className="btn btn-outline-secondary"
-                  onClick={() => setBusqueda('')}>
-                  <i className="bi bi-x"></i>
-                </button>
-              )}
+            <div className="row g-3 align-items-center">
+              <div className="col-md-4">
+                <div className="input-group">
+                  <span className="input-group-text bg-white">
+                    <i className="bi bi-search text-muted"></i>
+                  </span>
+                  <input className="form-control border-start-0"
+                    placeholder="Buscar por código o descripción..."
+                    value={busqueda}
+                    onChange={e => setBusqueda(e.target.value)} />
+                  {busqueda && (
+                    <button className="btn btn-outline-secondary"
+                      onClick={() => setBusqueda('')}>
+                      <i className="bi bi-x"></i>
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="col-md-3">
+                <select className="form-select form-select-sm"
+                  value={filtroEstado}
+                  onChange={e => setFiltroEstado(e.target.value)}>
+                  <option value="activos">Activos</option>
+                  <option value="inactivos">Inactivos</option>
+                  <option value="todos">Todos</option>
+                </select>
+              </div>
+              <div className="col-md-auto">
+                <span className="small text-muted">{filtrados.length} resultado(s)</span>
+              </div>
             </div>
           </div>
         </div>
@@ -158,9 +196,13 @@ export default function CentroCostosPage() {
                         )}
                       </td>
                       <td className="text-center">
-                        {c.is_active
-                          ? <span className="badge bg-success">Activo</span>
-                          : <span className="badge bg-secondary">Inactivo</span>}
+                        <div className="form-check d-flex justify-content-center">
+                          <input className="form-check-input" type="checkbox"
+                            checked={c.is_active}
+                            onChange={() => toggleActivo(c)}
+                            disabled={!canEdit}
+                            title={canEdit ? 'Cambiar estado' : 'No tiene permiso para editar'} />
+                        </div>
                       </td>
                       <td className="text-center">
                         <div className="btn-group btn-group-sm">

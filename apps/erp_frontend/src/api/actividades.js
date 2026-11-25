@@ -1,7 +1,22 @@
 import API from './client';
 
 // Asistencia
-export const getAsistencias   = (params)  => API.get('/actividades/asistencias/', { params });
+function buildParams(params) {
+  const sp = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      if (value.length) sp.append(key, value.join(','));
+    } else if (value !== '' && value !== null && value !== undefined) {
+      sp.append(key, value);
+    }
+  });
+  return sp.toString();
+}
+
+export const getAsistencias = (params) => {
+  const query = buildParams(params);
+  return API.get(`/actividades/asistencias/${query ? `?${query}` : ''}`);
+};
 export const getAsistencia    = (id)      => API.get(`/actividades/asistencias/${id}/`);
 export const createAsistencia = (data)    => API.post('/actividades/asistencias/', data);
 export const updateAsistencia = (id, data) => API.put(`/actividades/asistencias/${id}/`, data);

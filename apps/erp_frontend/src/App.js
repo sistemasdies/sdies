@@ -28,6 +28,8 @@ import CopiaSeguridadPage from './pages/Procesos/CopiaSeguridadPage';
 import ExportarDatosPage  from './pages/Procesos/ExportarDatosPage';
 import CorreccionDatosPage from './pages/Procesos/CorreccionDatosPage';
 import DatosGeneralesPage from './pages/Configuracion/DatosGeneralesPage';
+import GenerarPresupuestoPage from './pages/Presupuesto/GenerarPresupuestoPage';
+import ControlPresupuestalPage from './pages/Presupuesto/ControlPresupuestalPage';
 import BloquearFechaPage from './pages/BloquearFecha/BloquearFechaPage';
 import AuxiliaresPage    from './pages/Informes/AuxiliaresPage';
 import ComparativoMesesPage from './pages/Informes/ComparativoMesesPage';
@@ -92,7 +94,8 @@ function AppRoutes() {
       <Route path="/procesos/bloquear-fecha"      element={<PrivateRoute><BloquearFechaPage /></PrivateRoute>} />
       <Route path="/procesos/cierre-periodo"      element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
       <Route path="/procesos/generar-balance"     element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
-      <Route path="/procesos/generar-presupuesto" element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
+      <Route path="/procesos/generar-presupuesto" element={<PrivateRoute><GenerarPresupuestoPage /></PrivateRoute>} />
+      <Route path="/procesos/control-presupuestal" element={<PrivateRoute><ControlPresupuestalPage /></PrivateRoute>} />
       <Route path="/procesos/correccion-datos"    element={<PrivateRoute><CorreccionDatosPage /></PrivateRoute>} />
       <Route path="/procesos/copia-seguridad"     element={<PrivateRoute><CopiaSeguridadPage /></PrivateRoute>} />
       <Route path="/procesos/exportar-datos"      element={<PrivateRoute><ExportarDatosPage /></PrivateRoute>} />

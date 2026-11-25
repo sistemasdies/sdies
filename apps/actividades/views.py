@@ -4,6 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.filters import BaseInFilter
+from django_filters import rest_framework as django_filters
 from django.db.models import F
 
 from apps.actividades.models import Acontecimiento, FotoAcontecimiento, Asistencia, Visitacion
@@ -118,15 +120,29 @@ class AcontecimientoViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class CharInFilter(BaseInFilter, django_filters.CharFilter):
+    pass
+
+
+class AsistenciaFilter(django_filters.FilterSet):
+    congregacion = CharInFilter(field_name='congregacion__codigo', lookup_expr='in')
+    fecha__gte = django_filters.DateFilter(field_name='fecha', lookup_expr='gte')
+    fecha__lte = django_filters.DateFilter(field_name='fecha', lookup_expr='lte')
+
+    class Meta:
+        model = Asistencia
+        fields = []
+
+
 class AsistenciaViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
     pagination_class = StandardPagination
     serializer_class = AsistenciaSerializer
     module = 'asistencia'
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['congregacion', 'fecha']
+    filterset_class = AsistenciaFilter
     search_fields = ['comentarios', 'tema_predicacion', 'congregacion__codigo', 'congregacion__nombre']
-    ordering_fields = ['fecha', 'congregacion']
+    ordering_fields = ['fecha', 'congregacion', 'subtotal', 'total']
     ordering = ['-fecha', 'congregacion']
     queryset = Asistencia.objects.all().select_related('congregacion')
 
@@ -135,12 +151,16 @@ class AsistenciaViewSet(AuditMixin, HardDeleteMixin, viewsets.ModelViewSet):
         scope = user_scope(self.request.user)
         if scope['congregaciones'] is not None:
             qs = qs.filter(congregacion__codigo__in=scope['congregaciones'])
-        # Permitir ordenar por el total calculado
+        # Permitir ordenar por totales calculados
         ordering = self.request.query_params.get('ordering', '')
         campo = ordering.lstrip('-')
         if campo == 'total':
             qs = qs.annotate(
                 total=F('creyentes') + F('simpatizantes') + F('visitas') + F('ninos')
+            )
+        if campo == 'subtotal':
+            qs = qs.annotate(
+                subtotal=F('creyentes') + F('simpatizantes') + F('visitas')
             )
         return qs
 

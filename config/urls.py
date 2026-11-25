@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/auth/',          include('apps.users.urls.auth')),
     path('api/users/',         include('apps.users.urls.users')),
     path('api/accounts/',      include('apps.accounting.urls.accounts')),
+    path('api/presupuestos/',  include('apps.presupuesto.urls')),
     path('api/comprobantes/',  include('apps.accounting.urls.comprobantes')),
     path('api/movicont/',      include('apps.accounting.urls.movicont')),
     path('api/periodos/',      include('apps.accounting.urls.periodos')),
