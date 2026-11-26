@@ -64,6 +64,12 @@ export function AuthProvider({ children }) {
     setMarca(null);
   };
 
+  // Cierra la sesión solo en la pestaña actual, sin afectar otras pestañas.
+  const logoutTab = () => {
+    setUser(null);
+    setMarca(null);
+  };
+
   const refrescar = async () => {
     const { data } = await getMe();
     return aplicarMe(data);
@@ -114,7 +120,7 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refrescar, marca, refrescarMarca,
+    <AuthContext.Provider value={{ user, loading, login, logout, logoutTab, refrescar, marca, refrescarMarca,
                                    asumirRol, retomarRol,
                                    hasPermission, hasModulePermission, hasControl }}>
       {children}

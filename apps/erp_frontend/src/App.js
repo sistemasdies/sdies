@@ -71,7 +71,7 @@ function AppRoutes() {
   useIdleLogout();
   return (
     <Routes>
-      <Route path="/login"          element={user ? <Navigate to="/dashboard" /> : <LoginPage />} />
+      <Route path="/login"          element={user && !sessionStorage.getItem('idle_logout') ? <Navigate to="/dashboard" /> : <LoginPage />} />
       <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
       <Route path="/firmar-acta/:token" element={<FirmaPublicaPage />} />
       <Route path="/configurar-verificacion"

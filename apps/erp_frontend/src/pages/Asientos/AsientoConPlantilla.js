@@ -73,6 +73,7 @@ export default function AsientoConPlantilla() {
   // Catálogos
   const [comprobantes, setComprobantes] = useState([]);
   const [cuentas,      setCuentas]      = useState([]);
+  const [cuentasCaja,  setCuentasCaja]  = useState([]);
   const [terceros,     setTerceros]     = useState([]);
   const [centros,      setCentros]      = useState([]);
   const [plantillas,   setPlantillas]   = useState([]);
@@ -113,7 +114,11 @@ export default function AsientoConPlantilla() {
     };
     return api[tipo]().then(r => {
       const data = r.data.results || r.data;
-      if (tipo === 'cuenta')      setCuentas(data);
+      if (tipo === 'cuenta') {
+        setCuentas(data);
+        // Cuentas de activo corriente (1105...) disponibles para caja
+        setCuentasCaja(data.filter(c => c.codigo && c.codigo.startsWith('1105')));
+      }
       if (tipo === 'tercero')     setTerceros(data);
       if (tipo === 'cc')          setCentros(data);
       if (tipo === 'comprobante') setComprobantes(data);
@@ -153,10 +158,14 @@ export default function AsientoConPlantilla() {
     });
   }, []);
 
-  // Inicializar cajaUser desde el perfil del usuario
+  // Inicializar cajaUser desde el perfil del usuario (solo si está entre las cuentas 1105 disponibles)
   useEffect(() => {
-    if (user?.caja_user) setCajaUser(user.caja_user);
-  }, [user]);
+    if (user?.caja_user && cuentasCaja.some(c => c.codigo === user.caja_user)) {
+      setCajaUser(user.caja_user);
+    } else if (cuentasCaja.length > 0 && !cajaUser) {
+      setCajaUser(cuentasCaja[0].codigo);
+    }
+  }, [user, cuentasCaja]);
 
   // Auto-seleccionar plantilla desde URL
   useEffect(() => {
@@ -634,14 +643,20 @@ export default function AsientoConPlantilla() {
                   Configuración
                 </div>
                 <div className="card-body">
-                  {/* Caja user + Centro de costo (informativos, no editables) */}
-                  <div className="d-flex flex-wrap gap-3 mb-3" style={{ fontSize: '0.85rem' }}>
-                    <div>
+                  {/* Caja user (editable) + Centro de costo (informativo) */}
+                  <div className="mb-3" style={{ fontSize: '0.85rem' }}>
+                    <label className="form-label small fw-semibold mb-1">
                       <i className="bi bi-person-badge me-1 text-primary"></i>
-                      <span className="fw-semibold">Caja Usuario:</span>{' '}
-                      <span className="fw-bold font-monospace">{user?.caja_user || '—'}</span>
-                    </div>
-                    <div>
+                      Caja Usuario
+                    </label>
+                    <select className="form-select form-select-sm"
+                      value={cajaUser}
+                      onChange={e => setCajaUser(e.target.value)}>
+                      {cuentasCaja.map(c => (
+                        <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.descripcion}</option>
+                      ))}
+                    </select>
+                    <div className="mt-2">
                       <i className="bi bi-diagram-3 me-1 text-primary"></i>
                       <span className="fw-semibold">Centro de Costos del Usuario:</span>{' '}
                       <span className="fw-bold font-monospace">{user?.centro_costo_user || '—'}</span>

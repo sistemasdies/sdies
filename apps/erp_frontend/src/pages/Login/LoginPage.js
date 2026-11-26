@@ -39,6 +39,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(usuario, password);
+      sessionStorage.removeItem('idle_logout');
       toast.success('Bienvenido al sistema');
       navigate('/dashboard');
     } catch (err) {
