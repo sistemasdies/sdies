@@ -29,7 +29,7 @@ import ExportarDatosPage  from './pages/Procesos/ExportarDatosPage';
 import CorreccionDatosPage from './pages/Procesos/CorreccionDatosPage';
 import DatosGeneralesPage from './pages/Configuracion/DatosGeneralesPage';
 import GenerarPresupuestoPage from './pages/Presupuesto/GenerarPresupuestoPage';
-import ControlPresupuestalPage from './pages/Presupuesto/ControlPresupuestalPage';
+import PresupuestoVsRealPage from './pages/Presupuesto/PresupuestoVsRealPage';
 import BloquearFechaPage from './pages/BloquearFecha/BloquearFechaPage';
 import AuxiliaresPage    from './pages/Informes/AuxiliaresPage';
 import ComparativoMesesPage from './pages/Informes/ComparativoMesesPage';
@@ -71,7 +71,7 @@ function AppRoutes() {
   useIdleLogout();
   return (
     <Routes>
-      <Route path="/login"          element={user && !sessionStorage.getItem('idle_logout') ? <Navigate to="/dashboard" /> : <LoginPage />} />
+      <Route path="/login"          element={user ? <Navigate to="/dashboard" /> : <LoginPage />} />
       <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
       <Route path="/firmar-acta/:token" element={<FirmaPublicaPage />} />
       <Route path="/configurar-verificacion"
@@ -95,7 +95,7 @@ function AppRoutes() {
       <Route path="/procesos/cierre-periodo"      element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
       <Route path="/procesos/generar-balance"     element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
       <Route path="/procesos/generar-presupuesto" element={<PrivateRoute><GenerarPresupuestoPage /></PrivateRoute>} />
-      <Route path="/procesos/control-presupuestal" element={<PrivateRoute><ControlPresupuestalPage /></PrivateRoute>} />
+      <Route path="/procesos/control-presupuestal" element={<PrivateRoute><Navigate to="/informes/presupuesto-vs-real" replace /></PrivateRoute>} />
       <Route path="/procesos/correccion-datos"    element={<PrivateRoute><CorreccionDatosPage /></PrivateRoute>} />
       <Route path="/procesos/copia-seguridad"     element={<PrivateRoute><CopiaSeguridadPage /></PrivateRoute>} />
       <Route path="/procesos/exportar-datos"      element={<PrivateRoute><ExportarDatosPage /></PrivateRoute>} />
@@ -123,7 +123,7 @@ function AppRoutes() {
       <Route path="/informes/auxiliares"          element={<PrivateRoute><AuxiliaresPage /></PrivateRoute>} />
       <Route path="/informes/comparativo-meses"   element={<PrivateRoute><ComparativoMesesPage /></PrivateRoute>} />
       <Route path="/informes/balances"            element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
-      <Route path="/informes/estado-presupuestal" element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
+      <Route path="/informes/presupuesto-vs-real" element={<PrivateRoute><PresupuestoVsRealPage /></PrivateRoute>} />
       <Route path="/"               element={<Navigate to="/dashboard" replace />} />
       <Route path="*"               element={<Navigate to="/dashboard" replace />} />
     </Routes>

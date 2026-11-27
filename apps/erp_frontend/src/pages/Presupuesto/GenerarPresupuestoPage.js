@@ -25,7 +25,7 @@ export default function GenerarPresupuestoPage() {
   const [fechaHasta, setFechaHasta] = useState(`${ANIO_ACTUAL - 1}-12-31`);
   const [centrosCosto, setCentrosCosto] = useState([]);
   const [seleccionCC, setSeleccionCC] = useState([]);
-  const [mostrarRegistrosEnCero, setMostrarRegistrosEnCero] = useState(true);
+  const [mostrarRegistrosEnCero, setMostrarRegistrosEnCero] = useState(false);
 
   const [presupuestos, setPresupuestos] = useState([]);
   const [loading, setLoading] = useState(false);

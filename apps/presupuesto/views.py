@@ -176,21 +176,38 @@ class PresupuestoViewSet(HardDeleteMixin, viewsets.ModelViewSet):
             real_ejecutado = abs(real_ejecutado)
 
             presupuesto_a_comparar = p.monto_mensual * factor_meses
-            variacion = presupuesto_a_comparar - real_ejecutado
+            # Ingresos (cuentas 4...): variación positiva = ejecución por encima del presupuesto.
+            # Gastos (cuentas 5...): se conserva el signo original (presupuesto - real).
+            if cuenta.codigo.startswith('4'):
+                variacion = real_ejecutado - presupuesto_a_comparar
+            else:
+                variacion = presupuesto_a_comparar - real_ejecutado
 
             porcentaje = Decimal('0')
             if presupuesto_a_comparar > 0:
                 porcentaje = (real_ejecutado / presupuesto_a_comparar) * 100
 
             # Alertas
-            if presupuesto_a_comparar == 0 and real_ejecutado == 0:
-                alerta = 'verde'
-            elif porcentaje > tope_alto:
-                alerta = 'rojo'
-            elif porcentaje < tope_bajo:
-                alerta = 'amarillo'
+            if porcentaje == 0:
+                # Sin porcentaje, decide el signo de la variación:
+                # positiva = comportamiento favorable, negativa = desfavorable.
+                alerta = 'rojo' if variacion < 0 else 'verde'
+            elif cuenta.codigo.startswith('4'):
+                # Ingresos: rojo < 75%, naranja < 90%, verde >= 90%
+                if porcentaje < Decimal('75'):
+                    alerta = 'rojo'
+                elif porcentaje < Decimal('90'):
+                    alerta = 'naranja'
+                else:
+                    alerta = 'verde'
             else:
-                alerta = 'verde'
+                # Gastos: verde <= 90%, naranja > 90%, rojo > 100%
+                if porcentaje > Decimal('100'):
+                    alerta = 'rojo'
+                elif porcentaje > Decimal('90'):
+                    alerta = 'naranja'
+                else:
+                    alerta = 'verde'
 
             resultado.append({
                 'cuenta': cuenta.codigo,
