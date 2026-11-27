@@ -178,6 +178,10 @@ class MoviContAsientoSerializer(serializers.Serializer):
     num_lineas     = serializers.IntegerField()
     total_debitos  = serializers.DecimalField(max_digits=14, decimal_places=2)
     total_creditos = serializers.DecimalField(max_digits=14, decimal_places=2)
+    cuenta1        = serializers.CharField(allow_null=True, required=False)
+    cuenta1_desc   = serializers.CharField(allow_null=True, required=False)
+    cuenta2        = serializers.CharField(allow_null=True, required=False)
+    cuenta2_desc   = serializers.CharField(allow_null=True, required=False)
     referencia     = serializers.SerializerMethodField()
 
     def get_referencia(self, obj):

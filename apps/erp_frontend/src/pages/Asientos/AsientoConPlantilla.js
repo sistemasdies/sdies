@@ -196,13 +196,13 @@ export default function AsientoConPlantilla() {
     return () => clearTimeout(prefsAtrasadas);
   }, [plantillaId, sufijoComprob, cabecera.fecha]);
 
-  // Scroll a la plantilla seleccionada
+  // Scroll a la plantilla seleccionada, dejándola como primera fila visible.
+  // Se repite cuando llega el catálogo porque la preferencia puede hidratarse antes.
   useEffect(() => {
-    if (plantillaId && listaRef.current) {
-      const el = listaRef.current.querySelector(`[data-pid="${plantillaId}"]`);
-      if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    }
-  }, [plantillaId]);
+    if (!plantillaId || fase !== 'seleccionar' || !listaRef.current) return;
+    const el = listaRef.current.querySelector(`[data-pid="${plantillaId}"]`);
+    if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }, [plantillaId, plantillas, fase]);
 
   useEffect(() => {
     if (fase === 'wizard' && inputRef.current)
@@ -425,6 +425,18 @@ export default function AsientoConPlantilla() {
     });
   };
 
+  // Ctrl+D: copiar el valor de la celda activa a las filas inferiores.
+  const rellenarHaciaAbajo = (fila, campo, valor) => {
+    const cambios = { [campo]: valor };
+    if (campo === 'cuenta') {
+      cambios.cuenta_desc = cuentas.find(c => c.codigo === valor)?.descripcion || '';
+    }
+    if (campo === 'cedula') {
+      cambios.tercero_nombre = terceros.find(t => t.cedula === valor)?.nombre_completo || '';
+    }
+    setLineas(prev => prev.map((l, idx) => idx > fila ? { ...l, ...cambios } : l));
+  };
+
   const agregarLinea  = () => setLineas(p => [...p, {
     cuenta:'',cuenta_desc:'',observacion:'',cedula:'',tercero_nombre:'',
     centro_costo:'',vr_debitos:'',vr_creditos:'',
@@ -484,6 +496,58 @@ export default function AsientoConPlantilla() {
       toast.error(Array.isArray(d)?d[0]:(d||'Error al guardar'));
     } finally { setSaving(false); }
   };
+
+  // ── Atajo Ctrl+G para guardar ────────────────────────────────────────
+  const guardarRef = useRef(guardar);
+  useEffect(() => { guardarRef.current = guardar; }, [guardar]);
+
+  useEffect(() => {
+    const atajoGuardar = (e) => {
+      if (!(e.ctrlKey || e.metaKey) || (e.key || '').toLowerCase() !== 'g') return;
+      if (buscador.estado.show) return;
+      if (!canAdd || saving || !cuadra || pendientes > 0) return;
+      e.preventDefault();
+      guardarRef.current();
+    };
+    window.addEventListener('keydown', atajoGuardar);
+    return () => window.removeEventListener('keydown', atajoGuardar);
+  }, [buscador.estado.show, canAdd, saving, cuadra, pendientes]);
+
+  // ── Atajo Ctrl+D: copiar la celda activa hacia abajo ─────────────────
+  useEffect(() => {
+    const atajoCopiar = (e) => {
+      if (!(e.ctrlKey || e.metaKey) || (e.key || '').toLowerCase() !== 'd') return;
+      const activo = document.activeElement;
+      const campo = activo?.dataset?.campo;
+      if (!campo || activo?.dataset?.fila === undefined) return;
+      e.preventDefault();
+      rellenarHaciaAbajo(Number(activo.dataset.fila), campo, activo.value);
+    };
+    window.addEventListener('keydown', atajoCopiar);
+    return () => window.removeEventListener('keydown', atajoCopiar);
+  }, [rellenarHaciaAbajo]);
+
+  // ── Flechas ↑/↓: moverse entre textboxes de la misma columna ─────────
+  // ←/→ se dejan intactas para moverse dentro del texto.
+  useEffect(() => {
+    const navegarFilas = (e) => {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      const activo = document.activeElement;
+      if (!activo?.dataset?.campo || activo?.dataset?.fila === undefined) return;
+      const fila = Number(activo.dataset.fila);
+      const destino = fila + (e.key === 'ArrowDown' ? 1 : -1);
+      const siguiente = Array.from(document.querySelectorAll('input[data-campo]')).find(
+        x => x.dataset.campo === activo.dataset.campo &&
+             Number(x.dataset.fila) === destino
+      );
+      if (!siguiente) return;
+      e.preventDefault();
+      siguiente.focus();
+      siguiente.select?.();
+    };
+    window.addEventListener('keydown', navegarFilas);
+    return () => window.removeEventListener('keydown', navegarFilas);
+  }, []);
 
   // ── Datos para el modal según tipo activo ────────────────────────────
   const datosBuscador = () => {
@@ -768,6 +832,10 @@ export default function AsientoConPlantilla() {
                     </div>
                     <div>
                       <div className="fw-semibold">
+                        <i className="bi bi-layout-text-window me-1 text-primary"></i>
+                        Wizard · {plantillaActual?.nombre || 'Plantilla'}
+                      </div>
+                      <div className="small mt-1">
                         {paso.label}
                         <span className="badge bg-secondary ms-2" style={{fontSize:11}}>
                           Línea {paso.lineaNum}/{paso.total}
@@ -800,7 +868,7 @@ export default function AsientoConPlantilla() {
                     <label className="form-label fw-semibold text-dark mb-3" style={{fontSize:16}}>
                       {paso.tipo==='monto'  ?'¿Cuánto es el valor?':
                        paso.tipo==='cuenta' ?'¿Cuál es el código de cuenta?':
-                       paso.tipo==='tercero'?'¿Cuál es la cédula?':
+                       paso.tipo==='tercero'?'Digite el Código del tercero':
                        paso.tipo==='cc'     ?'¿Cuál es el centro de costo?':
                        `Ingresa: ${paso.label}`}
                     </label>
@@ -944,6 +1012,8 @@ export default function AsientoConPlantilla() {
                 </span>
                 <div className="d-flex align-items-center gap-3">
                   <span className="text-muted small"><i className="bi bi-search me-1"></i>Buscar con el ícono</span>
+                  <span className="text-muted small"><kbd>Ctrl</kbd>+<kbd>D</kbd> copiar hacia abajo</span>
+                  <span className="text-muted small"><kbd>↑</kbd><kbd>↓</kbd> entre filas</span>
                   <button className="btn btn-outline-success btn-sm" onClick={agregarLinea} disabled={!canAdd}>
                     <i className="bi bi-plus-lg me-1"></i>Agregar línea
                   </button>
@@ -974,6 +1044,7 @@ export default function AsientoConPlantilla() {
                           <td>
                             <div className="input-group input-group-sm">
                               <input
+                                data-fila={i} data-campo="cuenta"
                                 className={`form-control form-control-sm font-monospace ${isDig(l.cuenta)?'border-danger':''}`}
                                 value={isDig(l.cuenta)?'':l.cuenta}
                                 placeholder="Código"
@@ -1007,6 +1078,7 @@ export default function AsientoConPlantilla() {
                           {/* Observación */}
                           <td>
                             <input
+                              data-fila={i} data-campo="observacion"
                               className={`form-control form-control-sm ${isDig(l.observacion)?'border-danger':''}`}
                               value={isDig(l.observacion)?'':l.observacion}
                               onChange={e=>updateLinea(i,'observacion',e.target.value)}/>
@@ -1016,6 +1088,7 @@ export default function AsientoConPlantilla() {
                           <td>
                             <div className="input-group input-group-sm">
                               <input
+                                data-fila={i} data-campo="cedula"
                                 className={`form-control form-control-sm ${isDig(l.cedula)?'border-danger':''}`}
                                 value={isDig(l.cedula)?'':l.cedula}
                                 placeholder="Código"
@@ -1060,6 +1133,7 @@ export default function AsientoConPlantilla() {
                           <td>
                             <div className="input-group input-group-sm">
                               <input
+                                data-fila={i} data-campo="centro_costo"
                                 className={`form-control form-control-sm font-monospace ${isDig(l.centro_costo)?'border-danger':''}`}
                                 value={isDig(l.centro_costo)?'':l.centro_costo}
                                 placeholder="C.Costo"
@@ -1087,6 +1161,7 @@ export default function AsientoConPlantilla() {
                           {/* Débito */}
                           <td>
                             <input type="number" min="0" step="0.01"
+                              data-fila={i} data-campo="vr_debitos"
                               className={`form-control form-control-sm text-end ${isDig(l.vr_debitos)?'border-danger bg-danger bg-opacity-10':''}`}
                               value={isDig(l.vr_debitos)?'':l.vr_debitos}
                               onChange={e=>updateLinea(i,'vr_debitos',e.target.value)}/>
@@ -1095,6 +1170,7 @@ export default function AsientoConPlantilla() {
                           {/* Crédito */}
                           <td>
                             <input type="number" min="0" step="0.01"
+                              data-fila={i} data-campo="vr_creditos"
                               className={`form-control form-control-sm text-end ${isDig(l.vr_creditos)?'border-danger bg-danger bg-opacity-10':''}`}
                               value={isDig(l.vr_creditos)?'':l.vr_creditos}
                               onChange={e=>updateLinea(i,'vr_creditos',e.target.value)}/>
@@ -1133,7 +1209,10 @@ export default function AsientoConPlantilla() {
                 onClick={()=>{setFase('seleccionar');setPlantillaId('');setLineas([]);}}>
                 <i className="bi bi-arrow-counterclockwise me-1"></i>Cambiar plantilla
               </button>
-              <div className="d-flex gap-2">
+              <div className="d-flex gap-2 align-items-center">
+                <span className="text-muted small me-1">
+                  Atajo: <kbd>Ctrl</kbd>+<kbd>G</kbd>
+                </span>
                 <button className="btn btn-success"
                   disabled={!canAdd||saving||!cuadra||pendientes>0}
                   onClick={()=>guardar()}>

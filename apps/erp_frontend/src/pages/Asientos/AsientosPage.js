@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import MainLayout from '../../components/layout/MainLayout';
 import TopBar from '../../components/layout/TopBar';
 import PageHeader from '../../components/common/PageHeader';
@@ -51,8 +51,12 @@ export default function AsientosPage() {
   const [editSaving, setEditSaving] = useState(null);
   const [anular,    setAnular]    = useState({ show:false, cod_comprob:'', num_comprob:'', ok:'', loading:false });
   const [eliminar,  setEliminar]  = useState({ show:false, cod_comprob:'', num_comprob:'', ok:'', loading:false });
+  const [filaActiva, setFilaActiva] = useState(-1);
+  const tbodyRef = useRef(null);
   const { canAdd, canDel, canAnular } = usePerm(window.location.pathname);
   const navigate = useNavigate();
+
+  useEffect(() => { setFilaActiva(-1); }, [asientos]);
 
   useEffect(() => {
     getComprobantes().then(r => setOpciones(o => ({ ...o, comprobantes:r.data.results || r.data }))).catch(()=>{});
@@ -468,11 +472,36 @@ export default function AsientosPage() {
     setPagina(1);
   };
 
-  const Encabezado = ({ campo, children, className }) => {
+  // Navegación con flechas en el listado: resalta la fila igual que el hover
+  const moverFila = (e) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    if (e.repeat) { e.preventDefault(); return; } // un pressing = un solo renglón
+    const n = asientos.length;
+    if (!n) return;
+    e.preventDefault();
+    const actual = filaActiva;
+    const siguiente = e.key === 'ArrowDown'
+      ? (actual < 0 ? 0 : Math.min(actual + 1, n - 1))
+      : (actual < 0 ? n - 1 : Math.max(actual - 1, 0));
+    setFilaActiva(siguiente);
+    if (tbodyRef.current && document.activeElement !== tbodyRef.current) {
+      tbodyRef.current.focus({ preventScroll: true });
+    }
+    requestAnimationFrame(() => {
+      tbodyRef.current?.querySelectorAll('tr[data-fila]')[siguiente]
+        ?.scrollIntoView({ block: 'nearest' });
+    });
+  };
+
+  const Encabezado = ({ campo, children, className, style, compact }) => {
     const activo = orden.campo === campo;
     return (
       <th className={`${className || ''} ${activo ? 'text-primary' : ''}`}
-        style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}
+        style={{
+          cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
+          ...(compact ? { fontSize: 9, letterSpacing: 0 } : {}),
+          ...style,
+        }}
         onClick={() => handleOrden(campo)}>
         {children}
         {activo && <i className={`bi bi-arrow-${orden.dir === 'asc' ? 'up' : 'down'} ms-1`}></i>}
@@ -627,34 +656,53 @@ export default function AsientosPage() {
           {loading ? <div className="p-4"><Spinner /></div> : (
             <>
               <div className="table-responsive" style={{maxHeight:'65vh', overflowY:'auto'}}>
-                <table className="table table-hover table-sm mb-0">
+                <table className="table table-sm mb-0 tabla-asientos">
                   <thead className="table-dark" style={{position:'sticky', top:0, zIndex:1}}>
                     <tr>
-                      <Encabezado campo="cod_comprob">CodComprob</Encabezado>
-                      <Encabezado campo="num_comprob">NumComprob</Encabezado>
+                      <Encabezado campo="cod_comprob" compact style={{width:70}}>Comprob</Encabezado>
+                      <Encabezado campo="num_comprob" compact style={{width:64}}>Número</Encabezado>
                       <Encabezado campo="fecha">Fecha</Encabezado>
-                      <Encabezado campo="num_lineas" className="text-center">Nº líneas</Encabezado>
+                      <th style={{width:150}} title="Cuenta del primer renglón y descripción (15 caracteres)">
+                        Cuenta 1 + desc.
+                      </th>
+                      <th style={{width:150}} title="Cuenta del segundo renglón y descripción (15 caracteres)">
+                        Cuenta 2 + Desc.
+                      </th>
+                      <Encabezado campo="num_lineas" compact className="text-center" style={{width:70}}>Nº líneas</Encabezado>
                       <Encabezado campo="total_debitos" className="text-end">Débitos</Encabezado>
                       <Encabezado campo="total_creditos" className="text-end">Créditos</Encabezado>
                       <Encabezado campo="diferencia" className="text-end">Diferencia</Encabezado>
                       <th className="text-center">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody ref={tbodyRef} tabIndex={0} onKeyDown={moverFila}
+                    onFocus={() => setFilaActiva(f => f < 0 && asientos.length ? 0 : f)}
+                    style={{ outline: 'none' }}>
                     {asientos.length === 0 && (
-                      <tr><td colSpan={8} className="text-center text-muted py-4">
+                      <tr><td colSpan={10} className="text-center text-muted py-4">
                         Sin movimientos para los filtros seleccionados
                       </td></tr>
                     )}
-                    {asientos.map(a => {
+                    {asientos.map((a, idx) => {
                       const dif = Math.abs((parseFloat(a.total_debitos)||0) - (parseFloat(a.total_creditos)||0));
                       const descuadrado = dif >= 0.01;
+                      const cta1 = a.cuenta1
+                        ? `${a.cuenta1} ${(a.cuenta1_desc || '').slice(0,15)}`.trim()
+                        : '';
+                      const cta2 = a.cuenta2
+                        ? `${a.cuenta2} ${(a.cuenta2_desc || '').slice(0,15)}`.trim()
+                        : '';
                       return (
                       <tr key={`${a.cod_comprob}-${a.num_comprob}`}
-                          className={descuadrado ? 'table-danger fw-bold' : ''}>
+                          data-fila={idx}
+                          className={`${descuadrado ? 'table-danger fw-bold' : ''} ${filaActiva === idx ? 'fila-activa' : ''}`.trim()}
+                          onMouseEnter={() => setFilaActiva(idx)}
+                          onClick={() => setFilaActiva(idx)}>
                         <td><code className="small">{a.cod_comprob}</code></td>
                         <td className="small">{a.num_comprob}</td>
                         <td className="small">{formatDate(a.fecha)}</td>
+                        <td className="small" title={cta1}>{cta1 || '—'}</td>
+                        <td className="small font-monospace" title={cta2}>{cta2 || '—'}</td>
                         <td className="text-center small">{a.num_lineas}</td>
                         <td className="text-end small">{formatMoney(a.total_debitos)}</td>
                         <td className="text-end small">{formatMoney(a.total_creditos)}</td>

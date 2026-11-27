@@ -16,8 +16,9 @@ import { usePreferencias } from '../../hooks/usePreferencias';
 const ORDEN_CAMPOS = [
   { valor:'cuenta',       label:'Cuenta' },
   { valor:'fecha',        label:'Fecha' },
-  { valor:'cedula',       label:'Código' },
+  { valor:'cedula',       label:'Codigo Tercero' },
   { valor:'centro_costo', label:'Centro de costo' },
+  { valor:'num_comprob', label:'Numero' },
 ];
 
 const money = (v) => {

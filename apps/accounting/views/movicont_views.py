@@ -5,7 +5,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, CharField, OuterRef, Subquery
 from django.core.exceptions import ValidationError as DjangoValidationError
 from apps.accounting.models import (
     MoviCont, Comprobante, Cuenta, Tercero, CentroCosto
@@ -110,11 +110,35 @@ class MoviContViewSet(viewsets.GenericViewSet):
         observacion = p.get('observacion')
         if observacion: qs = qs.filter(observacion__icontains=observacion)
 
+        # Primeras dos líneas del movimiento (por item_comprob) para la lista
+        lineas_mov = qs.filter(
+            cod_comprob=OuterRef('cod_comprob'),
+            num_comprob=OuterRef('num_comprob'),
+        ).order_by('item_comprob')
+
         grouped = (
             qs.values('cod_comprob', 'num_comprob', 'fecha')
-              .annotate(total_debitos=Sum('vr_debitos'),
-                        total_creditos=Sum('vr_creditos'),
-                        num_lineas=Count('id'))
+              .annotate(
+                  total_debitos=Sum('vr_debitos'),
+                  total_creditos=Sum('vr_creditos'),
+                  num_lineas=Count('id'),
+                  cuenta1=Subquery(
+                      lineas_mov.values('cuenta__codigo')[:1],
+                      output_field=CharField(),
+                  ),
+                  cuenta1_desc=Subquery(
+                      lineas_mov.values('cuenta__descripcion')[:1],
+                      output_field=CharField(),
+                  ),
+                  cuenta2=Subquery(
+                      lineas_mov.values('cuenta__codigo')[1:2],
+                      output_field=CharField(),
+                  ),
+                  cuenta2_desc=Subquery(
+                      lineas_mov.values('cuenta__descripcion')[1:2],
+                      output_field=CharField(),
+                  ),
+              )
               .order_by('-fecha', '-num_comprob', '-cod_comprob')
         )
 

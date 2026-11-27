@@ -4,7 +4,7 @@ from django.db.models import Sum
 
 from apps.accounting.models import MoviCont
 
-CAMPOS_ORDEN = {'cuenta', 'fecha', 'cedula', 'centro_costo'}
+CAMPOS_ORDEN = {'cuenta', 'fecha', 'cedula', 'centro_costo', 'num_comprob'}
 CERO = Decimal('0')
 
 
@@ -80,6 +80,7 @@ def auxiliares(fecha_desde, fecha_hasta, cuentas=(), centros=(), comprobantes=()
         'fecha':        lambda f: f.fecha or '',
         'cedula':       lambda f: f.cedula_id or '',
         'centro_costo': lambda f: f.centro_costo_id or '',
+        'num_comprob':  lambda f: f.num_comprob or 0,
     }
     elegidos = [o for o in (orden1, orden2, orden3) if o in CAMPOS_ORDEN]
 

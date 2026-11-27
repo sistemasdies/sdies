@@ -3,6 +3,16 @@ body {
   background-color: #f8f9fa;
 }
 .table th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.tabla-asientos { font-size: 0.78rem; }
+.tabla-asientos th, .tabla-asientos td { white-space: nowrap; padding: 0.15rem 0.35rem !important; }
+/* Fila seleccionada con el teclado: mismo sombreado que el hover del mouse */
+.tabla-asientos tbody tr.fila-activa,
+.tabla-asientos tbody tr.fila-activa > * {
+  --bs-table-bg-state: var(--bs-table-hover-bg);
+  --bs-table-color-state: var(--bs-table-hover-color);
+  background-color: var(--bs-table-hover-bg);
+  color: var(--bs-table-hover-color);
+}
 .card { border-radius: 0.5rem; }
 .badge { font-weight: 500; }
 code { font-size: 0.82em; }
