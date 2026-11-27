@@ -5,7 +5,7 @@ import TopBar from '../../components/layout/TopBar';
 import ModalBuscador from '../../components/common/ModalBuscador';
 import AvisoCierre from '../../components/common/AvisoCierre';
 import { useBuscador } from '../../hooks/useBuscador';
-import { createAsiento } from '../../api/asientos';
+import { createAsiento, getAsientos, getMovimiento } from '../../api/asientos';
 import { getComprobantes } from '../../api/comprobantes';
 import { getCuentas } from '../../api/cuentas';
 import { getTerceros } from '../../api/terceros';
@@ -42,6 +42,8 @@ export default function NuevoAsientoPage() {
     doc_ref:'', doc_soporte:'',
   });
   const [lineas, setLineas] = useState([{ ...LINEA_VACIA }, { ...LINEA_VACIA }]);
+  const [filaActiva, setFilaActiva] = useState(null);
+  const [imitar, setImitar] = useState({ show:false, cargando:false, items:[], query:'' });
 
   useEffect(() => {
     Promise.allSettled([
@@ -88,8 +90,69 @@ export default function NuevoAsientoPage() {
     });
   };
 
-  const agregarLinea  = () => setLineas(p => [...p, { ...LINEA_VACIA }]);
+  // Duplica el renglón donde está el cursor y lo inserta justo debajo.
+  // Si ningún renglón tiene el foco, se agrega al final como antes.
+  const agregarLinea = () => {
+    setLineas(prev => {
+      const idx = filaActiva !== null && filaActiva < prev.length ? filaActiva : prev.length - 1;
+      const arr = [...prev];
+      arr.splice(idx + 1, 0, { ...prev[idx] });
+      return arr;
+    });
+  };
   const eliminarLinea = i  => { if (lineas.length > 2) setLineas(p => p.filter((_,j) => j !== i)); };
+
+  // ── Imitar asiento existente ──────────────────────────────────────────────
+  const abrirImitar = async () => {
+    const cod = (cabecera.cod_comprob || '').trim();
+    if (!cod) { toast.error('Seleccione un comprobante'); return; }
+    setImitar({ show:true, cargando:true, items:[], query:'' });
+    try {
+      const r = await getAsientos({ comprobante: cod, page_size: 1000 });
+      setImitar(prev => ({ ...prev, cargando:false, items: r.data?.results || r.data || [] }));
+    } catch (err) {
+      toast.error('Error al cargar los asientos existentes');
+      setImitar(prev => ({ ...prev, cargando:false }));
+    }
+  };
+
+  const copiarAsiento = async (a) => {
+    setImitar(prev => ({ ...prev, cargando:true }));
+    try {
+      const r = await getMovimiento({
+        cod_comprob: a.cod_comprob, num_comprob: a.num_comprob,
+      });
+      const copiadas = (r.data || []).map(l => ({
+        cuenta:         l.cuenta            || '',
+        cuenta_desc:    l.cuenta_descripcion || '',
+        observacion:    l.observacion       || '',
+        vr_debitos:     l.vr_debitos  ?? '',
+        vr_creditos:    l.vr_creditos ?? '',
+        cedula:         l.cedula            || '',
+        tercero_nombre: l.tercero_nombre    || '',
+        centro_costo:   l.centro_costo      || '',
+      }));
+      if (!copiadas.length) {
+        toast.error('El asiento seleccionado no tiene líneas');
+        setImitar(prev => ({ ...prev, cargando:false }));
+        return;
+      }
+      // Solo se reemplazan las líneas: fecha y número de comprobante se conservan.
+      setLineas(copiadas);
+      setImitar(prev => ({ ...prev, show:false, cargando:false }));
+      toast.success(`Asiento ${a.referencia || `${a.cod_comprob}-${a.num_comprob}`} imitado`);
+    } catch (err) {
+      toast.error('Error al copiar las líneas del asiento');
+      setImitar(prev => ({ ...prev, cargando:false }));
+    }
+  };
+
+  const imitarFiltrados = imitar.items.filter(a =>
+    !imitar.query ||
+    String(a.num_comprob).includes(imitar.query) ||
+    (a.referencia || '').toLowerCase().includes(imitar.query.toLowerCase()) ||
+    (a.fecha || '').includes(imitar.query)
+  );
 
   // ── Handlers F3 por tipo ─────────────────────────────────────────────────
   const f3Cuenta = (e, idx) => buscador.onKeyDown(e, 'cuenta', idx, (item, i) => {
@@ -231,9 +294,15 @@ export default function NuevoAsientoPage() {
             <span className="fw-semibold">
               <i className="bi bi-list-ul me-2 text-success"></i>Líneas del asiento
             </span>
-            <button className="btn btn-outline-success btn-sm" onClick={agregarLinea}>
-              <i className="bi bi-plus-lg me-1"></i>Agregar línea
-            </button>
+            <div className="d-flex gap-2">
+              <button className="btn btn-outline-success btn-sm" onClick={agregarLinea}>
+                <i className="bi bi-plus-lg me-1"></i>Agregar línea
+              </button>
+              <button className="btn btn-outline-primary btn-sm" onClick={abrirImitar}
+                disabled={!cabecera.cod_comprob?.trim()} title="Copiar líneas de un asiento existente">
+                <i className="bi bi-copy me-1"></i>Imitar asiento
+              </button>
+            </div>
           </div>
           <div className="table-responsive">
             <table className="table table-sm mb-0 align-middle">
@@ -258,7 +327,7 @@ export default function NuevoAsientoPage() {
               </thead>
               <tbody>
                 {lineas.map((l, i) => (
-                  <tr key={i}>
+                  <tr key={i} onFocus={() => setFilaActiva(i)}>
                     {/* Cuenta */}
                     <td>
                       <div className="input-group input-group-sm">
@@ -404,6 +473,79 @@ export default function NuevoAsientoPage() {
 
       {/* ── Modal Buscador ── */}
       <ModalBuscador {...buscador.modalProps(datosBuscador())} />
+
+      {/* ── Modal Imitar asiento ── */}
+      {imitar.show && (
+        <div className="modal fade show d-block" tabIndex="-1"
+          style={{ backgroundColor: 'rgba(0,0,0,.5)' }}
+          onClick={() => setImitar(p => ({ ...p, show:false }))}>
+          <div className="modal-dialog modal-lg modal-dialog-scrollable"
+            onClick={e => e.stopPropagation()}>
+            <div className="modal-content">
+              <div className="modal-header" style={{ justifyContent:'flex-start' }}>
+                <h6 className="modal-title mb-0">
+                  <i className="bi bi-copy me-2 text-primary"></i>
+                  Imitar asiento · {cabecera.cod_comprob}
+                </h6>
+                <button type="button" className="btn-close ms-auto"
+                  onClick={() => setImitar(p => ({ ...p, show:false }))}></button>
+              </div>
+              <div className="modal-body">
+                <div className="form-text mb-2">
+                  Se copiarán solo las líneas. La fecha y el número de comprobante serán los del nuevo asiento.
+                </div>
+                <input className="form-control form-control-sm mb-3"
+                  placeholder="Filtrar por número, referencia o fecha..."
+                  value={imitar.query}
+                  onChange={e => setImitar(p => ({ ...p, query: e.target.value }))} />
+                {imitar.cargando ? (
+                  <div className="text-center py-4">
+                    <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <span className="ms-2 small text-muted">Cargando asientos...</span>
+                  </div>
+                ) : imitarFiltrados.length === 0 ? (
+                  <div className="text-center py-4 text-muted small">
+                    No hay asientos existentes para este comprobante.
+                  </div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-sm table-hover mb-0 align-middle">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Referencia</th>
+                          <th>Fecha</th>
+                          <th className="text-center">Líneas</th>
+                          <th className="text-end">Débito</th>
+                          <th className="text-end">Crédito</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {imitarFiltrados.map(a => (
+                          <tr key={a.num_comprob}>
+                            <td className="font-monospace fw-semibold">{a.referencia}</td>
+                            <td>{a.fecha}</td>
+                            <td className="text-center">{a.num_lineas}</td>
+                            <td className="text-end">{formatMoney(a.total_debitos)}</td>
+                            <td className="text-end">{formatMoney(a.total_creditos)}</td>
+                            <td className="text-end">
+                              <button className="btn btn-sm btn-outline-primary"
+                                disabled={imitar.cargando}
+                                onClick={() => copiarAsiento(a)}>
+                                <i className="bi bi-copy me-1"></i>Imitar
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }
