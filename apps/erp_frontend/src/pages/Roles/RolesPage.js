@@ -37,6 +37,8 @@ const MODULE_LABELS = {
   comprobantes:      'Comprobantes',
   periodos:          'Períodos',
   reportes:          'Reportes',
+  presupuesto:       'Presupuesto vs Real',
+  generar_presupuesto: 'Generar Presupuesto',
   importar:          'Importar Datos',
   exportar:          'Exportar Datos',
   correccion_datos:  'Corrección de Datos',

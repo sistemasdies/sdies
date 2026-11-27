@@ -6,6 +6,7 @@ from django.db.models import Sum, F, Q
 from django.db.models.functions import Coalesce
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -13,6 +14,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from apps.core.utils.pagination import StandardPagination
 from apps.core.views import HardDeleteMixin
 from apps.core.permissions import ModulePermission
+from apps.users.services.scopes import user_scope
 from apps.accounting.models import Cuenta, CentroCosto, MoviCont
 from .models import Presupuesto
 from .serializers import PresupuestoSerializer, GenerarPresupuestoSerializer
@@ -21,19 +23,60 @@ from .serializers import PresupuestoSerializer, GenerarPresupuestoSerializer
 class PresupuestoViewSet(HardDeleteMixin, viewsets.ModelViewSet):
     pagination_class = StandardPagination
     serializer_class = PresupuestoSerializer
-    module = 'presupuesto'
+    # Dos áreas independientes: generar_presupuesto y presupuesto (Presupuesto vs Real).
+    module = 'generar_presupuesto'
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['anio', 'cuenta', 'centro_costo']
-    search_fields = ['cuenta__codigo', 'cuenta__descripcion', 'centro_costo__codigo', 'centro_costo__nombre']
+    search_fields = ['cuenta__codigo', 'cuenta__descripcion', 'centro_costo__codigo', 'centro_costo__descripcion']
     ordering_fields = ['anio', 'cuenta__codigo', 'centro_costo__codigo', 'monto_mensual']
     ordering = ['cuenta__codigo', 'centro_costo__codigo']
     queryset = Presupuesto.objects.all().select_related('cuenta', 'centro_costo')
 
     def get_permissions(self):
-        if self.action in {'control', 'generar', 'reiniciar'}:
-            return [ModulePermission()]
-        return super().get_permissions()
+        self.module = 'presupuesto' if self.action == 'control' else 'generar_presupuesto'
+        return [IsAuthenticated(), ModulePermission()]
+
+    # ── Datos permitidos por rol ───────────────────────────────────────────
+    def _scope(self):
+        return user_scope(self.request.user)
+
+    def _scope_presupuestos(self, qs):
+        scope = self._scope()
+        if scope['centros_costo'] is not None:
+            qs = qs.filter(centro_costo__codigo__in=scope['centros_costo'])
+        if scope['cuentas'] is not None:
+            qs = qs.filter(cuenta__codigo__in=scope['cuentas'])
+        return qs
+
+    def _scope_q_movimientos(self):
+        scope = self._scope()
+        q = Q()
+        if scope['centros_costo'] is not None:
+            q &= Q(centro_costo__codigo__in=scope['centros_costo'])
+        if scope['cuentas'] is not None:
+            q &= Q(cuenta__codigo__in=scope['cuentas'])
+        return q
+
+    def _validar_scope(self, serializer):
+        scope = self._scope()
+        cuenta = serializer.validated_data.get('cuenta') or getattr(serializer.instance, 'cuenta', None)
+        cc = serializer.validated_data.get('centro_costo') or getattr(serializer.instance, 'centro_costo', None)
+        if cuenta and scope['cuentas'] is not None and cuenta.codigo not in scope['cuentas']:
+            raise ValidationError({'cuenta': 'Cuenta no permitida para su rol.'})
+        if cc and scope['centros_costo'] is not None and cc.codigo not in scope['centros_costo']:
+            raise ValidationError({'centro_costo': 'Centro de costo no permitido para su rol.'})
+
+    def get_queryset(self):
+        return self._scope_presupuestos(super().get_queryset())
+
+    def perform_create(self, serializer):
+        self._validar_scope(serializer)
+        serializer.save()
+
+    def perform_update(self, serializer):
+        self._validar_scope(serializer)
+        serializer.save()
 
     @action(detail=False, methods=['post'], url_path='generar')
     def generar(self, request):
@@ -48,9 +91,15 @@ class PresupuestoViewSet(HardDeleteMixin, viewsets.ModelViewSet):
 
         meses_historicos = max(1, (fecha_hasta.year - fecha_desde.year) * 12 + fecha_hasta.month - fecha_desde.month + 1)
 
-        # Solo cuentas clase 4 (Ingresos) y 5 (Gastos)
+        # Solo cuentas clase 4 (Ingresos) y 5 (Gastos), dentro del alcance del rol
+        scope = self._scope()
         cuentas = Cuenta.objects.filter(deleted=False, es_detalle=True, clase_aptig__in=['I', 'G'])
+        if scope['cuentas'] is not None:
+            cuentas = cuentas.filter(codigo__in=scope['cuentas'])
+
         ccs = CentroCosto.objects.filter(deleted=False, is_active=True)
+        if scope['centros_costo'] is not None:
+            ccs = ccs.filter(codigo__in=scope['centros_costo'])
         if centros_costo:
             ccs = ccs.filter(codigo__in=centros_costo)
 
@@ -58,6 +107,7 @@ class PresupuestoViewSet(HardDeleteMixin, viewsets.ModelViewSet):
         mov_filter = Q(fecha__gte=fecha_desde, fecha__lte=fecha_hasta)
         if centros_costo:
             mov_filter &= Q(centro_costo__codigo__in=centros_costo)
+        mov_filter &= self._scope_q_movimientos()
 
         movimientos = MoviCont.objects.filter(mov_filter).values(
             'cuenta__codigo', 'centro_costo__codigo'
@@ -72,8 +122,8 @@ class PresupuestoViewSet(HardDeleteMixin, viewsets.ModelViewSet):
             key = (m['cuenta__codigo'], m['centro_costo__codigo'])
             historico[key] = {'debitos': m['debitos'], 'creditos': m['creditos']}
 
-        # Borrar presupuesto existente del año (borrado duro)
-        Presupuesto.all_objects.filter(anio=anio).delete()
+        # Borrar presupuesto existente del año dentro del alcance del rol (borrado duro)
+        self._scope_presupuestos(Presupuesto.all_objects.filter(anio=anio)).delete()
 
         creados = 0
         for cuenta in cuentas:
@@ -105,8 +155,8 @@ class PresupuestoViewSet(HardDeleteMixin, viewsets.ModelViewSet):
         anio = request.data.get('anio')
         if not anio:
             return Response({'anio': ['Este campo es obligatorio.']}, status=status.HTTP_400_BAD_REQUEST)
-        # Borrado duro (hard delete) de todos los registros del año, incluso los marcados como deleted.
-        eliminados, _ = Presupuesto.all_objects.filter(anio=anio).delete()
+        # Borrado duro (hard delete) de los registros permitidos del año, incluso los marcados como deleted.
+        eliminados, _ = self._scope_presupuestos(Presupuesto.all_objects.filter(anio=anio)).delete()
         return Response({'detail': f'Presupuesto del año {anio} reiniciado. {eliminados} registro(s) eliminados.'})
 
     @action(detail=False, methods=['get'], url_path='control')
@@ -141,14 +191,17 @@ class PresupuestoViewSet(HardDeleteMixin, viewsets.ModelViewSet):
 
         factor_meses = mes if modo == 'acumulado' else 1
 
-        presupuestos = Presupuesto.objects.filter(anio=anio).select_related('cuenta', 'centro_costo')
+        presupuestos = self._scope_presupuestos(
+            Presupuesto.objects.filter(anio=anio).select_related('cuenta', 'centro_costo')
+        )
         if centros_costo:
             presupuestos = presupuestos.filter(centro_costo__codigo__in=centros_costo.split(','))
 
-        # Ejecutado real
+        # Ejecutado real, también restringido a los datos permitidos del rol
         mov_filter = Q(fecha__gte=fecha_desde, fecha__lte=fecha_hasta)
         if centros_costo:
             mov_filter &= Q(centro_costo__codigo__in=centros_costo.split(','))
+        mov_filter &= self._scope_q_movimientos()
 
         ejecutado = MoviCont.objects.filter(mov_filter).values(
             'cuenta__codigo', 'centro_costo__codigo'

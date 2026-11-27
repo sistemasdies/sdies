@@ -8,6 +8,7 @@ import PageHeader from '../../components/common/PageHeader';
 import Spinner from '../../components/common/Spinner';
 import EmptyState from '../../components/common/EmptyState';
 import MultiSelect from '../../components/common/MultiSelect';
+import { usePerm } from '../../hooks/usePerm';
 import { controlPresupuestal } from '../../api/presupuesto';
 import { getCentrosCosto } from '../../api/centrosCosto';
 import { formatMoney } from '../../utils/formato';
@@ -26,6 +27,7 @@ const tipoDe = cuenta => {
 };
 
 export default function PresupuestoVsRealPage() {
+  const { canList } = usePerm(window.location.pathname);
   const hoy = new Date();
   const [anio, setAnio] = useState(hoy.getFullYear());
   const [mes, setMes] = useState(hoy.getMonth() + 1);
@@ -99,6 +101,7 @@ export default function PresupuestoVsRealPage() {
   }, []);
 
   const consultar = useCallback(() => {
+    if (!canList) return;
     setLoading(true);
     const params = { anio, mes, modo };
     if (seleccionCC.length) params.centros_costo = seleccionCC.join(',');
@@ -106,7 +109,7 @@ export default function PresupuestoVsRealPage() {
       .then(r => setData(r.data))
       .catch(err => toast.error(err.response?.data?.detail || 'Error al consultar control'))
       .finally(() => setLoading(false));
-  }, [anio, mes, modo, seleccionCC]);
+  }, [anio, mes, modo, seleccionCC, canList]);
 
   useEffect(() => { consultar(); }, [consultar]);
 
@@ -130,7 +133,7 @@ export default function PresupuestoVsRealPage() {
                 onChange={e => setMostrarRegistrosEnCero(e.target.checked)} />
               <label className="form-check-label small" htmlFor="chkCerosControl">Mostrar registros en cero</label>
             </div>
-            <button className="btn btn-primary btn-sm" onClick={consultar}>
+            <button className="btn btn-primary btn-sm" onClick={consultar} disabled={!canList}>
               <i className="bi bi-search me-2"></i>Consultar
             </button>
           </div>

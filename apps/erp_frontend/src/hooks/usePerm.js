@@ -12,6 +12,8 @@ const MODULE_MAP = {
   '/reportes':            'reportes',
   '/informes/auxiliares':        'auxiliares',
   '/informes/comparativo-meses': 'saldos_meses',
+  '/informes/presupuesto-vs-real': 'presupuesto',
+  '/procesos/generar-presupuesto': 'generar_presupuesto',
   '/importar':            'importar',
   '/procesos/exportar-datos': 'exportar',
   '/procesos/correccion-datos': 'correccion_datos',
