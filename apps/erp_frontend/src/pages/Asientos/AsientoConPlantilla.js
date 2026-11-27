@@ -675,8 +675,8 @@ export default function AsientoConPlantilla() {
                       </label>
                       <input className="form-control form-control-sm font-monospace"
                         maxLength={3} value={sufijoComprob} style={{ width: 90 }}
-                        placeholder="Ej: A, AB..."
-                        onChange={e => setSufijoComprob(e.target.value.toUpperCase())}/>
+                        placeholder="Ej: A, a, AB, Lx..."
+                        onChange={e => setSufijoComprob(e.target.value)}/>
                       <div className="form-text" style={{ maxWidth: 170 }}>
                         {sufijoComprob
                           ? <>Resultado: <code>{plantillaActual?.comprobante || '—'}{sufijoComprob}</code></>
